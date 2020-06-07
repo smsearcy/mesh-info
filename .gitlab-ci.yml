@@ -1,0 +1,59 @@
+default:
+  image: python:3.8-slim
+
+stages:
+  - test
+
+# run Code Quality checks
+include:
+  - template: Code-Quality.gitlab-ci.yml
+
+code_quality:
+  artifacts:
+    paths: [gl-code-quality-report.json]
+
+pre-commit:
+  stage: test
+  image: python:3.8
+  script:
+    - pip install pre-commit
+    - pre-commit run --all-files
+
+# Template to prepare Poetry (for use with `extends`)
+.poetry:
+  before_script:
+    - pip install poetry
+    - poetry install
+
+flake8:
+  stage: test
+  extends: .poetry
+  script:
+    - poetry run flake8 pymeshmap tests --format=junit-xml --output=flake8-report.xml
+  artifacts:
+    reports:
+      junit: flake8-report.xml
+
+mypy:
+  stage: test
+  extends: .poetry
+  script:
+    - poetry run mypy pymeshmap --junit-xml=mypy-report.xml
+  artifacts:
+    reports:
+      junit: mypy-report.xml
+
+# Template for pytest to simplify testing different versions of Python
+.pytest:
+  stage: test
+  extends: .poetry
+  script:
+    - poetry run pytest --cov=pymeshmap --junit-xml=pytest-report.xml
+  coverage: '/^TOTAL.+?(\d+\%)$/'
+  artifacts:
+    reports:
+      junit: pytest-report.xml
+
+pytest 3.8:
+  extends: .pytest
+  image: python:3.8-slim
