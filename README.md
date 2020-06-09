@@ -13,13 +13,14 @@ Python and crawling potentially slow AREDN mesh networks seemed like a good
 opportunity.  Thus I'm building off the work of KG6WXC's
 [MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap), leveraging the database
 design he has so that if this works and performs well it could be an alternate
-implementation of the network poller even if the .
+implementation of the network poller even if the rest of my goals do not get
+completed.
 
 **Other Goals:**
 
 * Unit tests for validating the parsing of `sysinfo.json` for different versions
 of the AREDN firmware.
-* A basic logical map of the mesh without need for tiles via
+* A basic logical map of the mesh without need for geography tiles via
 [NetworkX](https://networkx.github.io/documentation/stable/index.html).
 * Simpler deployment via containers (possibly via in-memory SQLite database for
 very basic setup).
