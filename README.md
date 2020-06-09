@@ -22,9 +22,9 @@ completed.
 of the AREDN firmware.
 * A basic logical map of the mesh without need for geography tiles via
 [NetworkX](https://networkx.github.io/documentation/stable/index.html).
-* Simpler deployment via containers (possibly via in-memory SQLite database for
+* Simpler deployment via containers (possibly with in-memory SQLite database for
 very basic setup).
-* Geographic based map similar to
+* Eventually, geographic based map similar to
 [MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap) so this could be a complete
 replacement.
 
