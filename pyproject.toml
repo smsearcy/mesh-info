@@ -1,18 +1,19 @@
 [tool.poetry]
 name = "pymeshmap"
 version = "0.1.0"
-description = "Application for crawling and mapping AREDwork."
+description = "Application for crawling and mapping an AREDN network."
 authors = ["Scott Searcy <smsearcy14@outlook.com>"]
 readme = "README.md"
 repository = "https://gitlab.com/smsearcy/pymeshmap"
-
 
 [tool.poetry.scripts]
 # Uncomment for CLI entrypoint
 # pymeshmap = "pymeshmap.pymeshmap:main"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
+aiohttp = {extras = ["speedups"], version = "^3.6.2"}
+loguru = "^0.5.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
