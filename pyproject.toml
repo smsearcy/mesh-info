@@ -14,6 +14,9 @@ repository = "https://gitlab.com/smsearcy/pymeshmap"
 python = "^3.7"
 aiohttp = {extras = ["speedups"], version = "^3.6.2"}
 loguru = "^0.5.0"
+click = "^7.1.2"
+marshmallow = "^3.6.1"
+sqlalchemy = "^1.3.17"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -22,6 +25,7 @@ flake8 = "^3.7.9"
 flake8-bugbear = "^20.1.4"
 flake8_formatter_junit_xml = "^0.0.6"
 mypy = "^0.780"
+Faker = "^4.1.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
