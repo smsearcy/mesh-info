@@ -16,17 +16,7 @@ import enum
 import json
 from datetime import datetime
 
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    Enum,
-    Float,
-    Integer,
-    String,
-    Unicode,
-    UnicodeText,
-)
+from sqlalchemy import Boolean, Column, DateTime, Enum, Float, Integer, String, Unicode
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import MetaData
 from sqlalchemy.types import TypeDecorator
