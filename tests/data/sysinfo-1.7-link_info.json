@@ -1,0 +1,82 @@
+{
+  "lon": "56.804502",
+  "sysinfo": {
+    "uptime": "3 days, 19:44:05",
+    "loads": [
+      0.16,
+      0.21,
+      0.18
+    ]
+  },
+  "interfaces": [
+    {
+      "mac": "91:18:9D:EE:1C:41",
+      "name": "eth0.2",
+      "ip": "10.126.147.14"
+    },
+    {
+      "mac": "43:4E:DB:E0:25:FA",
+      "name": "wlan0",
+      "ip": "10.106.204.11"
+    },
+    {
+      "mac": "B5:2E:23:2D:53:A3",
+      "name": "br-lan",
+      "ip": "10.136.67.11"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "eth0",
+      "mac": "93:A9:DA:2F:37:71"
+    },
+    {
+      "name": "eth0.1",
+      "mac": "C6:BB:FA:60:1A:42"
+    }
+  ],
+  "api_version": "1.7",
+  "lat": "-18.627378",
+  "meshrf": {
+    "ssid": "ArednMeshNetwork",
+    "channel": "177",
+    "status": "on",
+    "freq": "5.885 GHz",
+    "chanbw": "20"
+  },
+  "services_local": [],
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": false
+  },
+  "link_info": {
+    "10.33.72.151": {
+      "neighborLinkQuality": 1,
+      "linkQuality": 1,
+      "hostname": "CALLSIGN-VC-SHACK.local.mesh",
+      "olsrInterface": "eth0.2",
+      "linkType": "DTD"
+    },
+    "10.234.99.239": {
+      "neighborLinkQuality": 1,
+      "noise": -95,
+      "linkQuality": 1,
+      "linkType": "RF",
+      "hostname": "CALLSIGN-VC-Sulphur-to-Oxnard-5G.local.mesh",
+      "tx_rate": 52,
+      "olsrInterface": "wlan0",
+      "rx_rate": 52,
+      "signal": -70
+    }
+  },
+  "grid_square": "AH58ku",
+  "node": "CALLSIGN-VC-RF-5G",
+  "node_details": {
+    "firmware_version": "3.20.3.0",
+    "board_id": "MikroTik RouterBOARD LHG 5HPnD-XL",
+    "firmware_mfg": "AREDN",
+    "model": "MikroTik RouterBOARD LHG 5HPnD-XL"
+  }
+}

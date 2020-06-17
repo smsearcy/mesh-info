@@ -73,10 +73,12 @@ def scrub_scalar(key: str, value: t.Any) -> t.Any:
         new_value = f"{fake.longitude():.6f}"
     if key == "mac" and value != "00:00:00:00":
         new_value = fake.mac_address().upper()
-    if key in ("node", "hostname"):
+    if key in ("node", "hostname", "name"):
         new_value = callsign_regex.sub("CALLSIGN", value)
-    if key == "grid_square":
+    if key == "grid_square" and value != "":
         new_value = random_gridsquare()
+    if key == "ssid":
+        new_value = "ArednMeshNetwork"
 
     if new_value is not None:
         print(f"Rewrote {value!r} to {new_value!r}")
