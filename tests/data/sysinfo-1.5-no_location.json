@@ -1,0 +1,57 @@
+{
+  "lon": "",
+  "sysinfo": {
+    "uptime": "1 days, 8:04:23",
+    "loads": [
+      0,
+      0.01,
+      0
+    ]
+  },
+  "interfaces": [
+    {
+      "mac": "6E:C1:6C:C9:33:03",
+      "name": "eth0.2",
+      "ip": "10.145.89.239"
+    },
+    {
+      "mac": "D1:3A:F2:6E:BD:19",
+      "name": "wlan0",
+      "ip": "10.77.211.126"
+    },
+    {
+      "name": "eth0.1",
+      "mac": "35:18:E4:A7:7B:35"
+    },
+    {
+      "name": "eth0",
+      "mac": "51:4C:43:3B:D7:A3"
+    },
+    {
+      "mac": "CE:67:56:D0:F5:48",
+      "name": "eth0.0",
+      "ip": "10.66.236.21"
+    }
+  ],
+  "api_version": "1.5",
+  "meshrf": {
+    "chanbw": "10",
+    "ssid": "ArednMeshNetwork",
+    "channel": "-2"
+  },
+  "services_local": [],
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": false
+  },
+  "lat": "",
+  "grid_square": "",
+  "node": "CALLSIGN-NSM2-1",
+  "node_details": {
+    "description": "PORTABLE NANO",
+    "model": "NanoStation M2 XW ",
+    "board_id": "0xe866",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "3.18.9.0"
+  }
+}

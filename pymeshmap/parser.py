@@ -6,21 +6,32 @@ that will actually be called in here is `load_node_data()`.
 
 """
 
+from __future__ import annotations
+
+import html
 import typing as t
 from ipaddress import IPv4Address
 
 import attr
 from loguru import logger
-from marshmallow import EXCLUDE, Schema, fields, post_load, pre_load
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
 
-@attr.s(auto_attribs=True, slots=True)
-class Interface:
-    """Data class to represent the individual interfaces on a node."""
+def load_node_data(json_data: t.Dict) -> t.Optional[SystemInfo]:
+    """Convert data from `sysinfo.json` into a dataclass.
 
-    mac_address: str
-    name: str
-    ip_address: t.Optional[IPv4Address] = None
+    If it cannot parse the information it returns `None`.  Extra/unknown fields in the
+    source data are ignored.
+
+    """
+    try:
+        system_info: SystemInfo = SystemInfoParser(unknown=EXCLUDE).load(json_data)
+    except Exception as e:
+        # `logger.exception()` gives a lot more information, but will it be too much?
+        logger.error("Failed to parse sysinfo.json data: {!r}", e)
+        return None
+
+    return system_info
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -39,8 +50,8 @@ class SystemInfo:
     node_name: str
     api_version: str
     grid_square: str
-    latitude: str
-    longitude: str
+    latitude: t.Optional[float]
+    longitude: t.Optional[float]
     interfaces: t.Dict[str, Interface]
     ssid: str
     channel: str
@@ -53,10 +64,20 @@ class SystemInfo:
     tunnel_installed: bool
     link_info: t.Dict
     services: t.List
+    description: str = ""
     status: t.Optional[str] = None
     frequency: t.Optional[str] = None
     up_time: t.Optional[str] = None
     load_averages: t.Optional[t.List[float]] = None
+
+
+@attr.s(auto_attribs=True, slots=True)
+class Interface:
+    """Data class to represent the individual interfaces on a node."""
+
+    mac_address: str
+    name: str
+    ip_address: t.Optional[IPv4Address] = None
 
 
 class InterfaceParser(Schema):
@@ -64,14 +85,13 @@ class InterfaceParser(Schema):
 
     mac_address = fields.String(data_key="mac", required=True)
     name = fields.String(required=True)
-    ip_address = fields.Function(
-        deserialize=lambda obj: IPv4Address(obj), data_key="ip"
-    )
+    ip_address = fields.Method(deserialize="load_ip_address", data_key="ip")
 
-    @pre_load
-    def strip_none(self, in_data, **kwargs):
-        # API 1.0 had "ip": "none" so we want to remove that
-        return {key: value for key, value in in_data.items() if value != "none"}
+    def load_ip_address(self, value):
+        # API 1.0 had "ip": "none" so we want to drop that
+        if value == "none":
+            return None
+        return IPv4Address(value)
 
     @post_load
     def to_object(self, data, **kwargs):
@@ -98,6 +118,7 @@ class MeshRfParser(Schema):
 class NodeDetailsParser(Schema):
     """Marshmallow schema to load the 'node_details' information."""
 
+    description = fields.String()
     firmware_version = fields.String()
     firmware_manufacturer = fields.String(data_key="firmware_mfg")
     model = fields.String()
@@ -111,6 +132,16 @@ class TunnelParser(Schema):
     tunnel_installed = fields.Boolean()
 
 
+class ServicesParser(Schema):
+    """Marshmallow schema to load the 'services' information."""
+
+    # TODO: create data class?
+
+    name = fields.String()
+    protocol = fields.String()
+    link = fields.String()
+
+
 class SystemInfoParser(Schema):
     """Marshmallow schema to validate/load output of `sysinfo.json`.
 
@@ -121,18 +152,21 @@ class SystemInfoParser(Schema):
     node_name = fields.String(data_key="node", required=True)
     api_version = fields.String(required=True)
     grid_square = fields.String()
-    latitude = fields.Float(data_key="lat")
-    longitude = fields.Float(data_key="lon")
+    latitude = fields.Method(deserialize="load_coordinate", data_key="lat")
+    longitude = fields.Method(deserialize="load_coordinate", data_key="lon")
     interfaces = fields.List(fields.Nested(InterfaceParser))
     link_info = fields.Dict(missing=dict)
-    # TODO: need to do further research on what this array looks like
-    services = fields.Raw(data_key="services_local", missing=list)
+    services = fields.List(
+        fields.Nested(ServicesParser, unknown=EXCLUDE),
+        data_key="services_local",
+        missing=list,
+    )
 
     # Nested dictionaries that need to be flatted in newer versions
-    meshrf = fields.Nested(MeshRfParser, missing=dict)
-    node_details = fields.Nested(NodeDetailsParser, missing=dict)
-    sysinfo = fields.Nested(SysInfoParser, missing=dict)
-    tunnels = fields.Nested(TunnelParser, missing=dict)
+    meshrf = fields.Nested(MeshRfParser, missing=dict, unknown=EXCLUDE)
+    node_details = fields.Nested(NodeDetailsParser, missing=dict, unknown=EXCLUDE)
+    sysinfo = fields.Nested(SysInfoParser, missing=dict, unknown=EXCLUDE)
+    tunnels = fields.Nested(TunnelParser, missing=dict, unknown=EXCLUDE)
 
     # Older APIs had some fields at the root level
     # (`to_object()` will overwrite these blank values with the above nested values)
@@ -145,6 +179,16 @@ class SystemInfoParser(Schema):
     firmware_manufacturer = fields.String(data_key="firmware_mfg")
     active_tunnel_count = fields.Integer()
     tunnel_installed = fields.Boolean()
+
+    def load_coordinate(self, value):
+        """Parse latitude/longitude values.
+
+        Cannot use `mashmallow.fields.Float` because that chokes on an empty string.
+
+        """
+        if not value:
+            return None
+        return float(value)
 
     @post_load
     def to_object(self, data: t.Dict, **kwargs):
@@ -172,24 +216,8 @@ class SystemInfoParser(Schema):
         data["interfaces"] = {
             interface.name: interface for interface in data["interfaces"]
         }
+        if "description" in data:
+            # found an example where description had HTML entities
+            data["description"] = html.unescape(data["description"])
 
         return SystemInfo(**data)
-
-
-def load_node_data(json_data: t.Dict, *, log=None) -> t.Optional[SystemInfo]:
-    """Convert data from `sysinfo.json` into a dataclass.
-
-    If it cannot parse the information it returns `None`.  Extra/unknown fields in the
-    source data are ignored.
-
-    """
-    log = log or logger
-
-    try:
-        system_info: SystemInfo = SystemInfoParser(unknown=EXCLUDE).load(json_data)
-    except Exception as e:
-        # `log.exception()` gives a lot more information, but will it be too much?
-        log.error("Failed to parse sysinfo.json data: {!r}", e)
-        return None
-
-    return system_info
