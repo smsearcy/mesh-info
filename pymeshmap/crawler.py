@@ -1,63 +1,103 @@
 """Collect data from all the nodes in an AREDN network."""
 
 import asyncio
+import json
+import re
 import typing as t
+from collections import defaultdict
+from ipaddress import IPv4Address
 
 import aiohttp
-import click
-from loguru import Logger, logger
+from loguru import logger
 
 from . import models, parser
 
 # TODO: loguru has an async option, does it make a difference here?
 
 
-@click.command("map-network")
-@click.option(
-    "--noupdate", "-N", "no_update", is_flag=True, help="Do not update database"
-)
-@click.option("--verbose", "-v", is_flag=True, help="Output more details")
-@click.pass_obj
-def main(config, no_update, verbose):
-    """CLI sub-command entry point for mapping the network."""
+async def map_network(host_name: str):
+    """Map the AREDN mesh network."""
 
-    # verify no other mapping process is running
+    # FIXME add semaphore to cap tasks
+    tasks: t.List[t.Awaitable] = []
+    async with aiohttp.ClientSession() as session:
+        async for node_address in get_nodes(host_name):
+            logger.debug("Creating task to poll {}", node_address)
+            task = asyncio.create_task(poll_node(session, node_address))
+            tasks.append(task)
 
-    # mark the mapping has begun (and commit!)
+        node_details = await asyncio.gather(*tasks, return_exceptions=True)
 
-    # get list of nodes to query
-
-    # process list of nodes via async
-    # FIXME: where we start asyncio will likely change if this is running cron or not
-    node_info = asyncio.run(query_nodes(node_list))
-
-    # (typically) update database
-
-    # *always* clear the "running" flag
-
-    # (possibly) update link data
+    for node in node_details:
+        if isinstance(node, Exception):
+            print(repr(node))
+            continue
+        print(node.info)
+        if node.error:
+            with open(f"{node.ip_address}.json", "w") as f:
+                json.dump(node.json_data, f, indent=2)
 
     return
 
 
-async def query_nodes(nodes: t.List):
-    """Main entry point for the asyncio version of the crawler."""
+async def get_nodes(host_name: str) -> t.AsyncIterator[IPv4Address]:
+    """Yield the IP addresses of nodes in the network.
 
-    # FIXME: this is just a stub
+    Rather than crawling the whole network and looking for each node's neighbors we
+    query the list from OLSR.
 
-    tasks: t.List[t.Awaitable] = []
-    async with aiohttp.ClientSession() as session:
-        for node in nodes:
-            node_logger = logger.bind(node=node)
-            node_logger.info("Creating polling task")
-            tasks.append(poll_node(session, node, log=node_logger))
+    Based on `wxc_netcat()` in MeshMap the only lines we are interested in (when get the
+    node list) are the ones that look (generally) like this (sometimes the second
+    address is a CIDR address):
 
-    return await asyncio.gather(*tasks, return_exceptions=True)
+        "10.32.66.190" -> "10.80.213.95"[label="1.000"];
+
+    """
+    count = defaultdict(int)
+    # node could show up multiple times so save the ones we've seen
+    nodes_returned = set()
+    node_regex = re.compile(r"^\"(\d{2}\.\d{1,3}\.\d{1,3}\.\d{1,3})\" -> \"\d+")
+
+    # this can raise subclasses of OSError
+    reader, writer = await asyncio.open_connection(host_name, 2004)
+    while True:
+        line_bytes = await reader.readline()
+        if not line_bytes:
+            break
+        count["lines processed"] += 1
+        line = line_bytes.decode("utf-8").strip()
+
+        match = node_regex.match(line)
+        if not match:
+            count["lines skipped"] += 1
+            continue
+        logger.debug(line)
+        node_address = match.group(1)
+        if node_address in nodes_returned:
+            count["duplicate node"] += 1
+            continue
+        nodes_returned.add(node_address)
+        count["nodes returned"] += 1
+        yield IPv4Address(node_address)
+
+    writer.close()
+
+    logger.info("OLSR Statistics: {}", dict(count))
+    await writer.wait_closed()
+
+    return
+
+
+class NodeResult(t.NamedTuple):
+    ip_address: IPv4Address
+    info: t.Optional[t.Any]  # FIXME: this should be a data class
+    error: t.Optional[t.Any]  # FIXME: this should be an error
+    json_data: t.Optional[t.Dict]
 
 
 async def poll_node(
-    session: aiohttp.ClientSession, node: str, *, log: Logger, options: t.Dict = None
-) -> t.Union[models.NodeInfo, models.IgnoreHost]:
+    session: aiohttp.ClientSession, node_address: IPv4Address, *, options: t.Dict = None
+) -> NodeResult:
     """Query a node to get the parsed information.
 
     This calls some synchronous code for processing the JSON response.  Testing will
@@ -65,32 +105,31 @@ async def poll_node(
 
     Args:
         session: aiohttp session object (docs recommend to pass around single object)
-        node: Name or IP address of the node to query (should be IP?)
-        log: Loguru logging object
+        node_address: IP address of the node to query
         options: Dictionary of additional querystring options to pass to `sysinfo.json`
 
     Returns:
-        Database model either representing the node or to ignore it
 
     """
 
-    # FIXME: this is just a stub
-
-    log.debug("Begin polling...")
+    logger.debug("{} begin polling...", node_address)
 
     params = {"services_local": 1}
     if options:
         params.update(options)
 
+    error = None
+
+    # FIXME: add more error handling
     async with session.get(
-        f"http://{node}:8080/cgi-bin/sysinfo.json", params=params
+        f"http://{node_address}:8080/cgi-bin/sysinfo.json", params=params
     ) as resp:
-        node_data = await resp.json()
+        json_data = await resp.json()
 
-    node_info = parser.load_node_data(node_data, log=log)
-
-    # print node if running verbose
+    node_info = parser.load_node_data(json_data)
 
     if node_info is None:
-        # failed to parse, create a IgnoreHost record?
-        return
+        # FIXME: this should be an enum
+        error = "Failed to parse"
+
+    return NodeResult(node_address, node_info, error, json_data)
