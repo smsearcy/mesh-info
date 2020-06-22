@@ -25,13 +25,13 @@ def main(ctx):
 @click.option("--verbose", is_flag=True)
 @click.option("--service", is_flag=True)
 @click.pass_obj
-def crawl(config, no_update, verbose, service):
+def map_network(config, no_update, verbose, service):
     """"""
 
     if service:
         raise NotImplementedError("Not implemented yet")
 
     try:
-        asyncio.run(crawler.map_network(LOCAL_NODE_NAME))
+        asyncio.run(crawler.map_network(LOCAL_NODE_NAME), debug=True)
     except OSError as e:
         raise click.ClickException(f"{e!s}") from e
