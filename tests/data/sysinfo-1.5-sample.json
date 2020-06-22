@@ -41,7 +41,7 @@
   },
   "lat": "-30.960324",
   "grid_square": "DA05iv",
-  "node": "CALLSIGN-bm2-1",
+  "node": "N0CALL-bm2-1",
   "node_details": {
     "firmware_version": "3.18.9.0",
     "board_id": "0xe202",

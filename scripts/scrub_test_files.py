@@ -74,7 +74,7 @@ def scrub_scalar(key: str, value: t.Any) -> t.Any:
     if key == "mac" and value != "00:00:00:00":
         new_value = fake.mac_address().upper()
     if key in ("node", "hostname", "name", "link"):
-        new_value = callsign_regex.sub("CALLSIGN", value)
+        new_value = callsign_regex.sub("N0CALL", value)
     if key == "grid_square" and value != "":
         new_value = random_gridsquare()
     if key == "ssid":

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import html
 import typing as t
-from ipaddress import IPv4Address
 
 import attr
 from loguru import logger
@@ -77,7 +76,7 @@ class Interface:
 
     mac_address: str
     name: str
-    ip_address: t.Optional[IPv4Address] = None
+    ip_address: t.Optional[str] = None
 
 
 class InterfaceParser(Schema):
@@ -89,9 +88,7 @@ class InterfaceParser(Schema):
 
     def load_ip_address(self, value):
         # API 1.0 had "ip": "none" so we want to drop that
-        if value == "none":
-            return None
-        return IPv4Address(value)
+        return None if value == "none" else value
 
     @post_load
     def to_object(self, data, **kwargs):

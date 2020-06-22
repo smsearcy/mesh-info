@@ -1,48 +1,48 @@
 {
-  "lon": "77.502536",
+  "lon": "-27.505411",
   "sysinfo": {
-    "uptime": "255 days, 3:00:03",
+    "uptime": "257 days, 15:58:46",
     "loads": [
-      0.14,
-      0.11,
-      0.09
+      0.19,
+      0.07,
+      0.04
     ]
   },
   "interfaces": [
     {
       "name": "eth0.1",
-      "mac": "65:E7:3C:DF:8E:19"
+      "mac": "1F:AF:08:DA:84:7D"
     },
     {
-      "mac": "09:8A:43:CE:F0:B9",
+      "mac": "91:9E:BF:9E:E2:54",
       "name": "br-lan",
-      "ip": "10.190.43.182"
+      "ip": "10.23.61.91"
     },
     {
-      "mac": "FA:D0:35:A8:90:7E",
+      "mac": "C2:80:00:CD:87:90",
       "name": "br-dtdlink",
-      "ip": "10.3.8.186"
+      "ip": "10.67.34.229"
     },
     {
-      "mac": "47:83:46:D9:3A:E6",
+      "mac": "3E:6E:52:AB:CC:24",
       "name": "wlan0",
-      "ip": "10.159.123.176"
+      "ip": "10.95.156.144"
     },
     {
       "name": "br-wan",
-      "mac": "85:C7:FD:02:14:1C"
+      "mac": "EB:A9:96:21:B2:72"
     },
     {
       "name": "eth0.2",
-      "mac": "A9:5E:B2:DF:42:A2"
+      "mac": "2C:E2:5A:C6:E4:43"
     },
     {
       "name": "eth1.1",
-      "mac": "8E:E8:4B:55:C1:42"
+      "mac": "AB:E3:1E:5C:16:CC"
     },
     {
       "name": "eth1.2",
-      "mac": "7B:9C:83:4C:E5:36"
+      "mac": "D4:08:1A:EC:CB:84"
     },
     {
       "name": "tunl0",
@@ -50,11 +50,11 @@
     },
     {
       "name": "eth0",
-      "mac": "6C:2F:30:6B:B3:05"
+      "mac": "5E:48:EC:0C:54:75"
     },
     {
       "name": "eth1",
-      "mac": "D3:2E:55:5F:D4:7A"
+      "mac": "A9:7D:17:03:B6:ED"
     }
   ],
   "api_version": "1.6",
@@ -75,11 +75,11 @@
     "active_tunnel_count": "0",
     "tunnel_installed": false
   },
-  "lat": "54.894873",
-  "grid_square": "EH02ht",
+  "lat": "16.935808",
+  "grid_square": "BI19bx",
   "node": "N0CALL-NSM2-3-East-Hills",
   "node_details": {
-    "description": "Elevation 1850&apos; Pointing WSW",
+    "description": "Elevation 1850&apos; Pointing WSW towards the mall",
     "model": "NanoStation M2 ",
     "board_id": "0xe012",
     "firmware_mfg": "AREDN",

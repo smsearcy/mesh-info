@@ -1,0 +1,66 @@
+{
+  "lon": "29.684435",
+  "sysinfo": {
+    "uptime": "74 days, 21:14:31",
+    "loads": [
+      0.12,
+      0.05,
+      0.02
+    ]
+  },
+  "interfaces": [
+    {
+      "name": "eth0.1",
+      "mac": "B0:AE:63:31:35:5B"
+    },
+    {
+      "mac": "4B:B1:F0:ED:D6:43",
+      "name": "br-lan",
+      "ip": "10.9.133.136"
+    },
+    {
+      "mac": "33:2E:73:5A:DD:D8",
+      "name": "eth0.2",
+      "ip": "10.55.10.214"
+    },
+    {
+      "mac": "53:9C:C7:3F:1A:27",
+      "name": "wlan0",
+      "ip": "10.223.45.67"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "eth0.0",
+      "mac": "6B:29:48:9D:DF:8D"
+    },
+    {
+      "name": "eth0",
+      "mac": "B6:82:F5:05:83:11"
+    }
+  ],
+  "api_version": "1.6",
+  "meshrf": {
+    "status": "on",
+    "chanbw": "10",
+    "ssid": "ArednMeshNetwork",
+    "channel": "-2"
+  },
+  "services_local": [],
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": false
+  },
+  "lat": "47.734068",
+  "grid_square": "EH04kt",
+  "node": "N0CALL-CPE220-1-East-Hills",
+  "node_details": {
+    "description": "Pointing West from hill towards town",
+    "model": "TP-Link CPE220 v3.0 ",
+    "board_id": "TP-Link CPE220 v3.0",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "3.19.3.0"
+  }
+}
