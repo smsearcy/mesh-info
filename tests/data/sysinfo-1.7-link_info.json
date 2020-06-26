@@ -55,7 +55,7 @@
     "10.33.72.151": {
       "neighborLinkQuality": 1,
       "linkQuality": 1,
-      "hostname": "CALLSIGN-VC-SHACK.local.mesh",
+      "hostname": "N0CALL-VC-SHACK.local.mesh",
       "olsrInterface": "eth0.2",
       "linkType": "DTD"
     },
@@ -64,7 +64,7 @@
       "noise": -95,
       "linkQuality": 1,
       "linkType": "RF",
-      "hostname": "CALLSIGN-VC-Sulphur-to-Oxnard-5G.local.mesh",
+      "hostname": "N0CALL-VC-Sulphur-to-Oxnard-5G.local.mesh",
       "tx_rate": 52,
       "olsrInterface": "wlan0",
       "rx_rate": 52,
@@ -72,7 +72,7 @@
     }
   },
   "grid_square": "AH58ku",
-  "node": "CALLSIGN-VC-RF-5G",
+  "node": "N0CALL-VC-RF-5G",
   "node_details": {
     "firmware_version": "3.20.3.0",
     "board_id": "MikroTik RouterBOARD LHG 5HPnD-XL",

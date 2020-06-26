@@ -1,0 +1,59 @@
+{
+  "lon": "35.222090",
+  "sysinfo": {
+    "uptime": "604 days, 23:44:21",
+    "loads": [
+      0.15,
+      0.17,
+      0.15
+    ]
+  },
+  "interfaces": [
+    {
+      "name": "eth0.1",
+      "mac": "F7:8B:86:DF:A6:40"
+    },
+    {
+      "mac": "65:57:EC:3A:B9:FF",
+      "name": "wlan0",
+      "ip": "10.61.188.73"
+    },
+    {
+      "mac": "C5:3A:8A:2E:71:75",
+      "name": "eth0",
+      "ip": "10.73.41.118"
+    },
+    {
+      "mac": "BB:DC:90:08:AF:8C",
+      "name": "eth0.2",
+      "ip": "10.182.70.170"
+    }
+  ],
+  "api_version": "1.5",
+  "meshrf": {
+    "chanbw": "20",
+    "ssid": "ArednMeshNetwork",
+    "channel": "174"
+  },
+  "services_local": [
+    {
+      "name": "10.86.61.66",
+      "protocol": "tcp",
+      "link": "http://JPL-JEARS-Phone:0/"
+    }
+  ],
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": false
+  },
+  "lat": "4.360832",
+  "grid_square": "",
+  "node": "N0CALL-NSM5-Loco-XW-B310",
+  "node_details": {
+    "description": "JPL EOC in Building 310",
+    "model": "NanoStation Loco M5 XW ",
+    "board_id": "0xe845",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "3.18.9.0"
+  }
+}

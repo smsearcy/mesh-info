@@ -1,0 +1,88 @@
+{
+  "lon": "77.502536",
+  "sysinfo": {
+    "uptime": "255 days, 3:00:03",
+    "loads": [
+      0.14,
+      0.11,
+      0.09
+    ]
+  },
+  "interfaces": [
+    {
+      "name": "eth0.1",
+      "mac": "65:E7:3C:DF:8E:19"
+    },
+    {
+      "mac": "09:8A:43:CE:F0:B9",
+      "name": "br-lan",
+      "ip": "10.190.43.182"
+    },
+    {
+      "mac": "FA:D0:35:A8:90:7E",
+      "name": "br-dtdlink",
+      "ip": "10.3.8.186"
+    },
+    {
+      "mac": "47:83:46:D9:3A:E6",
+      "name": "wlan0",
+      "ip": "10.159.123.176"
+    },
+    {
+      "name": "br-wan",
+      "mac": "85:C7:FD:02:14:1C"
+    },
+    {
+      "name": "eth0.2",
+      "mac": "A9:5E:B2:DF:42:A2"
+    },
+    {
+      "name": "eth1.1",
+      "mac": "8E:E8:4B:55:C1:42"
+    },
+    {
+      "name": "eth1.2",
+      "mac": "7B:9C:83:4C:E5:36"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "eth0",
+      "mac": "6C:2F:30:6B:B3:05"
+    },
+    {
+      "name": "eth1",
+      "mac": "D3:2E:55:5F:D4:7A"
+    }
+  ],
+  "api_version": "1.6",
+  "meshrf": {
+    "status": "on",
+    "chanbw": "10",
+    "ssid": "ArednMeshNetwork",
+    "channel": "-2"
+  },
+  "services_local": [
+    {
+      "name": "MeshChat",
+      "protocol": "tcp",
+      "link": "http://N0CALL-NSM2-4:8080/meshchat"
+    }
+  ],
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": false
+  },
+  "lat": "54.894873",
+  "grid_square": "EH02ht",
+  "node": "N0CALL-NSM2-3-East-Hills",
+  "node_details": {
+    "description": "Elevation 1850&apos; Pointing WSW",
+    "model": "NanoStation M2 ",
+    "board_id": "0xe012",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "3.19.3.0"
+  }
+}

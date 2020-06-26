@@ -67,20 +67,20 @@ def scrub_scalar(key: str, value: t.Any) -> t.Any:
             pass
         else:
             new_value = fake.ipv4_private(address_class="a")
-    if key == "lat":
+    if key == "lat" and value != "":
         new_value = f"{fake.latitude():.6f}"
-    if key == "lon":
+    if key == "lon" and value != "":
         new_value = f"{fake.longitude():.6f}"
     if key == "mac" and value != "00:00:00:00":
         new_value = fake.mac_address().upper()
-    if key in ("node", "hostname", "name"):
-        new_value = callsign_regex.sub("CALLSIGN", value)
+    if key in ("node", "hostname", "name", "link"):
+        new_value = callsign_regex.sub("N0CALL", value)
     if key == "grid_square" and value != "":
         new_value = random_gridsquare()
     if key == "ssid":
         new_value = "ArednMeshNetwork"
 
-    if new_value is not None:
+    if new_value is not None and new_value != value:
         print(f"Rewrote {value!r} to {new_value!r}")
         return new_value
 

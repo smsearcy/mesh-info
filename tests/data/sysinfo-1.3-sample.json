@@ -1,0 +1,46 @@
+{
+  "lon": "-63.741642",
+  "sysinfo": {
+    "uptime": "53 days, 3:10:14",
+    "loads": [
+      0.46,
+      0.39,
+      0.28
+    ]
+  },
+  "chanbw": "10",
+  "services_local": [],
+  "firmware_mfg": "AREDN",
+  "node": "N0CALL-Ojai-VC-2",
+  "ssid": "ArednMeshNetwork",
+  "tunnel_installed": false,
+  "interfaces": [
+    {
+      "name": "eth0.1",
+      "mac": "A0:7C:02:57:59:58"
+    },
+    {
+      "mac": "B8:B7:3D:61:90:18",
+      "name": "wlan0",
+      "ip": "10.135.109.43"
+    },
+    {
+      "mac": "EF:FF:E4:EA:D6:F9",
+      "name": "eth0",
+      "ip": "10.145.96.189"
+    },
+    {
+      "mac": "C0:4C:7F:FB:93:BF",
+      "name": "eth0.2",
+      "ip": "10.190.133.201"
+    }
+  ],
+  "lat": "68.827359",
+  "api_version": "1.3",
+  "grid_square": "ME82vj",
+  "model": "Bullet M2 HP ",
+  "active_tunnel_count": "0",
+  "board_id": "0xe202",
+  "channel": "-2",
+  "firmware_version": "192-5869b73"
+}
