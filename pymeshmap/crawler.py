@@ -39,7 +39,9 @@ async def map_network(host_name: str):
             task = asyncio.create_task(poll_node(session, node_address))
             tasks.append(task)
 
-        node_details: t.List[NodeResult] = await asyncio.gather(*tasks, return_exceptions=True)
+        node_details: t.List[NodeResult] = await asyncio.gather(
+            *tasks, return_exceptions=True
+        )
 
     for node in node_details:
         if isinstance(node, Exception):
@@ -70,7 +72,7 @@ async def _query_olsr(host_name: str, port: int = 2004) -> t.AsyncIterator[str]:
         port: Port to connect to
 
     Yields:
-        Each line in the OLSR output, converted to UTF-8 and
+        Each line in the OLSR output, converted to UTF-8 and trailing newline removed
 
     """
     # this can raise subclasses of OSError
@@ -85,7 +87,9 @@ async def _query_olsr(host_name: str, port: int = 2004) -> t.AsyncIterator[str]:
     await writer.wait_closed()
 
 
-async def get_nodes(olsr_records: t.AsyncIterable[str], *, ignore_hosts: t.Set[str] = None) -> t.AsyncIterator[IPv4Address]:
+async def get_nodes(
+    olsr_records: t.AsyncIterable[str], *, ignore_hosts: t.Set[str] = None
+) -> t.AsyncIterator[IPv4Address]:
     """Process OLSR records, yielding the IP addresses of nodes in the network.
 
     Based on `wxc_netcat()` in MeshMap the only lines we are interested in (when get the
@@ -157,7 +161,7 @@ async def poll_node(
 
     try:
         async with session.get(
-            f"http://{node_address}:8080/cgi-bin/sysinfo.json", params=params,
+            f"http://{node_address}:8080/cgi-bin/sysinfo.json", params=params
         ) as resp:
             # status = resp.status
             response_text = await resp.text()
