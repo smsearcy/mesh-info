@@ -129,12 +129,13 @@ class SystemInfo:
             data["ssid"] = meshrf["ssid"]
             data["channel"] = meshrf["channel"]
             data["channel_bandwidth"] = meshrf["chanbw"]
-            data["status"] = meshrf.get("status")
+            data["status"] = meshrf.get("status", "on")
             data["frequency"] = meshrf.get("freq")
         else:
             data["ssid"] = raw_data["ssid"]
             data["channel"] = raw_data["channel"]
             data["channel_bandwidth"] = raw_data["chanbw"]
+            data["status"] = "on"
 
         if "node_details" in raw_data:
             details = raw_data["node_details"]
@@ -158,3 +159,25 @@ class SystemInfo:
             data["tunnel_installed"] = bool(raw_data["tunnel_installed"])
 
         return SystemInfo(**data)
+
+    @property
+    def wifi_interface(self) -> Interface:
+        """Get the active wireless interface."""
+        # In MeshMap it made sure the IP was set, not sure if that is necessary
+        iface_names = ["wlan0", "wlan1", "eth0.3975", "eth1.3975"]
+        for iface in iface_names:
+            if iface not in self.interfaces:
+                continue
+            return self.interfaces[iface]
+        else:
+            raise LookupError("Failed to identify wireless interface")
+
+    @property
+    def wifi_ip_address(self) -> str:
+        try:
+            return self.wifi_interface.ip_address or ""
+        except LookupError:
+            return ""
+
+    def __str__(self):
+        return f"{self.node_name} - {self.wifi_ip_address}"

@@ -96,6 +96,7 @@ def test_api_version_1_6(data_folder):
     assert system_info.active_tunnel_count == 0
     assert not system_info.tunnel_installed
     assert len(system_info.services) == 1
+    assert system_info.wifi_ip_address == "10.159.123.176"
 
 
 def test_api_version_1_7(data_folder):
@@ -121,3 +122,4 @@ def test_api_version_1_7(data_folder):
     assert system_info.up_time == "3 days, 19:44:05"
     assert system_info.active_tunnel_count == 0
     assert not system_info.tunnel_installed
+    assert system_info.wifi_ip_address == "10.106.204.11"
