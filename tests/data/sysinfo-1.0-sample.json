@@ -1,0 +1,43 @@
+{
+  "model": "Ubiquiti Rocket M",
+  "lon": "-6.193114",
+  "ssid": "ArednMeshNetwork",
+  "chanbw": "5",
+  "node": "N0CALL-Oceanside-West",
+  "channel": "-2",
+  "grid_square": "",
+  "lat": "-38.053394",
+  "board_id": "0xe1b2",
+  "api_version": "1.0",
+  "active_tunnel_count": "0",
+  "firmware_version": "3.16.1.0b01",
+  "tunnel_installed": "false",
+  "firmware_mfg": "AREDN",
+  "interfaces": [
+    {
+      "name": "eth0",
+      "ip": "10.49.212.68",
+      "mac": "8E:A3:88:0E:48:EC"
+    },
+    {
+      "name": "eth0.1",
+      "ip": "none",
+      "mac": "1B:54:EF:09:FF:2E"
+    },
+    {
+      "name": "eth0.2",
+      "ip": "10.16.166.141",
+      "mac": "33:A6:14:CE:C3:9E"
+    },
+    {
+      "name": "wlan0",
+      "ip": "10.68.206.23",
+      "mac": "A6:BE:F2:7E:24:47"
+    },
+    {
+      "name": "wlan0-1",
+      "ip": "none",
+      "mac": "10:54:0C:F0:62:E7"
+    }
+  ]
+}

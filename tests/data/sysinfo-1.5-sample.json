@@ -1,0 +1,51 @@
+{
+  "lon": "73.324469",
+  "sysinfo": {
+    "uptime": "0 days, 2:39:38",
+    "loads": [
+      0.2,
+      0.13,
+      0.04
+    ]
+  },
+  "interfaces": [
+    {
+      "name": "eth0.1",
+      "mac": "45:84:62:1E:11:EC"
+    },
+    {
+      "mac": "B9:73:C2:33:A9:8C",
+      "name": "wlan0",
+      "ip": "10.114.151.162"
+    },
+    {
+      "mac": "10:D4:13:7D:FA:B1",
+      "name": "eth0",
+      "ip": "10.206.233.110"
+    },
+    {
+      "mac": "8F:93:5A:FE:B8:27",
+      "name": "eth0.2",
+      "ip": "10.42.36.83"
+    }
+  ],
+  "api_version": "1.5",
+  "meshrf": {
+    "chanbw": "10",
+    "ssid": "ArednMeshNetwork",
+    "channel": "-2"
+  },
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": false
+  },
+  "lat": "-30.960324",
+  "grid_square": "DA05iv",
+  "node": "N0CALL-bm2-1",
+  "node_details": {
+    "firmware_version": "3.18.9.0",
+    "board_id": "0xe202",
+    "firmware_mfg": "AREDN",
+    "model": "Bullet M2 HP "
+  }
+}

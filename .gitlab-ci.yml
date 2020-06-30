@@ -1,5 +1,5 @@
 default:
-  image: python:3.8-slim
+  image: python:3.8
 
 stages:
   - test
@@ -54,6 +54,10 @@ mypy:
     reports:
       junit: pytest-report.xml
 
+pytest 3.7:
+  extends: .pytest
+  image: python:3.7
+
 pytest 3.8:
   extends: .pytest
-  image: python:3.8-slim
+  image: python:3.8

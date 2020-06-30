@@ -1,0 +1,61 @@
+{
+  "lon": "-88.329804",
+  "sysinfo": {
+    "uptime": "68 days, 5:06:46",
+    "loads": [
+      0.52,
+      0.41,
+      0.32
+    ]
+  },
+  "interfaces": [
+    {
+      "mac": "CF:F5:BB:C7:1D:40",
+      "name": "eth0.2",
+      "ip": "10.42.182.238"
+    },
+    {
+      "mac": "DA:6D:CF:49:F5:E1",
+      "name": "wlan0",
+      "ip": "10.253.167.186"
+    },
+    {
+      "mac": "26:C5:89:29:9E:35",
+      "name": "br-lan",
+      "ip": "10.91.142.130"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "eth0",
+      "mac": "D4:10:AE:92:A9:2B"
+    },
+    {
+      "name": "eth0.1",
+      "mac": "0A:89:E6:27:CF:B6"
+    }
+  ],
+  "api_version": "1.6",
+  "meshrf": {
+    "status": "on",
+    "chanbw": "5",
+    "ssid": "ArednMeshNetwork",
+    "channel": "-2"
+  },
+  "services_local": [],
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": false
+  },
+  "lat": "39.054886",
+  "grid_square": "KB78nh",
+  "node": "N0CALL-N0CALL-ALRUZ",
+  "node_details": {
+    "firmware_version": "3.19.3.0",
+    "board_id": "0xe1b2",
+    "firmware_mfg": "AREDN",
+    "model": "Rocket M2 "
+  }
+}

@@ -5,16 +5,19 @@ Application for mapping and displaying displaying information about an
 [AREDN](https://arednmesh.org/) Mesh Network, based on KG6WXC's
 [MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap).
 
+
 Goals
 -----
 
 This project started because I wanted to play with the `asyncio` library in
 Python and crawling potentially slow AREDN mesh networks seemed like a good
 opportunity.  Thus I'm building off the work of KG6WXC's
-[MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap), leveraging the database
-design he has so that if this works and performs well it could be an alternate
-implementation of the network poller even if the rest of my goals do not get
-completed.
+[MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap), rather than re-inventing
+the wheel.  My initial goal was to keep the same database design (so this
+could be a drop-in replacement for the mapper) but I've decided to make some
+changes that I think improvements (such as moving manually set locations to
+their own table so the mapper can always write its table and the node data
+is not lost).
 
 **Other Goals:**
 
