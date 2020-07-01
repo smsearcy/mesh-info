@@ -57,9 +57,9 @@ This project started because I wanted to play with the `asyncio` library in Pyth
 and crawling potentially slow AREDN mesh networks seemed like a good opportunity.
 Thus I'm building off the work of KG6WXC's [MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap),
 rather than re-inventing the wheel.
-My initial goal was to keep the same database design
+My initial goal is to keep the same database design
 (so this could be a drop-in replacement for the mapper)
-but I've decided to make some changes that I think improvements
+but there are some future changes I'm thinking of as well
 (such as tracking old/inactive nodes as a status within the single table).
 
 **Other Goals:**

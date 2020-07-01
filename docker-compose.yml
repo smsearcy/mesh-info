@@ -1,0 +1,9 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:11
+    environment:
+      POSTGRES_PASSWORD: pyMeshMap
+    ports:
+      # this is useful for local development
+      - 5432:5432
