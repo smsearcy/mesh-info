@@ -1,4 +1,4 @@
-"""Parsing information from AREDN nodes with the Marshmallow library.
+"""Parses JSON information from AREDN nodes into an object.
 
 Defines "schema" classes modeling the information returned by `sysinfo.json` and
 returns that information as the dataclass `SystemInfo`, so the primary function
@@ -13,7 +13,6 @@ import typing as t
 
 import attr
 from loguru import logger
-from marshmallow import EXCLUDE, Schema, fields, post_load
 
 
 def load_node_data(json_data: t.Dict) -> t.Optional[SystemInfo]:
@@ -24,13 +23,45 @@ def load_node_data(json_data: t.Dict) -> t.Optional[SystemInfo]:
 
     """
     try:
-        system_info: SystemInfo = SystemInfoParser(unknown=EXCLUDE).load(json_data)
+        system_info = SystemInfo.from_json(json_data)
     except Exception as e:
         # `logger.exception()` gives a lot more information, but will it be too much?
-        logger.error("Failed to parse sysinfo.json data: {!r}", e)
+        logger.exception("Failed to parse sysinfo.json data: {!r}", e)
         return None
 
     return system_info
+
+
+@attr.s(auto_attribs=True, slots=True)
+class Interface:
+    """Data class to represent the individual interfaces on a node."""
+
+    mac_address: str
+    name: str
+    ip_address: t.Optional[str] = None
+
+    @classmethod
+    def from_json(cls, raw_data: t.Dict[str, str]) -> Interface:
+        return cls(
+            mac_address=raw_data["mac"],
+            name=raw_data["name"],
+            ip_address=raw_data.get("ip") if raw_data.get("ip") != "none" else None,
+        )
+
+
+@attr.s(auto_attribs=True, slots=True)
+class Service:
+    """Data class to represent the individual services on a node."""
+
+    name: str
+    protocol: str
+    link: str
+
+    @classmethod
+    def from_json(cls, raw_data: t.Dict[str, str]) -> Service:
+        return cls(
+            name=raw_data["name"], protocol=raw_data["protocol"], link=raw_data["link"]
+        )
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -61,160 +92,92 @@ class SystemInfo:
     firmware_manufacturer: str
     active_tunnel_count: int
     tunnel_installed: bool
-    link_info: t.Dict
-    services: t.List
+    services: t.List[Service]
     description: str = ""
     status: t.Optional[str] = None
     frequency: t.Optional[str] = None
     up_time: t.Optional[str] = None
     load_averages: t.Optional[t.List[float]] = None
 
+    @classmethod
+    def from_json(cls, raw_data: t.Dict[str, t.Any]) -> SystemInfo:
+        interfaces = [
+            Interface.from_json(iface_data) for iface_data in raw_data["interfaces"]
+        ]
 
-@attr.s(auto_attribs=True, slots=True)
-class Interface:
-    """Data class to represent the individual interfaces on a node."""
-
-    mac_address: str
-    name: str
-    ip_address: t.Optional[str] = None
-
-
-class InterfaceParser(Schema):
-    """Marshmallow schema to load the information in the 'interfaces' list."""
-
-    mac_address = fields.String(data_key="mac", required=True)
-    name = fields.String(required=True)
-    ip_address = fields.Method(deserialize="load_ip_address", data_key="ip")
-
-    def load_ip_address(self, value):
-        # API 1.0 had "ip": "none" so we want to drop that
-        return None if value == "none" else value
-
-    @post_load
-    def to_object(self, data, **kwargs):
-        return Interface(**data)
-
-
-class SysInfoParser(Schema):
-    """Marshmallow schema to load the 'sysinfo' information."""
-
-    up_time = fields.String(data_key="uptime")
-    load_averages = fields.List(fields.Float, data_key="loads")
-
-
-class MeshRfParser(Schema):
-    """Marshmallow schema to load the 'meshrf' information."""
-
-    ssid = fields.String(required=True)
-    channel = fields.String()
-    channel_bandwidth = fields.String(data_key="chanbw")
-    status = fields.String()
-    frequency = fields.String(data_key="freq")
-
-
-class NodeDetailsParser(Schema):
-    """Marshmallow schema to load the 'node_details' information."""
-
-    description = fields.String()
-    firmware_version = fields.String()
-    firmware_manufacturer = fields.String(data_key="firmware_mfg")
-    model = fields.String()
-    board_id = fields.String()
-
-
-class TunnelParser(Schema):
-    """Marshmallow schema to load the 'tunnels' information."""
-
-    active_tunnel_count = fields.Integer()
-    tunnel_installed = fields.Boolean()
-
-
-class ServicesParser(Schema):
-    """Marshmallow schema to load the 'services' information."""
-
-    # TODO: create data class?
-
-    name = fields.String()
-    protocol = fields.String()
-    link = fields.String()
-
-
-class SystemInfoParser(Schema):
-    """Marshmallow schema to validate/load output of `sysinfo.json`.
-
-    Based on samples from API versions 1.0, 1.5 & 1.7
-
-    """
-
-    node_name = fields.String(data_key="node", required=True)
-    api_version = fields.String(required=True)
-    grid_square = fields.String()
-    latitude = fields.Method(deserialize="load_coordinate", data_key="lat")
-    longitude = fields.Method(deserialize="load_coordinate", data_key="lon")
-    interfaces = fields.List(fields.Nested(InterfaceParser))
-    link_info = fields.Dict(missing=dict)
-    services = fields.List(
-        fields.Nested(ServicesParser, unknown=EXCLUDE),
-        data_key="services_local",
-        missing=list,
-    )
-
-    # Nested dictionaries that need to be flatted in newer versions
-    meshrf = fields.Nested(MeshRfParser, missing=dict, unknown=EXCLUDE)
-    node_details = fields.Nested(NodeDetailsParser, missing=dict, unknown=EXCLUDE)
-    sysinfo = fields.Nested(SysInfoParser, missing=dict, unknown=EXCLUDE)
-    tunnels = fields.Nested(TunnelParser, missing=dict, unknown=EXCLUDE)
-
-    # Older APIs had some fields at the root level
-    # (`to_object()` will overwrite these blank values with the above nested values)
-    ssid = fields.String()
-    channel = fields.String()
-    channel_bandwidth = fields.String(data_key="chanbw")
-    model = fields.String()
-    board_id = fields.String()
-    firmware_version = fields.String()
-    firmware_manufacturer = fields.String(data_key="firmware_mfg")
-    active_tunnel_count = fields.Integer()
-    tunnel_installed = fields.Boolean()
-
-    def load_coordinate(self, value):
-        """Parse latitude/longitude values.
-
-        Cannot use `mashmallow.fields.Float` because that chokes on an empty string.
-
-        """
-        if not value:
-            return None
-        return float(value)
-
-    @post_load
-    def to_object(self, data: t.Dict, **kwargs):
-        """Create the `SystemInfo` dataclass from the parsed information.
-
-        Because some values are nested in dictionaries in the newer firmware we need
-        to "flatten" those out by copying those values (if set) into the main
-        dictionary.
-
-        This method is automatically called by Marshmallow when we call
-        `SystemInfoParser.load()`.
-
-        """
-
-        # break out the nested dictionaries, but only update with known values
-        keys_to_flatten = ["node_details", "meshrf", "sysinfo", "tunnels"]
-
-        for key in keys_to_flatten:
-            nested_dict = data.pop(key)
-            data.update(
-                {key: value for key, value in nested_dict.items() if value is not None}
-            )
-
-        # convert interfaces from list to dictionary indexed by interface name
-        data["interfaces"] = {
-            interface.name: interface for interface in data["interfaces"]
+        data = {
+            "node_name": raw_data["node"],
+            "api_version": raw_data["api_version"],
+            "grid_square": raw_data["grid_square"],
+            "latitude": float(raw_data["lat"]) if raw_data["lat"] else None,
+            "longitude": float(raw_data["lon"]) if raw_data["lon"] else None,
+            "interfaces": {iface.name: iface for iface in interfaces},
+            "services": [
+                Service.from_json(service_data)
+                for service_data in raw_data.get("services_local", [])
+            ],
         }
-        if "description" in data:
-            # found an example where description had HTML entities
-            data["description"] = html.unescape(data["description"])
+
+        if "sysinfo" in raw_data:
+            data["up_time"] = raw_data["sysinfo"]["uptime"]
+            data["load_averages"] = [
+                float(load) for load in raw_data["sysinfo"]["loads"]
+            ]
+
+        if "meshrf" in raw_data:
+            meshrf = raw_data["meshrf"]
+            data["ssid"] = meshrf["ssid"]
+            data["channel"] = meshrf["channel"]
+            data["channel_bandwidth"] = meshrf["chanbw"]
+            data["status"] = meshrf.get("status", "on")
+            data["frequency"] = meshrf.get("freq")
+        else:
+            data["ssid"] = raw_data["ssid"]
+            data["channel"] = raw_data["channel"]
+            data["channel_bandwidth"] = raw_data["chanbw"]
+            data["status"] = "on"
+
+        if "node_details" in raw_data:
+            details = raw_data["node_details"]
+            data["description"] = html.unescape(details.get("description", ""))
+            data["firmware_version"] = details["firmware_version"]
+            data["firmware_manufacturer"] = details["firmware_mfg"]
+            data["model"] = details["model"]
+            data["board_id"] = details["model"]
+        else:
+            data["firmware_version"] = raw_data["firmware_version"]
+            data["firmware_manufacturer"] = raw_data["firmware_mfg"]
+            data["model"] = raw_data["model"]
+            data["board_id"] = raw_data["model"]
+
+        if "tunnels" in raw_data:
+            tunnels = raw_data["tunnels"]
+            data["active_tunnel_count"] = int(tunnels["active_tunnel_count"])
+            data["tunnel_installed"] = bool(tunnels["tunnel_installed"])
+        else:
+            data["active_tunnel_count"] = int(raw_data["active_tunnel_count"])
+            data["tunnel_installed"] = bool(raw_data["tunnel_installed"])
 
         return SystemInfo(**data)
+
+    @property
+    def wifi_interface(self) -> Interface:
+        """Get the active wireless interface."""
+        # In MeshMap it made sure the IP was set, not sure if that is necessary
+        iface_names = ["wlan0", "wlan1", "eth0.3975", "eth1.3975"]
+        for iface in iface_names:
+            if iface not in self.interfaces:
+                continue
+            return self.interfaces[iface]
+        else:
+            raise LookupError("Failed to identify wireless interface")
+
+    @property
+    def wifi_ip_address(self) -> str:
+        try:
+            return self.wifi_interface.ip_address or ""
+        except LookupError:
+            return ""
+
+    def __str__(self):
+        return f"{self.node_name} - {self.wifi_ip_address}"
