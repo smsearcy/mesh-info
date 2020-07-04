@@ -1,5 +1,7 @@
 """Collect data from all the nodes in an AREDN network."""
 
+from __future__ import annotations
+
 import asyncio
 import enum
 import json
@@ -7,12 +9,11 @@ import re
 import time
 import typing as t
 from collections import defaultdict
-from ipaddress import IPv4Address
 
 import aiohttp
 from loguru import logger
 
-from . import models, parser
+from . import parser
 
 # TODO: make this a configuration variable
 HTTP_CONNECTION_TIMEOUT = 30
@@ -24,12 +25,20 @@ class NodeError(enum.Enum):
     CONNECTION_ERROR = enum.auto()
 
 
-async def map_network(host_name: str):
-    """Map the AREDN mesh network."""
+class NodeResult(t.NamedTuple):
+    ip_address: str
+    info: t.Optional[parser.SystemInfo]
+    error: t.Optional[NodeError]
+    raw_response: t.Optional[str]
 
-    start_time = time.perf_counter()
 
-    # TODO: add semaphore to cap tasks?  (will require passing to `poll_node()`)
+async def network_nodes(
+    host_name: str, *, save_errors: bool = False
+) -> t.List[parser.SystemInfo]:
+    """Get information for all the active nodes on the network."""
+
+    start_time = time.monotonic()
+
     tasks: t.List[t.Awaitable] = []
     timeout = aiohttp.ClientTimeout(total=HTTP_CONNECTION_TIMEOUT)
     async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -43,21 +52,35 @@ async def map_network(host_name: str):
             *tasks, return_exceptions=True
         )
 
+    crawler_finished = time.monotonic()
+    logger.info(f"Querying nodes took {crawler_finished - start_time:.2f} seconds")
+
+    nodes = []
+    count: t.DefaultDict[str, int] = defaultdict(int)
     for node in node_details:
+        count["total"] += 1
         if isinstance(node, Exception):
-            print(repr(node))
+            # this shouldn't happen but just in case
+            count["exceptions"] += 1
+            logger.error("Unhandled exception polling node: {}", node)
             continue
-        print(node.info)
         if node.error:
-            print(f"Saving results for {node.ip_address} due to an error...")
-            with open(f"sysinfo-{node.ip_address}.json", "w") as f:
-                f.write(node.raw_response)
+            # this error would have already been logged
+            count["errors (total)"] += 1
+            count[f"errors ({node.error!s})"] += 1
+            if save_errors and node.raw_response:
+                logger.info(f"Saving results for {node.ip_address} due to an error...")
+                with open(f"{node.ip_address}-response.txt", "w") as f:
+                    f.write(node.raw_response)
+            continue
+        if not node.info:
+            count["missing data"] += 1
+            logger.warning("Node information for {} missing", node.ip_address)
+            continue
+        count["successes"] += 1
+        nodes.append(node.info)
 
-    crawler_finished = time.perf_counter()
-
-    print(f"Querying nodes took {crawler_finished - start_time:.2f} seconds")
-
-    return
+    return nodes
 
 
 async def _query_olsr(host_name: str, port: int = 2004) -> t.AsyncIterator[str]:
@@ -76,7 +99,12 @@ async def _query_olsr(host_name: str, port: int = 2004) -> t.AsyncIterator[str]:
 
     """
     # this can raise subclasses of OSError
-    reader, writer = await asyncio.open_connection(host_name, port)
+    try:
+        reader, writer = await asyncio.open_connection(host_name, port)
+    except OSError as e:
+        logger.error("Failed to connect to {}:{} ({!s})", host_name, port, e)
+        return
+
     while True:
         line_bytes = await reader.readline()
         if not line_bytes:
@@ -89,7 +117,7 @@ async def _query_olsr(host_name: str, port: int = 2004) -> t.AsyncIterator[str]:
 
 async def get_nodes(
     olsr_records: t.AsyncIterable[str], *, ignore_hosts: t.Set[str] = None
-) -> t.AsyncIterator[IPv4Address]:
+) -> t.AsyncIterator[str]:
     """Process OLSR records, yielding the IP addresses of nodes in the network.
 
     Based on `wxc_netcat()` in MeshMap the only lines we are interested in (when get the
@@ -100,7 +128,7 @@ async def get_nodes(
 
     """
     ignore_hosts = ignore_hosts or set()
-    count = defaultdict(int)
+    count: t.DefaultDict[str, int] = defaultdict(int)
     # node could show up multiple times so save the ones we've seen
     nodes_returned = set()
     node_regex = re.compile(r"^\"(\d{2}\.\d{1,3}\.\d{1,3}\.\d{1,3})\" -> \"\d+")
@@ -112,7 +140,7 @@ async def get_nodes(
         if not match:
             count["lines skipped"] += 1
             continue
-        logger.debug(line)
+        logger.trace(line)
         node_address = match.group(1)
         if node_address in ignore_hosts:
             count["ignored node"] += 1
@@ -122,22 +150,15 @@ async def get_nodes(
             continue
         nodes_returned.add(node_address)
         count["nodes returned"] += 1
-        yield IPv4Address(node_address)
+        yield node_address
 
     logger.info("OLSR Statistics: {}", dict(count))
 
     return
 
 
-class NodeResult(t.NamedTuple):
-    ip_address: IPv4Address
-    info: t.Optional[parser.SystemInfo]
-    error: t.Optional[NodeError]
-    raw_response: t.Optional[str]
-
-
 async def poll_node(
-    session: aiohttp.ClientSession, node_address: IPv4Address, *, options: t.Dict = None
+    session: aiohttp.ClientSession, node_address: str, *, options: t.Dict = None
 ) -> NodeResult:
     """Query a node to get the parsed information.
 

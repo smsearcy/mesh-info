@@ -1,0 +1,75 @@
+{
+  "lon": "67.757344",
+  "sysinfo": {
+    "uptime": "106 days, 5:48:05",
+    "loads": [
+      0.01,
+      0.03,
+      0
+    ]
+  },
+  "interfaces": [
+    {
+      "mac": "1F:1B:8D:DE:D1:05",
+      "name": "br-lan",
+      "ip": "10.59.26.228"
+    },
+    {
+      "name": "wlan0",
+      "mac": "F3:9F:18:3E:E0:8D"
+    },
+    {
+      "mac": "30:21:2F:02:03:EB",
+      "name": "wlan1",
+      "ip": "10.66.203.27"
+    },
+    {
+      "mac": "31:23:8B:74:19:C7",
+      "name": "eth1.2",
+      "ip": "10.53.81.40"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "eth1.0",
+      "mac": "33:1A:AC:7D:00:2A"
+    },
+    {
+      "name": "eth0",
+      "mac": "55:EA:02:04:81:D5"
+    },
+    {
+      "name": "eth1",
+      "mac": "50:BC:1C:9B:66:6D"
+    }
+  ],
+  "api_version": "1.6",
+  "meshrf": {
+    "status": "on",
+    "chanbw": "10",
+    "ssid": "ArednMeshNetwork",
+    "channel": "-2"
+  },
+  "services_local": [
+    {
+      "name": "N0CALL Camera",
+      "protocol": "tcp",
+      "link": "http://Camera:80/Streaming/channels/1/httpPreview"
+    }
+  ],
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": false
+  },
+  "lat": "28.356868",
+  "grid_square": "LB69yc",
+  "node": "N0CALL-HAPAC-East-Town",
+  "node_details": {
+    "firmware_version": "3.19.3.0",
+    "board_id": "0x0000",
+    "firmware_mfg": "AREDN",
+    "model": "MikroTik RouterBOARD 952Ui-5ac2nD "
+  }
+}

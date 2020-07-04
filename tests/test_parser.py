@@ -25,6 +25,9 @@ def test_parse_all_sysinfo_examples(filename):
     system_info = parser.load_node_data(json_data)
     assert system_info is not None
 
+    # Make sure we identified the wireless IP address
+    assert system_info.wifi_ip_address != ""
+
 
 def test_api_version_1_0(data_folder):
     """Test parsing API version 1.0"""

@@ -161,12 +161,21 @@ class SystemInfo:
         return SystemInfo(**data)
 
     @property
+    def lan_ip_address(self) -> str:
+        iface_names = ["br-lan", "eth0"]
+        for iface in iface_names:
+            if iface not in self.interfaces or not self.interfaces[iface].ip_address:
+                continue
+            return self.interfaces[iface].ip_address or ""
+        return ""
+
+    @property
     def wifi_interface(self) -> Interface:
         """Get the active wireless interface."""
-        # In MeshMap it made sure the IP was set, not sure if that is necessary
+        # is it worth using cached_property?
         iface_names = ["wlan0", "wlan1", "eth0.3975", "eth1.3975"]
         for iface in iface_names:
-            if iface not in self.interfaces:
+            if iface not in self.interfaces or not self.interfaces[iface].ip_address:
                 continue
             return self.interfaces[iface]
         else:
@@ -176,6 +185,13 @@ class SystemInfo:
     def wifi_ip_address(self) -> str:
         try:
             return self.wifi_interface.ip_address or ""
+        except LookupError:
+            return ""
+
+    @property
+    def wifi_mac_address(self) -> str:
+        try:
+            return self.wifi_interface.mac_address or ""
         except LookupError:
             return ""
 
