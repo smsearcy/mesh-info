@@ -8,11 +8,6 @@ import pytest
 from pymeshmap import parser
 
 
-@pytest.fixture(scope="module")
-def data_folder() -> Path:
-    return Path(__file__).parent / "data"
-
-
 @pytest.mark.parametrize(
     "filename",
     list(Path(__file__).parent.glob("data/sysinfo-*.json")),

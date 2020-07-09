@@ -202,3 +202,56 @@ async def poll_node(
         return NodeResult(node_address, None, NodeError.PARSE_ERROR, response_text)
 
     return NodeResult(node_address, node_info, None, response_text)
+
+
+async def get_links(
+    olsr_records: t.AsyncIterable[str], *, ignore_hosts: t.Set[str] = None
+) -> t.AsyncIterator[str]:
+    """Process OLSR records, yielding the link information between nodes in the network.
+
+    Based on `wxc_netcat()` in MeshMap the only lines we are interested in
+    (when get the node list)
+    are the ones that look like this:
+
+        "10.32.66.190" -> "10.80.213.95"[label="1.000"];
+
+    Records where the second address is in CIDR notation and the label is "HNA" should
+    be excluded.
+
+    """
+    ignore_hosts = ignore_hosts or set()
+    count: t.DefaultDict[str, int] = defaultdict(int)
+    # apparently there have been issues with duplicate links
+    # so track the ones that have been returned
+    links_returned = set()
+    link_regex = re.compile(
+        r"^\"(10\.\d{1,3}\.\d{1,3}\.\d{1,3})\" -> "
+        r"\"(10\.\d{1,3}\.\d{1,3}\.\d{1,3})\"\[label=\"(.+?)\"\];"
+    )
+
+    async for line in olsr_records:
+        count["lines processed"] += 1
+
+        match = link_regex.match(line)
+        if not match:
+            count["lines skipped"] += 1
+            continue
+        logger.trace(line)
+        source_node = match.group(1)
+        destination_node = match.group(2)
+        label = match.group(3)
+        if source_node in ignore_hosts or destination_node in ignore_hosts:
+            count["ignored link"] += 1
+            continue
+        if (source_node, destination_node) in links_returned:
+            logger.debug("Duplicate link: {}", (source_node, destination_node, label))
+            count["duplicate link"] += 1
+            continue
+        links_returned.add((source_node, destination_node))
+        count["links returned"] += 1
+        # FIXME: this should return tuple or data class
+        yield (source_node, destination_node, label)
+
+    logger.info("OLSR Statistics: {}", dict(count))
+
+    return
