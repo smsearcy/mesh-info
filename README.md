@@ -26,12 +26,12 @@ $ poetry run pymeshmap [command]
 ```
 
 The `--no-dev` option assumes you just want to use **pyMeshMap**.
-If you want to contribute then leave that off to get extra dependencies for test for testing.
+If you want to contribute then leave that off to get extra dependencies for development and testing.
 
 Commands
 --------
 
-## network-report
+### network-report
 ```shell script
 $ poetry run pymeshmap network-report [-v] [--save-errors] [--path=.] [HOSTNAME]
 ```
