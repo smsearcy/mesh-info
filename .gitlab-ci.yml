@@ -4,14 +4,6 @@ default:
 stages:
   - test
 
-# run Code Quality checks
-include:
-  - template: Code-Quality.gitlab-ci.yml
-
-code_quality:
-  artifacts:
-    paths: [gl-code-quality-report.json]
-
 pre-commit:
   stage: test
   image: python:3.8
