@@ -1,16 +1,18 @@
-"""Test parsing of AREDN node data."""
+"""Test network crawling functionality."""
 
 import json
 from pathlib import Path
 
 import pytest
 
-from pymeshmap import parser
+from pymeshmap import crawler
 
 
-@pytest.fixture(scope="module")
-def data_folder() -> Path:
-    return Path(__file__).parent / "data"
+async def olsr_records(filename):
+    """Simulate `_query_olsr()` with data from a file."""
+    with open(filename, "r") as f:
+        for line in f:
+            yield line.rstrip()
 
 
 @pytest.mark.parametrize(
@@ -22,8 +24,11 @@ def test_parse_all_sysinfo_examples(filename):
     """Simply validate that all sample 'sysinfo.json' files parse without errors."""
     with open(filename, "r") as f:
         json_data = json.load(f)
-    system_info = parser.load_node_data(json_data)
+    system_info = crawler._load_node_data(json_data)
     assert system_info is not None
+
+    # Make sure we identified the wireless IP address
+    assert system_info.wifi_ip_address != ""
 
 
 def test_api_version_1_0(data_folder):
@@ -31,7 +36,7 @@ def test_api_version_1_0(data_folder):
 
     with open(data_folder / "sysinfo-1.0-sample.json", "r") as f:
         json_data = json.load(f)
-    system_info = parser.load_node_data(json_data)
+    system_info = crawler._load_node_data(json_data)
 
     # I could just construct a second object but I'm not checking everything
     assert system_info.node_name == "N0CALL-Oceanside-West"
@@ -44,6 +49,7 @@ def test_api_version_1_0(data_folder):
     assert system_info.channel == "-2"
     assert system_info.channel_bandwidth == "5"
     assert system_info.api_version == "1.0"
+    assert not system_info.tunnel_installed
 
 
 def test_api_version_1_5(data_folder):
@@ -51,7 +57,7 @@ def test_api_version_1_5(data_folder):
 
     with open(data_folder / "sysinfo-1.5-sample.json", "r") as f:
         json_data = json.load(f)
-    system_info = parser.load_node_data(json_data)
+    system_info = crawler._load_node_data(json_data)
 
     # I could just construct a second object but I'm not checking everything
     assert system_info.node_name == "N0CALL-bm2-1"
@@ -76,7 +82,7 @@ def test_api_version_1_6(data_folder):
 
     with open(data_folder / "sysinfo-1.6-services.json", "r") as f:
         json_data = json.load(f)
-    system_info = parser.load_node_data(json_data)
+    system_info = crawler._load_node_data(json_data)
 
     # I could just construct a second object but I'm not checking everything
     assert system_info.node_name == "N0CALL-NSM2-3-East-Hills"
@@ -97,6 +103,7 @@ def test_api_version_1_6(data_folder):
     assert not system_info.tunnel_installed
     assert len(system_info.services) == 1
     assert system_info.wifi_ip_address == "10.159.123.176"
+    assert system_info.band == "2GHz"
 
 
 def test_api_version_1_7(data_folder):
@@ -104,7 +111,7 @@ def test_api_version_1_7(data_folder):
 
     with open(data_folder / "sysinfo-1.7-link_info.json", "r") as f:
         json_data = json.load(f)
-    system_info = parser.load_node_data(json_data)
+    system_info = crawler._load_node_data(json_data)
 
     # I could just construct a second object but I'm not checking everything
     assert system_info.node_name == "N0CALL-VC-RF-5G"
@@ -123,3 +130,47 @@ def test_api_version_1_7(data_folder):
     assert system_info.active_tunnel_count == 0
     assert not system_info.tunnel_installed
     assert system_info.wifi_ip_address == "10.106.204.11"
+    assert system_info.band == "5GHz"
+
+
+@pytest.mark.asyncio
+async def test_get_nodes(data_folder):
+    """Verify some basic information about `crawler.get_nodes()`"""
+    records = olsr_records(data_folder / "olsr-dump.txt")
+    nodes = [node async for node in crawler._get_node_addresses(records)]
+
+    assert len(nodes) == 23
+    assert nodes[0] == "10.122.183.8"
+
+
+@pytest.mark.asyncio
+async def test_get_nodes_unique(data_folder):
+    """Verify that the node parser is only returning unique nodes."""
+    records = olsr_records(data_folder / "olsr-dump.txt")
+    nodes = [node async for node in crawler._get_node_addresses(records)]
+
+    assert len(set(nodes)) == len(nodes)
+
+
+@pytest.mark.asyncio
+async def test_get_nodes_ignore_hosts(data_folder):
+    """Verify that ignored hosts are excluded from the node list."""
+    records = olsr_records(data_folder / "olsr-dump.txt")
+    nodes = {
+        node
+        async for node in crawler._get_node_addresses(
+            records, addresses_to_ignore={"10.122.183.8"}
+        )
+    }
+
+    assert "10.122.183.8" not in nodes
+    assert len(nodes) == 22
+
+
+@pytest.mark.asyncio
+async def test_get_link_info(data_folder):
+    records = olsr_records(data_folder / "olsr-dump.txt")
+    links = [link async for link in crawler._get_node_links(records)]
+
+    assert len(links) == 96
+    assert links[0] == crawler.LinkInfo("10.22.15.88", "10.98.33.29", 2.986)
