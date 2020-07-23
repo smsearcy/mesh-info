@@ -133,6 +133,27 @@ def test_api_version_1_7(data_folder):
     assert system_info.band == "5GHz"
 
 
+def test_tunnel_only_1_6(data_folder):
+    """Load information from a "tunnel" node, no WiFi and mulitple tunnels."""
+
+    with open(data_folder / "sysinfo-1.6-tunnel-only.json", "r") as f:
+        json_data = json.load(f)
+    system_info = crawler._load_node_data(json_data)
+
+    # I could just construct a second object but I'm not checking everything
+    assert system_info.node_name == "N0CALL-6-HILO-HAP"
+    assert len(system_info.interfaces) == 20
+    assert system_info.interfaces["eth0"].ip_address == "192.168.0.50"
+    assert system_info.status == "off"
+    assert system_info.ssid == ""
+    assert system_info.api_version == "1.6"
+    assert len(system_info.load_averages) == 3
+    assert system_info.tunnel_installed
+    assert system_info.active_tunnel_count == 11
+    assert system_info.wifi_ip_address == "10.154.255.82"
+    assert system_info.lan_ip_address == "10.215.250.145"
+
+
 @pytest.mark.asyncio
 async def test_get_nodes(data_folder):
     """Verify some basic information about `crawler.get_nodes()`"""
