@@ -618,6 +618,11 @@ async def _get_node_addresses(
         yield node_address
 
     logger.info("OLSR Node Statistics: {}", dict(count))
+    if count["nodes returned"] == 0:
+        logger.warning(
+            "Failed to find any nodes in {:,d} lines of OLSR data.",
+            count["lines processed"],
+        )
 
     return
 
@@ -725,5 +730,10 @@ async def _get_node_links(olsr_records: AsyncIterable[str]) -> AsyncIterator[Lin
         yield LinkInfo.from_strings(source_node, destination_node, label)
 
     logger.info("OLSR Link Statistics: {}", dict(count))
+    if count["links returned"] == 0:
+        logger.warning(
+            "Failed to find any links in {:,d} lines of OLSR data.",
+            count["lines processed"],
+        )
 
     return
