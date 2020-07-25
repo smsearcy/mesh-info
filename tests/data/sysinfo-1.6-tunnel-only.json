@@ -1,0 +1,131 @@
+{
+  "lon": "7.111095",
+  "sysinfo": {
+    "uptime": "5 days, 15:03:44",
+    "loads": [
+      0.06,
+      0.31,
+      0.4
+    ]
+  },
+  "interfaces": [
+    {
+      "name": "tun55",
+      "ip": "172.31.77.18"
+    },
+    {
+      "mac": "40:DD:9E:A6:38:E1",
+      "name": "br-lan",
+      "ip": "10.215.250.145"
+    },
+    {
+      "name": "tun62",
+      "ip": "172.31.228.93"
+    },
+    {
+      "name": "tun50",
+      "ip": "172.31.76.254"
+    },
+    {
+      "mac": "40:DD:9E:A6:38:E1",
+      "name": "eth1.2",
+      "ip": "10.155.255.82"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "mac": "B5:00:1F:AC:F0:4B",
+      "name": "eth0",
+      "ip": "192.168.0.50"
+    },
+    {
+      "name": "tun61",
+      "ip": "172.31.80.49"
+    },
+    {
+      "name": "wlan0",
+      "mac": "63:70:94:98:BA:06"
+    },
+    {
+      "name": "tun53",
+      "ip": "172.31.77.10"
+    },
+    {
+      "name": "tun58",
+      "ip": "172.31.77.30"
+    },
+    {
+      "name": "tun52",
+      "ip": "172.31.77.6"
+    },
+    {
+      "mac": "40:DD:9E:A6:38:E1",
+      "name": "eth1.3975",
+      "ip": "10.154.255.82"
+    },
+    {
+      "name": "tun60",
+      "ip": "172.31.77.29"
+    },
+    {
+      "name": "tun54",
+      "ip": "172.31.77.14"
+    },
+    {
+      "name": "tun51",
+      "ip": "172.31.77.2"
+    },
+    {
+      "name": "tun57",
+      "ip": "172.31.77.26"
+    },
+    {
+      "name": "eth1.0",
+      "mac": "40:DD:9E:A6:38:E1"
+    },
+    {
+      "name": "wlan1",
+      "mac": "22:88:D4:58:50:AD"
+    },
+    {
+      "name": "eth1",
+      "mac": "40:DD:9E:A6:38:E1"
+    }
+  ],
+  "api_version": "1.6",
+  "meshrf": {
+    "status": "off"
+  },
+  "services_local": [
+    {
+      "name": "N0CALL-Allmosn",
+      "protocol": "tcp",
+      "link": "http://N0CALL-Allstar:80/allmon"
+    },
+    {
+      "name": "N0CALL-Supermon",
+      "protocol": "tcp",
+      "link": "http://N0CALL-Allstar:80/supermon"
+    },
+    {
+      "name": "N0CALL N0CALL PO",
+      "protocol": "tcp",
+      "link": "wl2k://N0CALL-WL2K-GW:8772/"
+    }
+  ],
+  "tunnels": {
+    "active_tunnel_count": "11",
+    "tunnel_installed": "true"
+  },
+  "lat": "-87.174818",
+  "grid_square": "",
+  "node": "N0CALL-6-HILO-HAP",
+  "node_details": {
+    "firmware_version": "3.19.3.0",
+    "board_id": "0x0000",
+    "firmware_mfg": "AREDN",
+    "model": "MikroTik RouterBOARD RB952Ui-5ac2nD "
+  }
+}

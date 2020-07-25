@@ -212,15 +212,16 @@ class NodeResult(NamedTuple):
 class Interface:
     """Data class to represent the individual interfaces on a node."""
 
-    mac_address: str
     name: str
+    mac_address: str
     ip_address: Optional[str] = None
 
     @classmethod
     def from_json(cls, raw_data: Dict[str, str]) -> Interface:
         return cls(
-            mac_address=raw_data["mac"],
             name=raw_data["name"],
+            # some tunnel interfaces lack a MAC address
+            mac_address=raw_data.get("mac", ""),
             ip_address=raw_data.get("ip") if raw_data.get("ip") != "none" else None,
         )
 
@@ -251,6 +252,13 @@ class SystemInfo:
     The network interfaces are represented by a dictionary,
     indexed by the interface name.
 
+    For string values, missing data is typically stored as an empty string,
+    particularly if an empty string would not be a valid value (e.g. SSID).
+    If there is a situation in which missing/unknown values need to be distinguished
+    from empty strings then `None` would be appropriate.
+    In a case like node description it is an optional value
+    so I see no need for "Unknown"/`None`.
+
     """
 
     node_name: str = attr.ib()
@@ -269,10 +277,10 @@ class SystemInfo:
     active_tunnel_count: int = attr.ib()
     tunnel_installed: bool = attr.ib()
     services: List[Service] = attr.ib()
+    status: str = attr.ib()
     description: str = attr.ib(default="")
-    status: Optional[str] = attr.ib(default=None)
-    frequency: Optional[str] = attr.ib(default=None)
-    up_time: Optional[str] = attr.ib(default=None)
+    frequency: str = attr.ib(default="")
+    up_time: str = attr.ib(default="")
     load_averages: Optional[List[float]] = attr.ib(default=None)
 
     @property
@@ -307,6 +315,8 @@ class SystemInfo:
 
     @property
     def band(self) -> str:
+        if self.status != "on":
+            return ""
         if self.board_id in NINE_HUNDRED_MHZ_BOARDS:
             return "900MHz"
         elif self.channel in TWO_GHZ_CHANNELS:
@@ -496,11 +506,12 @@ def _load_node_data(json_data: Dict[str, Any]) -> SystemInfo:
 
     if "meshrf" in json_data:
         meshrf = json_data["meshrf"]
-        data["ssid"] = meshrf["ssid"]
-        data["channel"] = meshrf["channel"]
-        data["channel_bandwidth"] = meshrf["chanbw"]
         data["status"] = meshrf.get("status", "on")
-        data["frequency"] = meshrf.get("freq")
+        #
+        data["ssid"] = meshrf.get("ssid", "")
+        data["channel"] = meshrf.get("channel", "")
+        data["channel_bandwidth"] = meshrf.get("chanbw", "")
+        data["frequency"] = meshrf.get("freq", "")
     else:
         data["ssid"] = json_data["ssid"]
         data["channel"] = json_data["channel"]
@@ -607,6 +618,11 @@ async def _get_node_addresses(
         yield node_address
 
     logger.info("OLSR Node Statistics: {}", dict(count))
+    if count["nodes returned"] == 0:
+        logger.warning(
+            "Failed to find any nodes in {:,d} lines of OLSR data.",
+            count["lines processed"],
+        )
 
     return
 
@@ -714,5 +730,10 @@ async def _get_node_links(olsr_records: AsyncIterable[str]) -> AsyncIterator[Lin
         yield LinkInfo.from_strings(source_node, destination_node, label)
 
     logger.info("OLSR Link Statistics: {}", dict(count))
+    if count["links returned"] == 0:
+        logger.warning(
+            "Failed to find any links in {:,d} lines of OLSR data.",
+            count["lines processed"],
+        )
 
     return
