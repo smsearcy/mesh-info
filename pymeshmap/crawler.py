@@ -166,8 +166,12 @@ FIVE_GHZ_CHANNELS = {
 }
 
 # TODO: make these configuration variables
-HTTP_CONNECTION_TIMEOUT = 20
-HTTP_MAX_CONNECTIONS = 100  # 100 is the default in aiohttp
+# (I think the best way to pass them in is for the Poller to be a class)
+# all timeouts are in seconds
+CRAWLER_CONNECTION_TIMEOUT = 10
+CRAWLER_READ_TIMEOUT = 20
+CRAWLER_TOTAL_TIMEOUT = None  # None prevents an overall timeout from kicking in
+CRAWLER_MAX_CONNECTIONS = 50  # 100 is the default in aiohttp
 
 
 class NetworkInfo(NamedTuple):
@@ -401,8 +405,12 @@ async def network_nodes(
     start_time = time.monotonic()
 
     tasks: List[Awaitable] = []
-    conn = aiohttp.TCPConnector(limit=HTTP_MAX_CONNECTIONS)
-    timeout = aiohttp.ClientTimeout(sock_connect=HTTP_CONNECTION_TIMEOUT)
+    conn = aiohttp.TCPConnector(limit=CRAWLER_MAX_CONNECTIONS)
+    timeout = aiohttp.ClientTimeout(
+        total=CRAWLER_TOTAL_TIMEOUT,
+        sock_connect=CRAWLER_CONNECTION_TIMEOUT,
+        sock_read=CRAWLER_READ_TIMEOUT,
+    )
     async with aiohttp.ClientSession(connector=conn, timeout=timeout) as session:
         olsr_records = _query_olsr(host)
         async for node_address in _get_node_addresses(
