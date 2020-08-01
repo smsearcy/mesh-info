@@ -7,3 +7,12 @@ services:
     ports:
       # this is useful for local development
       - 5432:5432
+
+  mysql:
+    image: mariadb:10
+    environment:
+      MYSQL_ROOT_PASSWORD: pyMeshMap
+    ports:
+      # this is useful for local development
+      - 3306:3306
+

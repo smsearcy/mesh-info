@@ -18,7 +18,7 @@ from .mymodel import MyModel  # flake8: noqa
 configure_mappers()
 
 
-def get_engine(settings, prefix="sqlalchemy."):
+def get_engine(settings, prefix="database."):
     return engine_from_config(settings, prefix)
 
 

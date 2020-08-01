@@ -1,8 +1,7 @@
 import enum
 import json
-from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, Float, Integer, String, Unicode
+from sqlalchemy import Boolean, Column, DateTime, Float, String, Unicode
 from sqlalchemy.types import TypeDecorator
 
 from .meta import Base
@@ -40,71 +39,52 @@ class JsonEncodedValue(TypeDecorator):
         return value
 
 
-class MeshNode(Base):
-    """Information about a node in the mesh network.
+class NodeInfo(Base):
+    """Information about a node in the mesh network."""
 
-    Using `NULL`/`None` to indicate missing values.
+    __tablename__ = "node_info"
 
-    """
+    wlan_ip = Column(String(50), primary_key=True)
+    name = Column("node", String(70), unique=True)
+    lan_ip = Column(String(50))
 
-    __tablename__ = "mesh_node"
-
-    ip_address = Column(String(20), primary_key=True)
-    name = Column(Unicode(70))
-    description = Column(Unicode(200))
-    polling_status = Column(Enum(NodeStatus), default=NodeStatus.ACTIVE)
     last_seen = Column(DateTime)
-    latitude = Column(Float, nullable=True)
-    longitude = Column(Float, nullable=True)
-    grid_square = Column(String(20), nullable=True)
 
-    wlan_mac_address = Column(String(50))
-    lan_ip = Column(String(20), nullable=True)
+    up_time = Column("uptime", String(50))
+    load_average = Column("loadavg", JsonEncodedValue(128))
+    model = Column(String(50))
+    board_id = Column(String(50))
+    firmware_version = Column(String(50))
+    firmware_manufacturer = Column("firmware_mfg", String(100))
+    api_version = Column(String(50))
 
-    # TODO: double check these against the data class requirements
-    model = Column(Unicode(100), nullable=True)
-    board_id = Column(Unicode(100), nullable=True)
-    firmware_version = Column(Unicode(50), nullable=True)
-    firmware_manufacturer = Column(Unicode(100), nullable=True)
-    api_version = Column(Unicode(50))
-    uptime = Column(Unicode(50), nullable=True)
-    load_average = Column(JsonEncodedValue(128))
-    # TODO: make another table for services
+    latitude = Column("lat", Float, nullable=True)
+    longitude = Column("lon", Float, nullable=True)
+    grid_square = Column(String(20))
+    fixed_location = Column("location_fix", Boolean(), default=False)
 
-    mesh_status = Column(String(10))
-    ssid = Column(Unicode(100))
-    channel = Column(String(25))
-    channel_bandwidth = Column(String(25))
-    band = Column(String(25))
+    wlan_mac_address = Column("wifi_mac_address", String(50))
 
-    tunnel_installed = Column(Boolean)
-    active_tunnel_count = Column(Integer)
+    ssid = Column(String(50))
+    channel = Column(String(50))
+    channel_bandwidth = Column("chanbw", String(50))
 
-    created_at = Column(DateTime, default=datetime.utcnow())
-    last_updated_at = Column(DateTime, onupdate=datetime.utcnow())
+    # should this be JSON?
+    services = Column(String(2048))
+
+    # matching existing column types
+    tunnel_installed = Column(String(50))
+    active_tunnel_count = Column(String(50))
+
+    # not in MeshMap
+    # description = Column(Unicode(200))
+    # band = Column(String(25))
+    # polling_status = Column(Enum(NodeStatus), default=NodeStatus.ACTIVE)
+    # created_at = Column(DateTime, default=datetime.utcnow())
+    # last_updated_at = Column(DateTime, onupdate=datetime.utcnow())
 
     def __repr__(self):
-        return f"<models.MeshNode(ip_address={self.ip_address!r}, name={self.name!r})>"
+        return f"<models.MeshNode(wlan_ip={self.wlan_ip!r}, name={self.name!r})>"
 
     def __str__(self):
-        return f"{self.name} ({self.ip_address}): {self.polling_status}"
-
-
-class IgnoreReasons(enum.Enum):
-    """Enumerate possible ignore reasons for nodes."""
-
-    CONNECTION_ERROR = enum.auto()
-    INFORMATION_ERROR = enum.auto()
-
-
-class IgnoreNode(Base):
-    """Track hosts to ignore for a period of time based on response."""
-
-    __tablename__ = "ignore_node"
-
-    ip_address = Column("ip_address", String(50), primary_key=True)
-    reason = Column(Enum(IgnoreReasons))
-    timestamp = Column(DateTime, default=datetime.utcnow())
-
-    def __str__(self):
-        return f"{self.ip_address}: {self.reason}"
+        return f"{self.name} ({self.wlan_ip})"
