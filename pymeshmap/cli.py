@@ -7,32 +7,31 @@ import json
 import sys
 import time
 from pathlib import Path
+from typing import Dict
 
 import click
 from loguru import logger
 
-from pymeshmap import crawler, scrub
-from pymeshmap.crawler import NodeError
+from pymeshmap import config, scrub
+from pymeshmap.poller import LinkInfo, NodeError, Poller, SystemInfo
 
 VERBOSE_TO_LOGGING = {0: "SUCCESS", 1: "INFO", 2: "DEBUG", 3: "TRACE"}
 
 
 # TODO: replace these with proper configuration
-LOCAL_NODE_NAME = "localnode.local.mesh"
-CURRENT_STABLE_FIRMWARE = "3.20.3.0"
 API_VERSIONS = {"1.7": "bright_green", "1.6": "green", "1.5": "yellow", "1.3": "red"}
 
 
 @click.group()
 @click.pass_context
 def main(ctx):
-    # TODO: configure environment
-    ctx.obj = None
+    settings = config.get_settings()
+    ctx.obj = settings
     return
 
 
 @main.command()
-@click.argument("hostname", default="localnode.local.mesh")
+@click.argument("hostname", default="")
 @click.option(
     "-v",
     "--verbose",
@@ -50,7 +49,10 @@ def main(ctx):
     default=".",
     help="Path to save files to",
 )
-def network_report(hostname: str, verbose: int, save_errors: bool, path: str):
+@click.pass_obj
+def network_report(
+    settings: Dict, hostname: str, verbose: int, save_errors: bool, path: str
+):
     """Crawls network and prints information about the nodes and links.
 
     Detailed output is not printed until the crawler finishes.
@@ -62,6 +64,8 @@ def network_report(hostname: str, verbose: int, save_errors: bool, path: str):
 
     """
 
+    hostname = hostname or settings["pymeshmap.local_node"]
+
     log_level = VERBOSE_TO_LOGGING.get(verbose, "SUCCESS")
     logger.remove()
     logger.add(sys.stderr, level=log_level)
@@ -71,9 +75,14 @@ def network_report(hostname: str, verbose: int, save_errors: bool, path: str):
     output_path = Path(path)
 
     async_debug = log_level == "DEBUG"
-    nodes, links, errors = asyncio.run(
-        crawler.network_info(hostname), debug=async_debug
+    poller = Poller(
+        hostname,
+        read_timeout=settings["poller.read_timeout"],
+        connect_timeout=settings["poller.connect_timeout"],
+        total_timeout=settings["poller.total_timeout"],
+        max_connections=settings["poller.max_connections"],
     )
+    nodes, links, errors = asyncio.run(poller.network_info(), debug=async_debug)
 
     for node in nodes:
         pprint_node(node)
@@ -128,7 +137,7 @@ def network_report(hostname: str, verbose: int, save_errors: bool, path: str):
     click.secho(f"Network report took {total_time:.2f} seconds", fg="blue")
 
 
-def pprint_node(node: crawler.SystemInfo):
+def pprint_node(node: SystemInfo):
     """Pretty print information about an AREDN node."""
     click.echo("Name: ", nl=False)
     click.secho(node.node_name, fg="blue")
@@ -196,7 +205,7 @@ def pprint_node(node: crawler.SystemInfo):
     click.echo()
 
 
-def pprint_link(link: crawler.LinkInfo):
+def pprint_link(link: LinkInfo):
     click.echo(f"{link.source} -> {link.destination} cost: ", nl=False)
     if link.cost > 10:
         click.secho(f"{link.cost:.3f}", fg="bright_red", bold=True)
