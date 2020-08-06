@@ -168,7 +168,7 @@ FIVE_GHZ_CHANNELS = {
 # TODO: make these configuration variables
 # (I think the best way to pass them in is for the Poller to be a class)
 # all timeouts are in seconds
-CRAWLER_CONNECTION_TIMEOUT = 10
+CRAWLER_CONNECTION_TIMEOUT = 20
 CRAWLER_READ_TIMEOUT = 20
 CRAWLER_TOTAL_TIMEOUT = None  # None prevents an overall timeout from kicking in
 CRAWLER_MAX_CONNECTIONS = 50  # 100 is the default in aiohttp
