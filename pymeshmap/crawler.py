@@ -285,7 +285,7 @@ class SystemInfo:
 
     @property
     def lan_ip_address(self) -> str:
-        iface_names = ["br-lan", "eth0"]
+        iface_names = ["br-lan", "eth0", "eth0.0"]
         for iface in iface_names:
             if iface not in self.interfaces or not self.interfaces[iface].ip_address:
                 continue
