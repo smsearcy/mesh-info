@@ -165,8 +165,13 @@ FIVE_GHZ_CHANNELS = {
     "184",
 }
 
-# TODO: make this a configuration variable
-HTTP_MAX_CONNECTIONS = 100  # 100 is the default in aiohttp
+# TODO: make these configuration variables
+# (I think the best way to pass them in is for the Poller to be a class)
+# all timeouts are in seconds
+CRAWLER_CONNECTION_TIMEOUT = 20
+CRAWLER_READ_TIMEOUT = 20
+CRAWLER_TOTAL_TIMEOUT = None  # None prevents an overall timeout from kicking in
+CRAWLER_MAX_CONNECTIONS = 50  # 100 is the default in aiohttp
 
 
 class NetworkInfo(NamedTuple):
@@ -400,8 +405,13 @@ async def network_nodes(
     start_time = time.monotonic()
 
     tasks: List[Awaitable] = []
-    conn = aiohttp.TCPConnector(limit=HTTP_MAX_CONNECTIONS)
-    async with aiohttp.ClientSession(connector=conn) as session:
+    conn = aiohttp.TCPConnector(limit=CRAWLER_MAX_CONNECTIONS)
+    timeout = aiohttp.ClientTimeout(
+        total=CRAWLER_TOTAL_TIMEOUT,
+        sock_connect=CRAWLER_CONNECTION_TIMEOUT,
+        sock_read=CRAWLER_READ_TIMEOUT,
+    )
+    async with aiohttp.ClientSession(connector=conn, timeout=timeout) as session:
         olsr_records = _query_olsr(host)
         async for node_address in _get_node_addresses(
             olsr_records, addresses_to_ignore=addresses_to_ignore
@@ -651,12 +661,13 @@ async def poll_node(session: aiohttp.ClientSession, node_address: str) -> NodeRe
         ) as resp:
             status = resp.status
             response_text = await resp.text()
-    except aiohttp.ClientError as e:
-        logger.error("{}: Connection issue: {}", node_address, e)
-        return NodeResult(node_address, NodeError.CONNECTION_ERROR, str(e))
-    except asyncio.TimeoutError:
-        logger.error("{}: Timeout attempting to connect", node_address)
+    except asyncio.TimeoutError as e:
+        # catch this first, because some exceptions use multiple inheritance
+        logger.error("{}: {}", node_address, e)
         return NodeResult(node_address, NodeError.TIMEOUT_ERROR, "Timeout error")
+    except aiohttp.ClientError as e:
+        logger.error("{}: {}", node_address, e)
+        return NodeResult(node_address, NodeError.CONNECTION_ERROR, str(e))
     except Exception as e:
         logger.error("{}: Unknown error connecting: {!r}", node_address, e)
         return NodeResult(node_address, NodeError.CONNECTION_ERROR, str(e))
