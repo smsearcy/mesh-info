@@ -660,7 +660,10 @@ async def poll_node(session: aiohttp.ClientSession, node_address: str) -> NodeRe
             f"http://{node_address}:8080/cgi-bin/sysinfo.json", params=params
         ) as resp:
             status = resp.status
-            response_text = await resp.text()
+            response = await resp.read()
+            # copy and pasting Unicode seems to create an invalid description
+            # example we had was b"\xb0" for a degree symbol
+            response_text = response.decode("utf-8", "replace")
     except asyncio.TimeoutError as e:
         # catch this first, because some exceptions use multiple inheritance
         logger.error("{}: {}", node_address, e)
