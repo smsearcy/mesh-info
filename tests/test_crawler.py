@@ -154,6 +154,16 @@ def test_tunnel_only_1_6(data_folder):
     assert system_info.lan_ip_address == "10.215.250.145"
 
 
+def test_lan_interface_eth0_0(data_folder):
+    """Validate that eth0.0 is recognized as a LAN IP address."""
+
+    with open(data_folder / "sysinfo-1.5-no-location.json", "r") as f:
+        json_data = json.load(f)
+    system_info = crawler._load_node_data(json_data)
+
+    assert system_info.lan_ip_address == "10.66.236.21"
+
+
 @pytest.mark.asyncio
 async def test_get_nodes(data_folder):
     """Verify some basic information about `crawler.get_nodes()`"""
