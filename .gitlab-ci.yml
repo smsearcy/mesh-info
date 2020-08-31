@@ -1,15 +1,36 @@
 default:
   image: python:3.8
 
+variables:
+  PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
+  POETRY_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pypoetry
+  PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
+
 stages:
+  - prep
   - test
+
+build:
+  # Confirm Poetry can build - and warm up the cache
+  stage: prep
+  script:
+    - pip install poetry
+    - poetry install
+  cache:
+    paths:
+      - .cache/pip
+      - .cache/pypoetry
 
 pre-commit:
   stage: test
-  image: python:3.8
   script:
     - pip install pre-commit
     - pre-commit run --all-files
+  cache:
+    key: pre-commit
+    paths:
+      - .cache/pip
+      - .cache/pre-commit
 
 # Template to prepare Poetry (for use with `extends`)
 .poetry:
@@ -25,6 +46,11 @@ flake8:
   artifacts:
     reports:
       junit: flake8-report.xml
+  cache:
+    paths:
+      - .cache/pip
+      - .cache/pypoetry
+    policy: pull
 
 mypy:
   stage: test
@@ -34,6 +60,11 @@ mypy:
   artifacts:
     reports:
       junit: mypy-report.xml
+  cache:
+    paths:
+      - .cache/pip
+      - .cache/pypoetry
+    policy: pull
 
 # Template for pytest to simplify testing different versions of Python
 .pytest:
@@ -49,7 +80,17 @@ mypy:
 pytest 3.7:
   extends: .pytest
   image: python:3.7
+  cache:
+    key: poetry37
+    paths:
+      - .cache/pip
+      - .cache/pypoetry
 
 pytest 3.8:
   extends: .pytest
   image: python:3.8
+  cache:
+    paths:
+      - .cache/pip
+      - .cache/pypoetry
+    policy: pull
