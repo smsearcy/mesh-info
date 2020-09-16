@@ -36,7 +36,7 @@ import aiohttp
 import attr
 from loguru import logger
 
-from . import radio
+from . import aredn
 
 
 @attr.s(auto_attribs=True)
@@ -304,13 +304,13 @@ class SystemInfo:
     def band(self) -> str:
         if self.status != "on":
             return ""
-        if self.board_id in radio.NINE_HUNDRED_MHZ_BOARDS:
+        if self.board_id in aredn.NINE_HUNDRED_MHZ_BOARDS:
             return "900MHz"
-        elif self.channel in radio.TWO_GHZ_CHANNELS:
+        elif self.channel in aredn.TWO_GHZ_CHANNELS:
             return "2GHz"
-        elif self.channel in radio.THREE_GHZ_CHANNELS:
+        elif self.channel in aredn.THREE_GHZ_CHANNELS:
             return "3GHZ"
-        elif self.channel in radio.FIVE_GHZ_CHANNELS:
+        elif self.channel in aredn.FIVE_GHZ_CHANNELS:
             return "5GHz"
         else:
             return "Unknown"

@@ -1,4 +1,4 @@
-"""Define some general radio functionality."""
+"""Define data and functionality related to radios and AREDN software."""
 
 # these are defined as constants at the module level so they are only initialized once
 # (if the set was initialize for each function then it wouldn't be faster)
