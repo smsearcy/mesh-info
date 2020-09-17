@@ -3,41 +3,35 @@
 from __future__ import annotations
 
 import asyncio
-import ipaddress
 import json
-import random
-import re
-import string
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict
 
 import click
-from faker import Faker  # type: ignore
 from loguru import logger
 
-from pymeshmap import crawler
+from pymeshmap import config, scrub
+from pymeshmap.poller import LinkInfo, NodeError, Poller, SystemInfo
 
 VERBOSE_TO_LOGGING = {0: "SUCCESS", 1: "INFO", 2: "DEBUG", 3: "TRACE"}
 
 
 # TODO: replace these with proper configuration
-LOCAL_NODE_NAME = "localnode.local.mesh"
-CURRENT_STABLE_FIRMWARE = "3.20.3.0"
 API_VERSIONS = {"1.7": "bright_green", "1.6": "green", "1.5": "yellow", "1.3": "red"}
 
 
 @click.group()
 @click.pass_context
 def main(ctx):
-    # TODO: configure environment
-    ctx.obj = None
+    settings = config.get_settings()
+    ctx.obj = settings
     return
 
 
 @main.command()
-@click.argument("hostname", default="localnode.local.mesh")
+@click.argument("hostname", default="")
 @click.option(
     "-v",
     "--verbose",
@@ -55,7 +49,10 @@ def main(ctx):
     default=".",
     help="Path to save files to",
 )
-def network_report(hostname: str, verbose: int, save_errors: bool, path: str):
+@click.pass_obj
+def network_report(
+    settings: Dict, hostname: str, verbose: int, save_errors: bool, path: str
+):
     """Crawls network and prints information about the nodes and links.
 
     Detailed output is not printed until the crawler finishes.
@@ -67,6 +64,8 @@ def network_report(hostname: str, verbose: int, save_errors: bool, path: str):
 
     """
 
+    hostname = hostname or settings["pymeshmap.local_node"]
+
     log_level = VERBOSE_TO_LOGGING.get(verbose, "SUCCESS")
     logger.remove()
     logger.add(sys.stderr, level=log_level)
@@ -76,20 +75,45 @@ def network_report(hostname: str, verbose: int, save_errors: bool, path: str):
     output_path = Path(path)
 
     async_debug = log_level == "DEBUG"
-    nodes, links, errors = asyncio.run(
-        crawler.network_info(hostname), debug=async_debug
+    poller = Poller(
+        hostname,
+        read_timeout=settings["poller.read_timeout"],
+        connect_timeout=settings["poller.connect_timeout"],
+        total_timeout=settings["poller.total_timeout"],
+        max_connections=settings["poller.max_connections"],
     )
+    nodes, links, errors = asyncio.run(poller.network_info(), debug=async_debug)
 
-    click.secho(f"Successfully gathered results for {len(nodes):,d} nodes", fg="blue")
     for node in nodes:
         pprint_node(node)
 
     for link in links:
         pprint_link(link)
 
-    if len(errors) == 0:
-        click.secho("No errors!", fg="green")
+    if len(nodes) > 0 and len(links) > 0:
+        click.secho(
+            f"Gathered results for {len(nodes):,d} nodes and {len(links):,d} links.",
+            fg="green",
+        )
+    elif len(nodes) > 0 and len(links) == 0:
+        click.secho(
+            f"Gathered results for {len(nodes):,d} nodes but 0 links!\n"
+            "This could be due to a timing issue querying OLSR.  "
+            "Please run with -v for more information and/or report the issue",
+            fg="yellow",
+        )
+    elif len(nodes) == 0 and len(links) > 0:
+        click.secho(
+            f"Gathered results for {len(links):,d} links but 0 nodes!\n"
+            f"This could be due to a timing issue querying OLSR.  "
+            "Please run with -v for more information and/or report the issue",
+            fg="yellow",
+        )
     else:
+        click.secho(
+            "Failed to gather any results!  Connection issue to local node?\n", fg="red"
+        )
+    if len(errors) > 0:
         click.secho(f"Encountered errors with {len(errors):,d} nodes", fg="red")
         if save_errors:
             click.echo("Saving responses for nodes with errors")
@@ -101,13 +125,19 @@ def network_report(hostname: str, verbose: int, save_errors: bool, path: str):
             # TODO: MeshMap did a reverse DNS lookup to get the node name
             click.secho(f"{ip_address}: {error!s}", fg="yellow")
             if save_errors:
-                open(output_path / f"{ip_address}-response.txt", "w").write(response)
+                if error == NodeError.PARSE_ERROR:
+                    filename = f"sysinfo-{ip_address}-error.json"
+                elif error in (NodeError.HTTP_ERROR, NodeError.INVALID_RESPONSE):
+                    filename = f"{ip_address}-response.txt"
+                else:
+                    filename = f"{ip_address}-error.txt"
+                open(output_path / filename, "w").write(response)
 
     total_time = time.monotonic() - start_time
     click.secho(f"Network report took {total_time:.2f} seconds", fg="blue")
 
 
-def pprint_node(node: crawler.SystemInfo):
+def pprint_node(node: SystemInfo):
     """Pretty print information about an AREDN node."""
     click.echo("Name: ", nl=False)
     click.secho(node.node_name, fg="blue")
@@ -156,7 +186,7 @@ def pprint_node(node: crawler.SystemInfo):
     if node.status == "off":
         click.secho("off", nl=False, fg="red")
         click.echo("\tSSID: ", nl=False)
-        click.secho(node.ssid, fg="red")
+        click.secho(node.ssid or "Unknown", fg="red")
     else:
         click.secho("on", nl=False, fg="green")
         click.echo("\tSSID: ", nl=False)
@@ -175,7 +205,7 @@ def pprint_node(node: crawler.SystemInfo):
     click.echo()
 
 
-def pprint_link(link: crawler.LinkInfo):
+def pprint_link(link: LinkInfo):
     click.echo(f"{link.source} -> {link.destination} cost: ", nl=False)
     if link.cost > 10:
         click.secho(f"{link.cost:.3f}", fg="bright_red", bold=True)
@@ -188,7 +218,7 @@ def pprint_link(link: crawler.LinkInfo):
     elif link.cost > 0.1:
         click.secho(f"{link.cost:.3f}", fg="bright_green", bold=True)
     else:
-        # is this a tunnel?
+        # is this a tunnel or direct link?
         click.echo(f"{link.cost:.3f}")
 
 
@@ -200,82 +230,6 @@ def scrub_file(filename, output):
 
     sys_info = json.load(filename)
     # I'm assuming we always start with a dictionary
-    scrubbed_info = _scrub_dict(sys_info)
+    scrubber = scrub.ScrubJsonSample()
+    scrubbed_info = scrubber.scrub_dict(sys_info)
     json.dump(scrubbed_info, output, indent=2)
-
-
-def _scrub_unknown(key: str, value: Any) -> Any:
-    if isinstance(value, dict):
-        return _scrub_dict(value)
-    elif isinstance(value, list):
-        return _scrub_list(key, value)
-    else:
-        return _scrub_scalar(key, value)
-
-
-def _scrub_dict(values: Dict[str, Any]) -> Dict:
-    scrubbed_dict = {key: _scrub_unknown(key, value) for key, value in values.items()}
-    return scrubbed_dict
-
-
-def _scrub_list(key: str, values: List) -> List:
-    scrubbed_list = [_scrub_unknown(key, value) for value in values]
-    return scrubbed_list
-
-
-def _scrub_scalar(key: str, value: Any) -> Any:
-    if not key:
-        logger.warning("Cannot scalar value without a key: {!r}", value)
-        return value
-
-    new_value = None
-    fake = Faker()
-
-    if key == "ip":
-        # version 1.0 has "none" as an IP address, so may sure it is valid first
-        try:
-            ipaddress.ip_address(value)
-        except ValueError:
-            pass
-        else:
-            new_value = fake.ipv4_private(address_class="a")
-    elif key == "lat" and value != "":
-        new_value = f"{fake.latitude():.6f}"
-    elif key == "lon" and value != "":
-        new_value = f"{fake.longitude():.6f}"
-    elif key == "mac" and value != "00:00:00:00":
-        new_value = fake.mac_address().upper()
-    elif key in ("node", "hostname", "name", "link"):
-        new_value = re.sub(r"\d?[a-zA-Z]{1,2}\d{1,4}[a-zA-Z]{1,4}", "N0CALL", value)
-    elif key == "grid_square" and value != "":
-        new_value = random_grid_square()
-    elif key == "ssid":
-        new_value = "ArednMeshNetwork"
-
-    if new_value is not None and new_value != value:
-        print(f"Rewrote {value!r} to {new_value!r}")
-        return new_value
-
-    return value
-
-
-def random_grid_square():
-    """Generate a random MaidenHead grid square value."""
-    uppercase = string.ascii_uppercase
-    lowercase = string.ascii_lowercase
-    values = [
-        random.randint(0, 17),
-        random.randint(0, 17),
-        random.randint(0, 9),
-        random.randint(0, 9),
-        random.randint(0, 24),
-        random.randint(0, 24),
-    ]
-    grid_square = (
-        uppercase[values[0]]
-        + uppercase[values[1]]
-        + f"{values[2]}{values[3]}"
-        + lowercase[values[4]]
-        + lowercase[values[5]]
-    )
-    return grid_square

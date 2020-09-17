@@ -28,7 +28,6 @@ from typing import (
     List,
     NamedTuple,
     Optional,
-    Set,
     Tuple,
     Union,
 )
@@ -37,136 +36,124 @@ import aiohttp
 import attr
 from loguru import logger
 
-# these are defined as constants at the module level so they are only initialized once
-# (if the set was initialize for each function then it wouldn't be faster)
-NINE_HUNDRED_MHZ_BOARDS = {"0xe009", "0xe1b9", "0xe239"}
-TWO_GHZ_CHANNELS = {"-1", "-2", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"}
-# according to MeshMap sometimes it will show channel, sometimes frequency
-THREE_GHZ_CHANNELS = {
-    "76",
-    "77",
-    "78",
-    "79",
-    "80",
-    "81",
-    "82",
-    "83",
-    "84",
-    "85",
-    "86",
-    "87",
-    "88",
-    "89",
-    "90",
-    "91",
-    "92",
-    "93",
-    "94",
-    "95",
-    "96",
-    "97",
-    "98",
-    "99",
-    "3380",
-    "3385",
-    "3390",
-    "3395",
-    "3400",
-    "3405",
-    "3410",
-    "3415",
-    "3420",
-    "3425",
-    "3430",
-    "3435",
-    "3440",
-    "3445",
-    "3450",
-    "3455",
-    "3460",
-    "3465",
-    "3470",
-    "3475",
-    "3480",
-    "3485",
-    "3490",
-    "3495",
-}
-# per MeshMap 133+ are US channel numbers, info taken from "channelmaps.pm" in AREDEN
-FIVE_GHZ_CHANNELS = {
-    "37",
-    "40",
-    "44",
-    "48",
-    "52",
-    "56",
-    "60",
-    "64",
-    "100",
-    "104",
-    "108",
-    "112",
-    "116",
-    "120",
-    "124",
-    "128",
-    "132",
-    "133",
-    "134",
-    "135",
-    "136",
-    "137",
-    "138",
-    "139",
-    "140",
-    "141",
-    "142",
-    "143",
-    "144",
-    "145",
-    "146",
-    "147",
-    "148",
-    "149",
-    "150",
-    "151",
-    "152",
-    "153",
-    "154",
-    "155",
-    "156",
-    "157",
-    "158",
-    "159",
-    "160",
-    "161",
-    "162",
-    "163",
-    "164",
-    "165",
-    "166",
-    "167",
-    "168",
-    "169",
-    "170",
-    "171",
-    "172",
-    "173",
-    "174",
-    "175",
-    "176",
-    "177",
-    "178",
-    "179",
-    "180",
-    "181",
-    "182",
-    "183",
-    "184",
-}
+from . import aredn
 
-# TODO: make this a configuration variable
-HTTP_MAX_CONNECTIONS = 100  # 100 is the default in aiohttp
+
+@attr.s(auto_attribs=True)
+class Poller:
+    """Class to handle polling the network nodes and links.
+
+    Mainly this is so we can initialize it with the configuration settings and then
+    call them later.
+
+    """
+
+    local_node: str = "localnode.local.mesh"
+    max_connections: int = 50
+    connect_timeout: int = 20
+    read_timeout: int = 20
+    total_timeout: Optional[int] = None
+    # if we add ignored_nodes it should be here
+
+    async def network_info(self) -> NetworkInfo:
+        """Helper function to query node and link information asynchronously.
+
+        Returns:
+            Named tuple with a list of all the nodes successfully queried,
+            a list of the links on the network,
+            and a dictionary of errors keyed by the IP address.
+
+        """
+
+        node_task = asyncio.create_task(self.network_nodes())
+        # without a 1 second sleep here only one task was able to get data from OLSR
+        # (but I'm on a small network)
+        # if only one task can access that daemon at once then these will need to happen
+        # sequentially (fortunately the links process is super fast)
+        await asyncio.sleep(1)
+        link_task = asyncio.create_task(self.network_links())
+
+        nodes: NetworkNodes = await node_task
+        links: List[LinkInfo] = await link_task
+
+        return NetworkInfo(nodes.nodes, links, nodes.errors)
+
+    async def network_nodes(self) -> NetworkNodes:
+        """Asynchronously gets information for all the nodes on the network.
+
+        Getting a list of the nodes is done via connecting to the OLSR
+
+        Returns:
+            Named tuple with a list of all the nodes successfully queried and
+            a dictionary of errors keyed by the IP address.
+
+        """
+        start_time = time.monotonic()
+
+        tasks: List[Awaitable] = []
+        connector = aiohttp.TCPConnector(limit=self.max_connections)
+        timeout = aiohttp.ClientTimeout(
+            total=self.total_timeout,
+            sock_connect=self.connect_timeout,
+            sock_read=self.read_timeout,
+        )
+        async with aiohttp.ClientSession(
+            timeout=timeout, connector=connector
+        ) as session:
+            olsr_records = _query_olsr(self.local_node)
+            async for node_address in _get_node_addresses(olsr_records):
+                logger.debug("Creating task to poll {}", node_address)
+                task = asyncio.create_task(poll_node(session, node_address))
+                tasks.append(task)
+
+            # collect all the results in a single list
+            node_details: List[NodeResult] = await asyncio.gather(
+                *tasks, return_exceptions=True
+            )
+
+        crawler_finished = time.monotonic()
+        logger.info("Querying nodes took {:.2f} seconds", crawler_finished - start_time)
+
+        nodes = []
+        errors = {}
+        count: DefaultDict[str, int] = defaultdict(int)
+        for node in node_details:
+            count["total"] += 1
+            if isinstance(node, Exception):
+                # this shouldn't happen but just in case
+                count["exceptions"] += 1
+                logger.error("Unhandled exception polling a node: {!r}", node)
+                continue
+            if isinstance(node.result, NodeError):
+                # this error would have already been logged
+                count["errors (total)"] += 1
+                count[f"errors ({node.result!s})"] += 1
+                errors[node.ip_address] = (node.result, node.raw_response)
+                continue
+            count["successes"] += 1
+            nodes.append(node.result)
+
+        logger.info("Network nodes summary: {}", dict(count))
+        return NetworkNodes(nodes, errors)
+
+    async def network_links(self) -> List[LinkInfo]:
+        """Asynchronously gets information about all links between nodes in the network.
+
+        This is rather simple because all that information is available
+        from the OLSR daemon running on the local node.
+        Since this function does not need to crawl the network
+        there is less need to be asynchronous
+        but this way we can re-use a single OLSR query function
+
+        Returns:
+            List of `LinkInfo` data classes for each unique link in the network.
+
+        """
+
+        olsr_records = _query_olsr(self.local_node)
+        links = [link async for link in _get_node_links(olsr_records)]
+        logger.info("Network link count: {}", len(links))
+        return links
 
 
 class NetworkInfo(NamedTuple):
@@ -212,15 +199,16 @@ class NodeResult(NamedTuple):
 class Interface:
     """Data class to represent the individual interfaces on a node."""
 
-    mac_address: str
     name: str
+    mac_address: str
     ip_address: Optional[str] = None
 
     @classmethod
     def from_json(cls, raw_data: Dict[str, str]) -> Interface:
         return cls(
-            mac_address=raw_data["mac"],
             name=raw_data["name"],
+            # some tunnel interfaces lack a MAC address
+            mac_address=raw_data.get("mac", ""),
             ip_address=raw_data.get("ip") if raw_data.get("ip") != "none" else None,
         )
 
@@ -251,6 +239,13 @@ class SystemInfo:
     The network interfaces are represented by a dictionary,
     indexed by the interface name.
 
+    For string values, missing data is typically stored as an empty string,
+    particularly if an empty string would not be a valid value (e.g. SSID).
+    If there is a situation in which missing/unknown values need to be distinguished
+    from empty strings then `None` would be appropriate.
+    In a case like node description it is an optional value
+    so I see no need for "Unknown"/`None`.
+
     """
 
     node_name: str = attr.ib()
@@ -269,15 +264,15 @@ class SystemInfo:
     active_tunnel_count: int = attr.ib()
     tunnel_installed: bool = attr.ib()
     services: List[Service] = attr.ib()
+    status: str = attr.ib()
     description: str = attr.ib(default="")
-    status: Optional[str] = attr.ib(default=None)
-    frequency: Optional[str] = attr.ib(default=None)
-    up_time: Optional[str] = attr.ib(default=None)
+    frequency: str = attr.ib(default="")
+    up_time: str = attr.ib(default="")
     load_averages: Optional[List[float]] = attr.ib(default=None)
 
     @property
     def lan_ip_address(self) -> str:
-        iface_names = ["br-lan", "eth0"]
+        iface_names = ["br-lan", "eth0", "eth0.0"]
         for iface in iface_names:
             if iface not in self.interfaces or not self.interfaces[iface].ip_address:
                 continue
@@ -307,13 +302,15 @@ class SystemInfo:
 
     @property
     def band(self) -> str:
-        if self.board_id in NINE_HUNDRED_MHZ_BOARDS:
+        if self.status != "on":
+            return ""
+        if self.board_id in aredn.NINE_HUNDRED_MHZ_BOARDS:
             return "900MHz"
-        elif self.channel in TWO_GHZ_CHANNELS:
+        elif self.channel in aredn.TWO_GHZ_CHANNELS:
             return "2GHz"
-        elif self.channel in THREE_GHZ_CHANNELS:
+        elif self.channel in aredn.THREE_GHZ_CHANNELS:
             return "3GHZ"
-        elif self.channel in FIVE_GHZ_CHANNELS:
+        elif self.channel in aredn.FIVE_GHZ_CHANNELS:
             return "5GHz"
         else:
             return "Unknown"
@@ -337,121 +334,6 @@ class LinkInfo:
 
     def __str__(self):
         return f"{self.source} -> {self.destination} ({self.cost})"
-
-
-async def network_info(
-    host: str, *, addresses_to_ignore: Set[str] = None
-) -> NetworkInfo:
-    """Helper function to query node and link information asynchronously.
-
-    Args:
-        host: Host name or IP address to query the OLSR daemon for network information.
-        addresses_to_ignore: Set of IP addresses to skip.
-
-    Returns:
-        Named tuple with a list of all the nodes successfully queried,
-        a list of the links on the network,
-        and a dictionary of errors keyed by the IP address.
-
-    """
-
-    node_task = asyncio.create_task(
-        network_nodes(host, addresses_to_ignore=addresses_to_ignore)
-    )
-    # without a 1 second sleep here only one task was able to get data from OLSR
-    # (but I'm on a small network)
-    # if only one task can access that daemon at once then these will need to happen
-    # sequentially (fortunately the links process is super fast)
-    await asyncio.sleep(1)
-    link_task = asyncio.create_task(network_links(host))
-
-    nodes: NetworkNodes = await node_task
-    links: List[LinkInfo] = await link_task
-
-    return NetworkInfo(nodes.nodes, links, nodes.errors)
-
-
-async def network_nodes(
-    host: str, *, addresses_to_ignore: Set[str] = None
-) -> NetworkNodes:
-    """Asynchronously gets information for all the nodes on the network.
-
-    Getting a list of the nodes is done via connecting to the OLSR
-
-    Args:
-        host: Host name or IP address to query the OLSR daemon for network information.
-        addresses_to_ignore: Set of IP addresses to skip.
-
-    Returns:
-        Named tuple with a list of all the nodes successfully queried and
-        a dictionary of errors keyed by the IP address.
-
-    """
-    start_time = time.monotonic()
-
-    tasks: List[Awaitable] = []
-    conn = aiohttp.TCPConnector(limit=HTTP_MAX_CONNECTIONS)
-    async with aiohttp.ClientSession(connector=conn) as session:
-        olsr_records = _query_olsr(host)
-        async for node_address in _get_node_addresses(
-            olsr_records, addresses_to_ignore=addresses_to_ignore
-        ):
-            logger.debug("Creating task to poll {}", node_address)
-            task = asyncio.create_task(poll_node(session, node_address))
-            tasks.append(task)
-
-        # collect all the results in a single list
-        node_details: List[NodeResult] = await asyncio.gather(
-            *tasks, return_exceptions=True
-        )
-
-    crawler_finished = time.monotonic()
-    logger.info("Querying nodes took {:.2f} seconds", crawler_finished - start_time)
-
-    nodes = []
-    errors = {}
-    count: DefaultDict[str, int] = defaultdict(int)
-    for node in node_details:
-        count["total"] += 1
-        if isinstance(node, Exception):
-            # this shouldn't happen but just in case
-            count["exceptions"] += 1
-            logger.error("Unhandled exception polling a node: {!r}", node)
-            continue
-        if isinstance(node.result, NodeError):
-            # this error would have already been logged
-            count["errors (total)"] += 1
-            count[f"errors ({node.result!s})"] += 1
-            errors[node.ip_address] = (node.result, node.raw_response)
-            continue
-        count["successes"] += 1
-        nodes.append(node.result)
-
-    logger.info("Network nodes summary: {}", dict(count))
-    return NetworkNodes(nodes, errors)
-
-
-async def network_links(host: str) -> List[LinkInfo]:
-    """Asynchronously gets information about all links between nodes in the network.
-
-    This is rather simple because all that information is available
-    from the OLSR daemon running on the local node.
-    Since this function does not need to crawl the network
-    there is less need to be asynchronous
-    but this way we can re-use a single OLSR query function
-
-    Args:
-        host: Host name or IP address to query the OLSR daemon for network information.
-
-    Returns:
-        List of `LinkInfo` data classes for each unique link in the network.
-
-    """
-
-    olsr_records = _query_olsr(host)
-    links = [link async for link in _get_node_links(olsr_records)]
-    logger.info("Network link count: {}", len(links))
-    return links
 
 
 def _load_node_data(json_data: Dict[str, Any]) -> SystemInfo:
@@ -496,11 +378,12 @@ def _load_node_data(json_data: Dict[str, Any]) -> SystemInfo:
 
     if "meshrf" in json_data:
         meshrf = json_data["meshrf"]
-        data["ssid"] = meshrf["ssid"]
-        data["channel"] = meshrf["channel"]
-        data["channel_bandwidth"] = meshrf["chanbw"]
         data["status"] = meshrf.get("status", "on")
-        data["frequency"] = meshrf.get("freq")
+        #
+        data["ssid"] = meshrf.get("ssid", "")
+        data["channel"] = meshrf.get("channel", "")
+        data["channel_bandwidth"] = meshrf.get("chanbw", "")
+        data["frequency"] = meshrf.get("freq", "")
     else:
         data["ssid"] = json_data["ssid"]
         data["channel"] = json_data["channel"]
@@ -568,9 +451,7 @@ async def _query_olsr(host_name: str, port: int = 2004) -> AsyncIterator[str]:
     await writer.wait_closed()
 
 
-async def _get_node_addresses(
-    olsr_records: AsyncIterable[str], *, addresses_to_ignore: Set[str] = None
-) -> AsyncIterator[str]:
+async def _get_node_addresses(olsr_records: AsyncIterable[str]) -> AsyncIterator[str]:
     """Process OLSR records, yielding the IP addresses of nodes in the network.
 
     Based on `wxc_netcat()` in MeshMap the only lines we are interested in
@@ -581,7 +462,6 @@ async def _get_node_addresses(
         "10.32.66.190" -> "10.80.213.95"[label="1.000"];
 
     """
-    addresses_to_ignore = addresses_to_ignore or set()
     count: DefaultDict[str, int] = defaultdict(int)
     # node could show up multiple times so save the ones we've seen
     nodes_returned = set()
@@ -596,9 +476,6 @@ async def _get_node_addresses(
             continue
         logger.trace(line)
         node_address = match.group(1)
-        if node_address in addresses_to_ignore:
-            count["ignored node"] += 1
-            continue
         if node_address in nodes_returned:
             count["duplicate node"] += 1
             continue
@@ -607,6 +484,11 @@ async def _get_node_addresses(
         yield node_address
 
     logger.info("OLSR Node Statistics: {}", dict(count))
+    if count["nodes returned"] == 0:
+        logger.warning(
+            "Failed to find any nodes in {:,d} lines of OLSR data.",
+            count["lines processed"],
+        )
 
     return
 
@@ -634,13 +516,17 @@ async def poll_node(session: aiohttp.ClientSession, node_address: str) -> NodeRe
             f"http://{node_address}:8080/cgi-bin/sysinfo.json", params=params
         ) as resp:
             status = resp.status
-            response_text = await resp.text()
-    except aiohttp.ClientError as e:
-        logger.error("{}: Connection issue: {}", node_address, e)
-        return NodeResult(node_address, NodeError.CONNECTION_ERROR, str(e))
-    except asyncio.TimeoutError:
-        logger.error("{}: Timeout attempting to connect", node_address)
+            response = await resp.read()
+            # copy and pasting Unicode seems to create an invalid description
+            # example we had was b"\xb0" for a degree symbol
+            response_text = response.decode("utf-8", "replace")
+    except asyncio.TimeoutError as e:
+        # catch this first, because some exceptions use multiple inheritance
+        logger.error("{}: {}", node_address, e)
         return NodeResult(node_address, NodeError.TIMEOUT_ERROR, "Timeout error")
+    except aiohttp.ClientError as e:
+        logger.error("{}: {}", node_address, e)
+        return NodeResult(node_address, NodeError.CONNECTION_ERROR, str(e))
     except Exception as e:
         logger.error("{}: Unknown error connecting: {!r}", node_address, e)
         return NodeResult(node_address, NodeError.CONNECTION_ERROR, str(e))
@@ -714,5 +600,10 @@ async def _get_node_links(olsr_records: AsyncIterable[str]) -> AsyncIterator[Lin
         yield LinkInfo.from_strings(source_node, destination_node, label)
 
     logger.info("OLSR Link Statistics: {}", dict(count))
+    if count["links returned"] == 0:
+        logger.warning(
+            "Failed to find any links in {:,d} lines of OLSR data.",
+            count["lines processed"],
+        )
 
     return
