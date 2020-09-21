@@ -1,7 +1,7 @@
 import enum
 import json
 
-from sqlalchemy import Boolean, Column, DateTime, Float, String, Unicode
+from sqlalchemy import Boolean, Column, DateTime, Float, String
 from sqlalchemy.types import TypeDecorator
 
 from .meta import Base
@@ -21,12 +21,12 @@ class NodeStatus(enum.Enum):
 class JsonEncodedValue(TypeDecorator):
     """Represent structure as JSON-encoded string.
 
-    *Attention:* This implementation will not detect changes to the object (but will
-    detect when it is replaced which is what we would be doing).
+    *Attention:* This implementation will not detect changes to the object
+    (but it will detect when replaced which is what we should be doing).
 
     """
 
-    impl = Unicode
+    impl = String
 
     def process_bind_param(self, value, dialect):
         if value is not None:
@@ -39,7 +39,7 @@ class JsonEncodedValue(TypeDecorator):
         return value
 
 
-class NodeInfo(Base):
+class MeshNode(Base):
     """Information about a node in the mesh network."""
 
     __tablename__ = "node_info"
@@ -61,6 +61,7 @@ class NodeInfo(Base):
     latitude = Column("lat", Float, nullable=True)
     longitude = Column("lon", Float, nullable=True)
     grid_square = Column(String(20))
+    # Indicates manually entered location
     fixed_location = Column("location_fix", Boolean(), default=False)
 
     wlan_mac_address = Column("wifi_mac_address", String(50))
@@ -84,7 +85,4 @@ class NodeInfo(Base):
     # last_updated_at = Column(DateTime, onupdate=datetime.utcnow())
 
     def __repr__(self):
-        return f"<models.MeshNode(wlan_ip={self.wlan_ip!r}, name={self.name!r})>"
-
-    def __str__(self):
-        return f"{self.name} ({self.wlan_ip})"
+        return f"<MeshNode(wlan_ip={self.wlan_ip!r}, name={self.name!r})>"

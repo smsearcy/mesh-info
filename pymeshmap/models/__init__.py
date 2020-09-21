@@ -8,7 +8,9 @@ from sqlalchemy.orm import configure_mappers, sessionmaker
 
 # import or define all models here to ensure they are attached to the
 # Base.metadata prior to any initialization routines
-from .mymodel import MyModel  # flake8: noqa
+from .mesh_link import MeshLink  # noqa
+from .mesh_node import MeshNode  # noqa
+from .process_info import ProcessInfo, ProcessType  # noqa
 
 # import zope.sqlalchemy
 

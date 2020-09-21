@@ -15,4 +15,3 @@ services:
     ports:
       # this is useful for local development
       - 3306:3306
-
