@@ -7,7 +7,7 @@ readme = "README.md"
 repository = "https://gitlab.com/smsearcy/pymeshmap"
 
 [tool.poetry.scripts]
-pymeshmap = "pymeshmap.cli:main"
+pymeshmap = "pymeshmap.cli.main:main"
 
 [tool.poetry.dependencies]
 python = "^3.7"

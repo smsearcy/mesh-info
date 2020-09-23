@@ -3,8 +3,13 @@
 (Because the plan is to implement the web portion in Pyramid.)
 
 """
+from __future__ import annotations
+
+import contextlib
+from typing import Dict, Iterator
+
 from sqlalchemy import engine_from_config
-from sqlalchemy.orm import configure_mappers, sessionmaker
+from sqlalchemy.orm import Session, configure_mappers, sessionmaker
 
 # import or define all models here to ensure they are attached to the
 # Base.metadata prior to any initialization routines
@@ -20,14 +25,31 @@ from .process_info import ProcessInfo, ProcessType  # noqa
 configure_mappers()
 
 
-def get_engine(settings, prefix="database."):
+def get_engine(settings: Dict, prefix="database."):
     return engine_from_config(settings, prefix)
 
 
-def get_session_factory(engine):
+def get_session_factory(engine) -> sessionmaker:
     factory = sessionmaker()
     factory.configure(bind=engine)
     return factory
+
+
+@contextlib.contextmanager
+def session_scope(factory: sessionmaker, dry_run: bool = False) -> Iterator[Session]:
+    """Yields a session wrapped in a context manager."""
+    session = factory()
+    try:
+        yield session
+        if dry_run:
+            session.rollback()
+        else:
+            session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 # def get_tm_session(session_factory, transaction_manager):

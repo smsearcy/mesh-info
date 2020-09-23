@@ -16,8 +16,8 @@ class ProcessInfo(Base):
     __tablename__ = "map_info"
 
     type = Column("id", Enum(ProcessType), primary_key=True)
-    record_count = Column("table_records_num", Integer)
-    table_last_update = Column(DateTime)
-    last_ran = Column("script_last_run", DateTime)
-    currently_running = Column(Boolean)
+    record_count = Column("table_records_num", Integer, nullable=True)
+    table_last_update = Column(DateTime, nullable=True)
+    last_ran = Column("script_last_run", DateTime, nullable=True)
+    currently_running = Column(Boolean, default=False)
     # TODO: I identified more details that would be useful to track here

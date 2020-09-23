@@ -64,14 +64,14 @@ class MeshNode(Base):
     # Indicates manually entered location
     fixed_location = Column("location_fix", Boolean(), default=False)
 
-    wlan_mac_address = Column("wifi_mac_address", String(50))
+    wlan_mac_address = Column("wifi_mac_address", String(50), unique=True)
 
     ssid = Column(String(50))
     channel = Column(String(50))
     channel_bandwidth = Column("chanbw", String(50))
 
     # should this be JSON?
-    services = Column(String(2048))
+    services = Column(JsonEncodedValue(2048))
 
     # matching existing column types
     tunnel_installed = Column(String(50))
@@ -86,3 +86,6 @@ class MeshNode(Base):
 
     def __repr__(self):
         return f"<MeshNode(wlan_ip={self.wlan_ip!r}, name={self.name!r})>"
+
+    def __str__(self):
+        return f"{self.name} ({self.wlan_ip}; {self.last_seen})"

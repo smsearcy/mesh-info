@@ -1,9 +1,7 @@
-"""Main command-line entry point for `pymeshmap`."""
-
+"""This process polls the network and displays the results to the user."""
 from __future__ import annotations
 
 import asyncio
-import json
 import sys
 import time
 from pathlib import Path
@@ -12,25 +10,15 @@ from typing import Dict
 import click
 from loguru import logger
 
-from pymeshmap import config, scrub
-from pymeshmap.poller import LinkInfo, NodeError, Poller, SystemInfo
-
-VERBOSE_TO_LOGGING = {0: "SUCCESS", 1: "INFO", 2: "DEBUG", 3: "TRACE"}
-
+from ..poller import LinkInfo, NodeError, Poller, SystemInfo
+from . import VERBOSE_TO_LOGGING
 
 # TODO: replace these with proper configuration
+# (and in a general location)
 API_VERSIONS = {"1.7": "bright_green", "1.6": "green", "1.5": "yellow", "1.3": "red"}
 
 
-@click.group()
-@click.pass_context
-def main(ctx):
-    settings = config.get_settings()
-    ctx.obj = settings
-    return
-
-
-@main.command()
+@click.command()
 @click.argument("hostname", default="")
 @click.option(
     "-v",
@@ -50,9 +38,7 @@ def main(ctx):
     help="Path to save files to",
 )
 @click.pass_obj
-def network_report(
-    settings: Dict, hostname: str, verbose: int, save_errors: bool, path: str
-):
+def main(settings: Dict, hostname: str, verbose: int, save_errors: bool, path: str):
     """Crawls network and prints information about the nodes and links.
 
     Detailed output is not printed until the crawler finishes.
@@ -220,16 +206,3 @@ def pprint_link(link: LinkInfo):
     else:
         # is this a tunnel or direct link?
         click.echo(f"{link.cost:.3f}")
-
-
-@main.command(help="Scrub identifiable information from data files for testing.")
-@click.argument("filename", type=click.File("r"))
-@click.argument("output", type=click.File("w"))
-def scrub_file(filename, output):
-    """Scrub JSON files before adding to repository for tests."""
-
-    sys_info = json.load(filename)
-    # I'm assuming we always start with a dictionary
-    scrubber = scrub.ScrubJsonSample()
-    scrubbed_info = scrubber.scrub_dict(sys_info)
-    json.dump(scrubbed_info, output, indent=2)

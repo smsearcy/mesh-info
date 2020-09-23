@@ -1,5 +1,7 @@
 """Configuration for pyMeshMap from the environment."""
 
+from __future__ import annotations
+
 import enum
 import os
 from typing import Any, Callable, Dict

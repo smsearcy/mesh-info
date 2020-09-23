@@ -157,7 +157,12 @@ class Poller:
 
 
 class NetworkInfo(NamedTuple):
-    """Combined results of querying the nodes and links on the network."""
+    """Combined results of querying the nodes and links on the network.
+
+    Errors are stored as a dictionary, indexed by the IP address and storing the error
+    and any message in a tuple.
+
+    """
 
     nodes: List[SystemInfo]
     links: List[LinkInfo]
@@ -165,7 +170,12 @@ class NetworkInfo(NamedTuple):
 
 
 class NetworkNodes(NamedTuple):
-    """Results of querying the nodes on the network."""
+    """Results of querying the nodes on the network.
+
+    Errors are stored as a dictionary, indexed by the IP address and storing the error
+    and any message in a tuple.
+
+    """
 
     nodes: List[SystemInfo]
     errors: Dict[str, Tuple[NodeError, str]]
@@ -264,6 +274,7 @@ class SystemInfo:
     active_tunnel_count: int = attr.ib()
     tunnel_installed: bool = attr.ib()
     services: List[Service] = attr.ib()
+    services_json: List[Dict] = attr.ib()
     status: str = attr.ib()
     description: str = attr.ib(default="")
     frequency: str = attr.ib(default="")
@@ -367,6 +378,7 @@ def _load_node_data(json_data: Dict[str, Any]) -> SystemInfo:
             Service.from_json(service_data)
             for service_data in json_data.get("services_local", [])
         ],
+        "services_json": json_data.get("services_local", []),
     }
 
     # generally newer versions add data in nested dictionaries
