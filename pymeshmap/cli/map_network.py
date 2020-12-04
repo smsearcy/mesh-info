@@ -79,6 +79,9 @@ def main(settings: Dict, hostname: str, verbose: int, dry_run: bool):
     with models.session_scope(session_factory, dry_run) as dbsession:
         save_nodes(nodes, dbsession)
         save_links(links, dbsession)
+        # `save_nodes()` wrote summary of changes
+        process = dbsession.query(ProcessInfo).get(ProcessType.NODES)
+        process.currently_running = False
 
     updates_finished = time.monotonic()
     updates_elapsed = updates_finished - poller_finished
