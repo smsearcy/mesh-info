@@ -276,6 +276,7 @@ class SystemInfo:
     services: List[Service] = attr.ib()
     services_json: List[Dict] = attr.ib()
     status: str = attr.ib()
+    source_json: Dict = attr.ib()
     description: str = attr.ib(default="")
     frequency: str = attr.ib(default="")
     up_time: str = attr.ib(default="")
@@ -379,6 +380,7 @@ def _load_node_data(json_data: Dict[str, Any]) -> SystemInfo:
             for service_data in json_data.get("services_local", [])
         ],
         "services_json": json_data.get("services_local", []),
+        "source_json": json_data,
     }
 
     # generally newer versions add data in nested dictionaries

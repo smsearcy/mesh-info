@@ -13,9 +13,8 @@ from sqlalchemy.orm import Session, configure_mappers, sessionmaker
 
 # import or define all models here to ensure they are attached to the
 # Base.metadata prior to any initialization routines
-from .mesh_link import MeshLink  # noqa
-from .mesh_node import MeshNode  # noqa
-from .process_info import ProcessInfo, ProcessType  # noqa
+from .link import Link  # noqa
+from .node import Node  # noqa
 
 # import zope.sqlalchemy
 
