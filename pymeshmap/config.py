@@ -77,7 +77,7 @@ def get_settings(settings: Dict[str, Any] = None) -> Dict[str, Any]:
         settings,
         "database.url",
         "DATABASE_URL",
-        default="postgresql+psycopg2://postgres:pyMeshmap@localhost/postgres",
+        default="postgresql+psycopg2://postgres:pyMeshMap@localhost/postgres",
     )
 
     maybe_set(

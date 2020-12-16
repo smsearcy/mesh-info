@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, func
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, func
 
 from .meta import Base
 
@@ -8,8 +8,8 @@ class Link(Base):
 
     __tablename__ = "link"
 
-    source_id = Column(Integer, ForeignKey("node.id"), primary_key=True)
-    destination_id = Column(Integer, ForeignKey("node.id"), primary_key=True)
+    source_id = Column(Integer, ForeignKey("node.node_id"), primary_key=True)
+    destination_id = Column(Integer, ForeignKey("node.node_id"), primary_key=True)
     olsr_cost = Column(Float)
     distance = Column(Float)
     bearing = Column(Float)
@@ -28,4 +28,7 @@ class Link(Base):
     updated_at = Column(DateTime, onupdate=func.now(), nullable=False)
 
     def __repr__(self):
-        return f"<models.Link(source_id={self.source_id!r}, destination_id={self.destination_id!r})>"
+        return (
+            f"<models.Link(source_id={self.source_id!r}, "
+            f"destination_id={self.destination_id!r})>"
+        )

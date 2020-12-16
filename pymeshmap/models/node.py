@@ -33,6 +33,8 @@ class Node(Base):
 
     id = Column("node_id", Integer, primary_key=True)
     name = Column(String(70), nullable=False)
+    status = Column(Enum(NodeStatus), default=NodeStatus.ACTIVE, nullable=False)
+
     wlan_ip = Column(String(15), nullable=False)
     description = Column(Unicode(200), nullable=False)
 
@@ -64,8 +66,6 @@ class Node(Base):
     active_tunnel_count = Column(Integer(), nullable=False)
 
     system_info = Column(JSON(), nullable=False)
-
-    polling_status = Column(Enum(NodeStatus), default=NodeStatus.ACTIVE, nullable=False)
 
     created_at = Column(DateTime, default=func.now(), nullable=False)
     last_updated_at = Column(DateTime, onupdate=func.now(), nullable=False)
