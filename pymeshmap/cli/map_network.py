@@ -16,6 +16,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from .. import models
+from ..models import Link, Node, NodeStatus
 from ..poller import LinkInfo, Poller, SystemInfo
 from . import VERBOSE_TO_LOGGING
 
@@ -84,24 +85,24 @@ def save_nodes(nodes: List[SystemInfo], dbsession: Session):
 
     Looks for existing nodes by WiFi MAC address and name.
 
-    *Attention:* This does not currently implement the "removed nodes" of
-    MeshMap, the goal is to replace that functionality with a node status.
-
     """
     count: DefaultDict[str, int] = defaultdict(int)
     for node in nodes:
         count["total"] += 1
         # check to see if node exists in database by name, WiFi IP, or WiFi MAC address
-        results: List[models.Node] = dbsession.query(models.Node).filter(
-            or_(
-                models.Node.wlan_ip == node.wifi_ip_address,
-                models.Node.wlan_mac_address == node.wifi_mac_address,
-                models.Node.name == node.node_name,
+        results: List[Node] = (
+            dbsession.query(Node)
+            .filter(
+                or_(
+                    Node.wlan_mac_address == node.wifi_mac_address,
+                    Node.name == node.node_name,
+                )
             )
-        ).all()
+            .all()
+        )
         if len(results) > 1:
             count["issues"] += 1
-            model: models.Node = fix_multiple_entries(dbsession, results)
+            model: Node = fix_multiple_entries(dbsession, results)
         else:
             model = results[0]
 
@@ -109,9 +110,10 @@ def save_nodes(nodes: List[SystemInfo], dbsession: Session):
             # create new database model
             logger.debug("Saving {} to database", node)
             count["added"] += 1
-            model = models.Node(
-                wlan_ip=node.wifi_ip_address,
+            model = Node(
                 name=node.node_name,
+                status=NodeStatus.ACTIVE,
+                wlan_ip=node.wifi_ip_address,
                 description=node.description,
                 wlan_mac_address=node.wifi_mac_address,
                 last_seen=datetime.now(),  # timezone?
@@ -139,52 +141,56 @@ def save_nodes(nodes: List[SystemInfo], dbsession: Session):
             # update database model
             logger.debug("Updating {} in database with {}", model, node)
             count["updated"] += 1
-            model.wlan_ip = node.wifi_ip_address
             model.name = node.node_name
+            model.status = NodeStatus.ACTIVE
+            model.wlan_ip = node.wifi_ip_address
+            model.description = node.description
+            model.wlan_mac_address = node.wifi_mac_address
             model.last_seen = datetime.now()  # timezone?
             model.up_time = node.up_time
-            model.load_average = node.load_averages
+            model.load_averages = node.load_averages
             model.model = node.model
             model.board_id = node.board_id
             model.firmware_version = node.firmware_version
             model.firmware_manufacturer = node.firmware_manufacturer
             model.api_version = node.api_version
+            model.latitude = node.latitude
+            model.longitude = node.longitude
             model.grid_square = node.grid_square
-            model.wlan_mac_address = node.wifi_mac_address
             model.ssid = node.ssid
             model.channel = node.channel
             model.channel_bandwidth = node.channel_bandwidth
             model.services = node.services_json
             model.tunnel_installed = node.tunnel_installed
             model.active_tunnel_count = node.active_tunnel_count
-            model.latitude = node.latitude
-            model.longitude = node.longitude
 
     logger.success("Nodes written to database: {}", dict(count))
     return
 
 
-def fix_multiple_entries(dbsession: Session, rows: List[models.Node]) -> models.Node:
+def fix_multiple_entries(dbsession: Session, rows: List[Node]) -> Node:
     """Resolve multiple entries for a name, IP, and/or MAC address.
 
-    Currently saves the most recently seen entry and deletes the rest.
+    Currently saves the most recently seen entry and deactivates.
 
     Returns the model to use.
 
     """
+
+    # FIXME: This function needs to be updated
 
     matching_nodes = sorted(rows, key=attrgetter("last_seen"))
 
     logger.debug("Matching entries: {}", matching_nodes)
     if len(matching_nodes) > 2:
         logger.warning(
-            "Found {} entries in DB based on name, IP and/or MAC", len(matching_nodes)
+            "Found {} entries in DB based on name and/or MAC", len(matching_nodes)
         )
 
     most_recent = matching_nodes.pop(-1)
     for model in matching_nodes:
-        logger.debug("Deleting duplicate(?) entry: {}", model)
-        dbsession.delete(model)
+        logger.debug("Marking duplicate(?) entry inactive: {}", model)
+        model.status = NodeStatus.INACTIVE
 
     return most_recent
 
@@ -201,11 +207,13 @@ def save_links(links: List[LinkInfo], dbsession: Session):
 
     for link in links:
         count["total"] += 1
-        source: models.Node = dbsession.query(models.Node).get(link.source)
-        destination: models.Node = dbsession.query(models.Node).get(link.destination)
-        model = models.Link(
-            source_ip=source.wlan_ip, target_ip=destination.wlan_ip, olsr_cost=link.cost
+        source: Node = dbsession.query(Node).filter(
+            Node.wlan_ip == link.source, Node.status == NodeStatus.ACTIVE
         )
+        destination: Node = dbsession.query(Node).filter(
+            Node.wlan_ip == link.destination, Node.status == NodeStatus.ACTIVE
+        )
+        model = Link(source=source, destination=destination, olsr_cost=link.cost)
 
         if (
             source.longitude is None

@@ -1,4 +1,5 @@
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, func
+from sqlalchemy.orm import relationship
 
 from .meta import Base
 
@@ -26,6 +27,9 @@ class Link(Base):
 
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, onupdate=func.now(), nullable=False)
+
+    source = relationship("Node", foreign_keys="Link.source_id", back_populates="links")
+    destination = relationship("Node", foreign_keys="Link.destination_id")
 
     def __repr__(self):
         return (

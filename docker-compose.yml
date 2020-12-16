@@ -5,5 +5,6 @@ services:
     environment:
       POSTGRES_PASSWORD: pyMeshMap
     ports:
-      # this is useful for local development
-      - 5432:5432
+      # this is useful for local development/testing
+      # 5432 may already be in use
+      - 5433:5432

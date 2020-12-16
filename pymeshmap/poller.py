@@ -310,7 +310,7 @@ class SystemInfo:
 
     @property
     def wifi_mac_address(self) -> str:
-        return getattr(self.wifi_interface, "mac_address", "")
+        return getattr(self.wifi_interface, "mac_address", "").replace(":", "").lower()
 
     @property
     def band(self) -> str:

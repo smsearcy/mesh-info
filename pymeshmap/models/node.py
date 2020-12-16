@@ -12,6 +12,7 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
+from sqlalchemy.orm import relationship
 
 from .meta import Base
 
@@ -33,7 +34,7 @@ class Node(Base):
 
     id = Column("node_id", Integer, primary_key=True)
     name = Column(String(70), nullable=False)
-    status = Column(Enum(NodeStatus), default=NodeStatus.ACTIVE, nullable=False)
+    status = Column(Enum(NodeStatus), nullable=False)
 
     wlan_ip = Column(String(15), nullable=False)
     description = Column(Unicode(200), nullable=False)
@@ -69,6 +70,8 @@ class Node(Base):
 
     created_at = Column(DateTime, default=func.now(), nullable=False)
     last_updated_at = Column(DateTime, onupdate=func.now(), nullable=False)
+
+    links = relationship("Link", foreign_keys="Link.source_id", back_populates="source")
 
     def __repr__(self):
         return f"<models.Node(id={self.id!r}, name={self.name!r})>"
