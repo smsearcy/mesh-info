@@ -6,7 +6,7 @@ import math
 import sys
 import time
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from operator import attrgetter
 from typing import DefaultDict, Dict, List, Optional
 
@@ -28,9 +28,7 @@ from . import VERBOSE_TO_LOGGING
     count=True,
     help="Increase logging output by specifying -v up to -vvv",
 )
-@click.option(
-    "--dryrun", "dry_run", is_flag=True, help="Do not commit changes to the database"
-)
+@click.option("--dry-run", is_flag=True, help="Do not commit changes to the database")
 @click.pass_obj
 def main(settings: Dict, hostname: str, verbose: int, dry_run: bool):
     """Map the network and store information in the database."""
@@ -46,6 +44,9 @@ def main(settings: Dict, hostname: str, verbose: int, dry_run: bool):
     except Exception as exc:
         logger.exception("Failed to connect to database")
         raise click.ClickException(f"Failed to connect to database: {exc!s}")
+
+    with models.session_scope(session_factory, dry_run) as dbsession:
+        mark_inactive_nodes(dbsession, settings["map.inactive_days"])
 
     start_time = time.monotonic()
 
@@ -76,6 +77,26 @@ def main(settings: Dict, hostname: str, verbose: int, dry_run: bool):
 
     total_elapsed = time.monotonic() - start_time
     click.secho(f"Total time: {total_elapsed}s ({total_elapsed / 60:.2f}m)")
+    return
+
+
+def mark_inactive_nodes(dbsession: Session, inactive_days: int):
+    """Mark nodes inactive that have not been seen recently."""
+
+    inactive_cutoff = datetime.now() - timedelta(days=inactive_days)
+    count = (
+        dbsession.query(Node)
+        .filter(
+            Node.status == NodeStatus.ACTIVE,
+            Node.last_seen < inactive_cutoff,
+        )
+        .update({Node.status: NodeStatus.INACTIVE})
+    )
+    logger.info(
+        "Marked {:,d} nodes inactive that have not been seen since {}",
+        count,
+        inactive_cutoff,
+    )
     return
 
 

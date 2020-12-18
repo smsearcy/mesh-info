@@ -90,6 +90,10 @@ def get_settings(settings: Dict[str, Any] = None) -> Dict[str, Any]:
         default="1.7",
     )
 
+    maybe_set(
+        settings, "map.inactive_days", "MAP_INACTIVE_DAYS", default=14, converter=int
+    )
+
     return settings
 
 
