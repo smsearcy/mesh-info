@@ -8,11 +8,10 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from operator import attrgetter
-from typing import DefaultDict, Dict, List
+from typing import DefaultDict, Dict, List, Optional
 
 import click
 from loguru import logger
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from .. import models
@@ -83,28 +82,15 @@ def main(settings: Dict, hostname: str, verbose: int, dry_run: bool):
 def save_nodes(nodes: List[SystemInfo], dbsession: Session):
     """Saves node information to the database.
 
-    Looks for existing nodes by WiFi MAC address and name.
+    Looks for existing nodes by WLAN MAC address and name.
 
     """
     count: DefaultDict[str, int] = defaultdict(int)
     for node in nodes:
         count["total"] += 1
-        # check to see if node exists in database by name, WiFi IP, or WiFi MAC address
-        results: List[Node] = (
-            dbsession.query(Node)
-            .filter(
-                or_(
-                    Node.wlan_mac_address == node.wifi_mac_address,
-                    Node.name == node.node_name,
-                )
-            )
-            .all()
-        )
-        if len(results) > 1:
-            count["issues"] += 1
-            model: Node = fix_multiple_entries(dbsession, results)
-        else:
-            model = results[0]
+        # check to see if node exists in database by name and WLAN MAC address
+
+        model = get_db_model(dbsession, node)
 
         if model is None:
             # create new database model
@@ -168,31 +154,49 @@ def save_nodes(nodes: List[SystemInfo], dbsession: Session):
     return
 
 
-def fix_multiple_entries(dbsession: Session, rows: List[Node]) -> Node:
-    """Resolve multiple entries for a name, IP, and/or MAC address.
+def get_db_model(dbsession: Session, node: SystemInfo) -> Optional[Node]:
+    """Get the best match database record for this node."""
+    # Find the most recently seen node that matches both name and MAC address
+    query = dbsession.query(Node).filter(
+        Node.wlan_mac_address == node.wifi_mac_address,
+        Node.name == node.node_name,
+    )
+    model = _get_most_recent(query.all())
+    if model:
+        return model
 
-    Currently saves the most recently seen entry and deactivates.
+    # Find active node with same hardware
+    query = dbsession.query(Node).filter(
+        Node.wlan_mac_address == node.wifi_mac_address, Node.status == NodeStatus.ACTIVE
+    )
+    model = _get_most_recent(query.all())
+    if model:
+        return model
 
-    Returns the model to use.
+    # Find active node with same name
+    query = dbsession.query(Node).filter(
+        Node.name == node.node_name, Node.status == NodeStatus.ACTIVE
+    )
+    model = _get_most_recent(query.all())
+    if model:
+        return model
 
-    """
+    # Nothing found, treat as a new node
+    return None
 
-    # FIXME: This function needs to be updated
 
-    matching_nodes = sorted(rows, key=attrgetter("last_seen"))
+def _get_most_recent(results: List[Node]) -> Optional[Node]:
+    """Get the most recently seen node, optionally marking the others inactive."""
+    if len(results) == 0:
+        return None
 
-    logger.debug("Matching entries: {}", matching_nodes)
-    if len(matching_nodes) > 2:
-        logger.warning(
-            "Found {} entries in DB based on name and/or MAC", len(matching_nodes)
-        )
+    results = sorted(results, key=attrgetter("last_seen"), reverse=True)
+    for model in results[1:]:
+        if model.status == NodeStatus.ACTIVE:
+            logger.debug("Marking older match inactive: {}", model)
+            model.status = NodeStatus.INACTIVE
 
-    most_recent = matching_nodes.pop(-1)
-    for model in matching_nodes:
-        logger.debug("Marking duplicate(?) entry inactive: {}", model)
-        model.status = NodeStatus.INACTIVE
-
-    return most_recent
+    return results[0]
 
 
 def save_links(links: List[LinkInfo], dbsession: Session):
@@ -207,11 +211,15 @@ def save_links(links: List[LinkInfo], dbsession: Session):
 
     for link in links:
         count["total"] += 1
-        source: Node = dbsession.query(Node).filter(
-            Node.wlan_ip == link.source, Node.status == NodeStatus.ACTIVE
+        source: Node = (
+            dbsession.query(Node)
+            .filter(Node.wlan_ip == link.source, Node.status == NodeStatus.ACTIVE)
+            .one()
         )
-        destination: Node = dbsession.query(Node).filter(
-            Node.wlan_ip == link.destination, Node.status == NodeStatus.ACTIVE
+        destination: Node = (
+            dbsession.query(Node)
+            .filter(Node.wlan_ip == link.destination, Node.status == NodeStatus.ACTIVE)
+            .one()
         )
         model = Link(source=source, destination=destination, olsr_cost=link.cost)
 

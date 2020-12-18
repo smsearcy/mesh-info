@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     Float,
+    Index,
     Integer,
     String,
     Unicode,
@@ -72,6 +73,15 @@ class Node(Base):
     last_updated_at = Column(DateTime, onupdate=func.now(), nullable=False)
 
     links = relationship("Link", foreign_keys="Link.source_id", back_populates="source")
+
+    Index("active_name", name, unique=True, postgres_where=status == NodeStatus.ACTIVE)
+    Index(
+        "active_mac",
+        wlan_mac_address,
+        unique=True,
+        postgres_where=status == NodeStatus.ACTIVE,
+    )
+    Index("active_ip", wlan_ip, unique=True, postgres_where=status == NodeStatus.ACTIVE)
 
     def __repr__(self):
         return f"<models.Node(id={self.id!r}, name={self.name!r})>"
