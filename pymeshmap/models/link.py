@@ -26,7 +26,9 @@ class Link(Base):
     # neighbor_link_quality = Column(Float)
 
     created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(DateTime, onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     source = relationship("Node", foreign_keys="Link.source_id", back_populates="links")
     destination = relationship("Node", foreign_keys="Link.destination_id")

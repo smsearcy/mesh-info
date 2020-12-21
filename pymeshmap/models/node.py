@@ -70,7 +70,9 @@ class Node(Base):
     system_info = Column(JSON(), nullable=False)
 
     created_at = Column(DateTime, default=func.now(), nullable=False)
-    last_updated_at = Column(DateTime, onupdate=func.now(), nullable=False)
+    last_updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     links = relationship("Link", foreign_keys="Link.source_id", back_populates="source")
 

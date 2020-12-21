@@ -77,7 +77,8 @@ def get_settings(settings: Dict[str, Any] = None) -> Dict[str, Any]:
         settings,
         "database.url",
         "DATABASE_URL",
-        default="postgresql+psycopg2://postgres:pyMeshMap@localhost:5433/postgres",
+        # this is defaulted in preparation for docker-compose
+        default="postgresql+psycopg2://postgres:pyMeshMap@db:5432/postgres",
     )
 
     maybe_set(

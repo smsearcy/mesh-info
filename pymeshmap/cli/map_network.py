@@ -83,7 +83,7 @@ def main(settings: Dict, hostname: str, verbose: int, dry_run: bool):
 def mark_inactive_nodes(dbsession: Session, inactive_days: int):
     """Mark nodes inactive that have not been seen recently."""
 
-    inactive_cutoff = datetime.now() - timedelta(days=inactive_days)
+    inactive_cutoff = datetime.utcnow() - timedelta(days=inactive_days)
     count = (
         dbsession.query(Node)
         .filter(
@@ -123,7 +123,7 @@ def save_nodes(nodes: List[SystemInfo], dbsession: Session):
                 wlan_ip=node.wifi_ip_address,
                 description=node.description,
                 wlan_mac_address=node.wifi_mac_address,
-                last_seen=datetime.now(),  # timezone?
+                last_seen=datetime.utcnow(),
                 up_time=node.up_time,
                 load_averages=node.load_averages,
                 model=node.model,
@@ -153,7 +153,7 @@ def save_nodes(nodes: List[SystemInfo], dbsession: Session):
             model.wlan_ip = node.wifi_ip_address
             model.description = node.description
             model.wlan_mac_address = node.wifi_mac_address
-            model.last_seen = datetime.now()  # timezone?
+            model.last_seen = datetime.utcnow()  # timezone?
             model.up_time = node.up_time
             model.load_averages = node.load_averages
             model.model = node.model
@@ -242,7 +242,23 @@ def save_links(links: List[LinkInfo], dbsession: Session):
             .filter(Node.wlan_ip == link.destination, Node.status == NodeStatus.ACTIVE)
             .one()
         )
-        model = Link(source=source, destination=destination, olsr_cost=link.cost)
+        model = (
+            dbsession.query(Link)
+            .filter(
+                Link.source == source,
+                Link.destination == destination,
+            )
+            .one_or_none()
+        )
+
+        if model is None:
+            count["new"] += 1
+            model = Link(source=source, destination=destination)
+            dbsession.add(model)
+        else:
+            count["updated"] += 1
+
+        model.olsr_cost = link.cost
 
         if (
             source.longitude is None
@@ -268,8 +284,6 @@ def save_links(links: List[LinkInfo], dbsession: Session):
                 destination.latitude,
                 destination.longitude,
             )
-
-        dbsession.merge(model)
 
     logger.success("Links written to database: {}", dict(count))
     return
