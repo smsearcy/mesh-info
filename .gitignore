@@ -1,5 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/python,virtualenv,vagrant
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,virtualenv,vagrant
+# Created by https://www.toptal.com/developers/gitignore/api/python,virtualenv
+# Edit at https://www.toptal.com/developers/gitignore?templates=python,virtualenv
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -141,16 +141,6 @@ dmypy.json
 # profiling data
 .prof
 
-### Vagrant ###
-# General
-.vagrant/
-
-# Log files (if you are creating logs in debug mode, uncomment this)
-# *.log
-
-### Vagrant Patch ###
-*.box
-
 ### VirtualEnv ###
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
@@ -163,4 +153,4 @@ dmypy.json
 pyvenv.cfg
 pip-selfcheck.json
 
-# End of https://www.toptal.com/developers/gitignore/api/python,virtualenv,vagrant
+# End of https://www.toptal.com/developers/gitignore/api/python,virtualenv
