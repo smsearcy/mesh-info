@@ -15,25 +15,42 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from .. import models
-from ..models import Link, Node, NodeStatus
+from ..models import Link, LinkStatus, Node, NodeStatus
 from ..poller import LinkInfo, Poller, SystemInfo
-from . import VERBOSE_TO_LOGGING
+
+MODEL_TO_SYSINFO_ATTRS = {
+    "name": "node_name",
+    "wlan_ip": "wifi_ip_address",
+    "description": "description",
+    "wlan_mac_address": "wifi_mac_address",
+    "up_time": "up_time",
+    "load_averages": "load_averages",
+    "model": "model",
+    "board_id": "board_id",
+    "firmware_version": "firmware_version",
+    "firmware_manufacturer": "firmware_manufacturer",
+    "api_version": "api_version",
+    "latitude": "latitude",
+    "longitude": "longitude",
+    "grid_square": "grid_square",
+    "ssid": "ssid",
+    "channel": "channel",
+    "channel_bandwidth": "channel_bandwidth",
+    "band": "band",
+    "services": "services_json",
+    "tunnel_installed": "tunnel_installed",
+    "active_tunnel_count": "active_tunnel_count",
+    "system_info": "source_json",
+}
 
 
 @click.command()
 @click.argument("hostname", default="")
-@click.option(
-    "-v",
-    "--verbose",
-    count=True,
-    help="Increase logging output by specifying -v up to -vvv",
-)
-@click.option("--dry-run", is_flag=True, help="Do not commit changes to the database")
 @click.pass_obj
-def main(settings: Dict, hostname: str, verbose: int, dry_run: bool):
+def main(settings: Dict, hostname: str):
     """Map the network and store information in the database."""
 
-    log_level = VERBOSE_TO_LOGGING.get(verbose, "SUCCESS")
+    log_level = settings["pymeshmap.log_level"]
     logger.remove()
     logger.add(sys.stderr, level=log_level)
 
@@ -45,8 +62,9 @@ def main(settings: Dict, hostname: str, verbose: int, dry_run: bool):
         logger.exception("Failed to connect to database")
         raise click.ClickException(f"Failed to connect to database: {exc!s}")
 
-    with models.session_scope(session_factory, dry_run) as dbsession:
-        mark_inactive_nodes(dbsession, settings["map.inactive_days"])
+    with models.session_scope(session_factory) as dbsession:
+        # TODO: switch to configuration objects then pass that
+        expire_data(dbsession, settings["map.inactive_days"])
 
     start_time = time.monotonic()
 
@@ -64,7 +82,7 @@ def main(settings: Dict, hostname: str, verbose: int, dry_run: bool):
     poller_elapsed = poller_finished - start_time
     click.secho(f"Network polling took {poller_elapsed}s ({poller_elapsed / 60:.2f}m)")
 
-    with models.session_scope(session_factory, dry_run) as dbsession:
+    with models.session_scope(session_factory) as dbsession:
         save_nodes(nodes, dbsession)
         save_links(links, dbsession)
 
@@ -80,10 +98,25 @@ def main(settings: Dict, hostname: str, verbose: int, dry_run: bool):
     return
 
 
-def mark_inactive_nodes(dbsession: Session, inactive_days: int):
-    """Mark nodes inactive that have not been seen recently."""
+def expire_data(dbsession: Session, inactive_days: int):
+    """Update the status of nodes/links that have not been seen recently."""
 
     inactive_cutoff = datetime.utcnow() - timedelta(days=inactive_days)
+
+    count = (
+        dbsession.query(Link)
+        .filter(
+            Link.status == LinkStatus.RECENT,
+            Link.last_seen < inactive_cutoff,
+        )
+        .update({Link.status: LinkStatus.INACTIVE})
+    )
+    logger.info(
+        "Marked {:,d} links inactive that have not been seen since {}",
+        count,
+        inactive_cutoff,
+    )
+
     count = (
         dbsession.query(Node)
         .filter(
@@ -117,59 +150,18 @@ def save_nodes(nodes: List[SystemInfo], dbsession: Session):
             # create new database model
             logger.debug("Saving {} to database", node)
             count["added"] += 1
-            model = Node(
-                name=node.node_name,
-                status=NodeStatus.ACTIVE,
-                wlan_ip=node.wifi_ip_address,
-                description=node.description,
-                wlan_mac_address=node.wifi_mac_address,
-                last_seen=datetime.utcnow(),
-                up_time=node.up_time,
-                load_averages=node.load_averages,
-                model=node.model,
-                board_id=node.board_id,
-                firmware_version=node.firmware_version,
-                firmware_manufacturer=node.firmware_manufacturer,
-                api_version=node.api_version,
-                latitude=node.latitude,
-                longitude=node.longitude,
-                grid_square=node.grid_square,
-                ssid=node.ssid,
-                channel=node.channel,
-                channel_bandwidth=node.channel_bandwidth,
-                band=node.band,
-                services=node.services_json,
-                tunnel_installed=node.tunnel_installed,
-                active_tunnel_count=node.active_tunnel_count,
-                system_info=node.source_json,
-            )
+            model = Node()
             dbsession.add(model)
         else:
             # update database model
             logger.debug("Updating {} in database with {}", model, node)
             count["updated"] += 1
-            model.name = node.node_name
-            model.status = NodeStatus.ACTIVE
-            model.wlan_ip = node.wifi_ip_address
-            model.description = node.description
-            model.wlan_mac_address = node.wifi_mac_address
-            model.last_seen = datetime.utcnow()  # timezone?
-            model.up_time = node.up_time
-            model.load_averages = node.load_averages
-            model.model = node.model
-            model.board_id = node.board_id
-            model.firmware_version = node.firmware_version
-            model.firmware_manufacturer = node.firmware_manufacturer
-            model.api_version = node.api_version
-            model.latitude = node.latitude
-            model.longitude = node.longitude
-            model.grid_square = node.grid_square
-            model.ssid = node.ssid
-            model.channel = node.channel
-            model.channel_bandwidth = node.channel_bandwidth
-            model.services = node.services_json
-            model.tunnel_installed = node.tunnel_installed
-            model.active_tunnel_count = node.active_tunnel_count
+
+        model.last_seen = datetime.utcnow()
+        model.status = NodeStatus.ACTIVE
+
+        for model_attr, node_attr in MODEL_TO_SYSINFO_ATTRS.items():
+            setattr(model, model_attr, getattr(node, node_attr))
 
     logger.success("Nodes written to database: {}", dict(count))
     return
@@ -230,6 +222,11 @@ def save_links(links: List[LinkInfo], dbsession: Session):
     """
     count: DefaultDict[str, int] = defaultdict(int)
 
+    # Downgrade all "current" links to "recent" so that only ones updated are "current"
+    dbsession.query(Link).filter(Link.status == LinkStatus.CURRENT).update(
+        {Link.status: LinkStatus.RECENT}
+    )
+
     for link in links:
         count["total"] += 1
         source: Node = (
@@ -259,6 +256,8 @@ def save_links(links: List[LinkInfo], dbsession: Session):
             count["updated"] += 1
 
         model.olsr_cost = link.cost
+        model.status = LinkStatus.CURRENT
+        model.last_seen = datetime.utcnow()
 
         if (
             source.longitude is None

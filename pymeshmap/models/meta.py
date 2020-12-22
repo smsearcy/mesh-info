@@ -1,3 +1,5 @@
+import enum
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import MetaData
 
@@ -14,3 +16,24 @@ NAMING_CONVENTION = {
 
 metadata = MetaData(naming_convention=NAMING_CONVENTION)
 Base = declarative_base(metadata=metadata)
+
+
+class NodeStatus(enum.Enum):
+    """Enumerate possible polling statuses for nodes."""
+
+    ACTIVE = enum.auto()
+    INACTIVE = enum.auto()
+
+    def __str__(self):
+        return self.name.title()
+
+
+class LinkStatus(enum.Enum):
+    """Enumerate possible statuses for links."""
+
+    CURRENT = enum.auto()
+    RECENT = enum.auto()
+    INACTIVE = enum.auto()
+
+    def __str__(self):
+        return self.name.title()

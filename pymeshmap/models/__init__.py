@@ -14,8 +14,8 @@ from sqlalchemy.orm import Session, configure_mappers, sessionmaker
 # import or define all models here to ensure they are attached to the
 # Base.metadata prior to any initialization routines
 from .link import Link  # noqa
-from .meta import Base  # noqa
-from .node import Node, NodeStatus  # noqa
+from .meta import Base, LinkStatus, NodeStatus  # noqa
+from .node import Node  # noqa
 
 # import zope.sqlalchemy
 
@@ -36,15 +36,12 @@ def get_session_factory(engine) -> sessionmaker:
 
 
 @contextlib.contextmanager
-def session_scope(factory: sessionmaker, dry_run: bool = False) -> Iterator[Session]:
+def session_scope(factory: sessionmaker) -> Iterator[Session]:
     """Yields a session wrapped in a context manager."""
     session = factory()
     try:
         yield session
-        if dry_run:
-            session.rollback()
-        else:
-            session.commit()
+        session.commit()
     except Exception:
         session.rollback()
         raise

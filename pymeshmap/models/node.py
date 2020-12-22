@@ -1,4 +1,4 @@
-import enum
+from datetime import datetime
 
 from sqlalchemy import (
     Boolean,
@@ -10,22 +10,11 @@ from sqlalchemy import (
     Integer,
     String,
     Unicode,
-    func,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlalchemy.orm import relationship
 
-from .meta import Base
-
-
-class NodeStatus(enum.Enum):
-    """Enumerate possible polling statuses for nodes."""
-
-    ACTIVE = enum.auto()
-    INACTIVE = enum.auto()
-
-    def __str__(self):
-        return self.name.title()
+from .meta import Base, NodeStatus
 
 
 class Node(Base):
@@ -69,21 +58,25 @@ class Node(Base):
 
     system_info = Column(JSON(), nullable=False)
 
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow(), nullable=False)
     last_updated_at = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow(), nullable=False
     )
 
     links = relationship("Link", foreign_keys="Link.source_id", back_populates="source")
 
-    Index("active_name", name, unique=True, postgres_where=status == NodeStatus.ACTIVE)
+    Index(
+        "active_name", name, unique=True, postgresql_where=status == NodeStatus.ACTIVE
+    )
     Index(
         "active_mac",
         wlan_mac_address,
         unique=True,
-        postgres_where=status == NodeStatus.ACTIVE,
+        postgresql_where=status == NodeStatus.ACTIVE,
     )
-    Index("active_ip", wlan_ip, unique=True, postgres_where=status == NodeStatus.ACTIVE)
+    Index(
+        "active_ip", wlan_ip, unique=True, postgresql_where=status == NodeStatus.ACTIVE
+    )
 
     def __repr__(self):
         return f"<models.Node(id={self.id!r}, name={self.name!r})>"
