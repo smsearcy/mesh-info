@@ -5,11 +5,11 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import Dict
 
 import click
 from loguru import logger
 
+from ..config import AppConfig
 from ..poller import LinkInfo, NodeError, Poller, SystemInfo
 from . import VERBOSE_TO_LOGGING
 
@@ -38,7 +38,9 @@ API_VERSIONS = {"1.7": "bright_green", "1.6": "green", "1.5": "yellow", "1.3": "
     help="Path to save files to",
 )
 @click.pass_obj
-def main(settings: Dict, hostname: str, verbose: int, save_errors: bool, path: str):
+def main(
+    app_config: AppConfig, hostname: str, verbose: int, save_errors: bool, path: str
+):
     """Crawls network and prints information about the nodes and links.
 
     Detailed output is not printed until the crawler finishes.
@@ -50,7 +52,7 @@ def main(settings: Dict, hostname: str, verbose: int, save_errors: bool, path: s
 
     """
 
-    hostname = hostname or settings["pymeshmap.local_node"]
+    app_config.poller.node = hostname or app_config.poller.node
 
     log_level = VERBOSE_TO_LOGGING.get(verbose, "SUCCESS")
     logger.remove()
@@ -61,13 +63,7 @@ def main(settings: Dict, hostname: str, verbose: int, save_errors: bool, path: s
     output_path = Path(path)
 
     async_debug = log_level == "DEBUG"
-    poller = Poller(
-        hostname,
-        read_timeout=settings["poller.read_timeout"],
-        connect_timeout=settings["poller.connect_timeout"],
-        total_timeout=settings["poller.total_timeout"],
-        max_connections=settings["poller.max_connections"],
-    )
+    poller = Poller.from_config(app_config.poller)
     nodes, links, errors = asyncio.run(poller.network_info(), debug=async_debug)
 
     for node in nodes:

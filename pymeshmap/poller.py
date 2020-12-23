@@ -37,6 +37,7 @@ import attr
 from loguru import logger
 
 from . import aredn
+from .config import AppConfig
 
 
 @attr.s(auto_attribs=True)
@@ -53,7 +54,15 @@ class Poller:
     connect_timeout: int = 20
     read_timeout: int = 20
     total_timeout: Optional[int] = None
-    # if we add ignored_nodes it should be here
+
+    @classmethod
+    def from_config(cls, config: AppConfig.Poller) -> Poller:
+        return cls(
+            local_node=config.node,
+            max_connections=config.max_connections,
+            connect_timeout=config.connect_timeout,
+            read_timeout=config.read_timeout,
+        )
 
     async def network_info(self) -> NetworkInfo:
         """Helper function to query node and link information asynchronously.

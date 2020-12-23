@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import enum
-import os
-from typing import Any, Callable, Dict
 
+import environ
 from dotenv import load_dotenv
+
+__all__ = ["Environment", "AppConfig", "app_config"]
 
 
 class Environment(enum.Enum):
@@ -14,109 +15,36 @@ class Environment(enum.Enum):
     PROD = "production"
 
 
-def get_settings(settings: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Load application configuration from the environment.
+@environ.config(prefix="MESHMAP")
+class AppConfig:
+    @environ.config
+    class Poller:
+        node: str = environ.var(default="localnode.local.mesh")
+        max_connections: int = environ.var(default=50, converter=int)
+        connect_timeout: int = environ.var(default=20, converter=int)
+        read_timeout: int = environ.var(default=20, converter=int)
 
-    If settings are not provided then use sane defaults so the application can run.
+    @environ.config
+    class Aredn:
+        current_firmware: str = environ.var(default="3.20.3.1")
+        current_api: str = environ.var(default="1.7")
 
-    """
-    # walks up the folder path looking for `.env` file
-    # and loads into environment variables
-    load_dotenv()
+    @environ.config
+    class Collector:
+        node_inactive: int = environ.var(default=7, converter=int)
+        link_inactive: int = environ.var(default=1, converter=int)
 
-    if settings is None:
-        settings = {}
-
-    maybe_set(
-        settings,
-        "pymeshmap.env",
-        "PYMESHMAP_ENV",
-        default=Environment.PROD,
-        converter=Environment,
+    env: Environment = environ.var(default=Environment.PROD, converter=Environment)
+    log_level: str = environ.var(default="SUCCESS")
+    db_url: str = environ.var(
+        default="postgresql+psycopg2://postgres:pyMeshMap@db:5432/postgres"
     )
-    maybe_set(
-        settings,
-        "pymeshmap.local_node",
-        "PYMESHMAP_LOCAL_NODE",
-        default="localnode.local.mesh",
-    )
-    maybe_set(settings, "pymeshmap.log_level", "PYMESHMAP_LOG_LEVEL", default="SUCCESS")
-
-    # Configure the poller
-    maybe_set(
-        settings,
-        "poller.max_connections",
-        "POLLER_MAX_CONNECTIONS",
-        default=50,
-        converter=int,
-    )
-    # Timeouts are in seconds
-    maybe_set(
-        settings,
-        "poller.connect_timeout",
-        "POLLER_CONNECT_TIMEOUT",
-        default=20,
-        converter=int,
-    )
-    maybe_set(
-        settings,
-        "poller.read_timeout",
-        "POLLER_READ_TIMEOUT",
-        default=20,
-        converter=int,
-    )
-    maybe_set(
-        settings,
-        "poller.total_timeout",
-        "POLLER_TOTAL_TIMEOUT",
-        default=None,
-        converter=int,
-    )
-
-    maybe_set(
-        settings,
-        "database.url",
-        "DATABASE_URL",
-        # this is defaulted in preparation for docker-compose
-        default="postgresql+psycopg2://postgres:pyMeshMap@db:5432/postgres",
-    )
-
-    maybe_set(
-        settings, "aredn.current_firmware", "AREDN_CURRENT_FIRMWARE", default="3.20.3.0"
-    )
-    maybe_set(
-        settings,
-        "aredn.current_api_version",
-        "AREDN_CURRENT_API_VERSION",
-        default="1.7",
-    )
-
-    maybe_set(
-        settings, "map.inactive_days", "MAP_INACTIVE_DAYS", default=14, converter=int
-    )
-
-    return settings
+    poller: Poller = environ.group(Poller)
+    aredn: Aredn = environ.group(Aredn)
+    collector: Collector = environ.group(Collector)
 
 
-def maybe_set(
-    settings: Dict[str, Any],
-    key: str,
-    env_var: str,
-    *,
-    default: Any,
-    converter: Callable = None,
-):
-    """Set missing values with either the environment or a provided default.
-
-    Based on `warehouse.config.maybe_set()` (licensed under Apache 2.0)
-
-    """
-    if key in settings:
-        return
-    if env_var in os.environ:
-        value = os.environ[env_var]
-        if converter is not None:
-            value = converter(value)
-        settings[key] = value
-    else:
-        settings[key] = default
+# walks up the folder path looking for `.env` file
+# and loads into environment variables
+load_dotenv()
+app_config = environ.to_config(AppConfig)

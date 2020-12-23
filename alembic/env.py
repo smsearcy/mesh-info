@@ -1,9 +1,9 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 
 from alembic import context
-from pymeshmap.config import get_settings
+from pymeshmap.config import app_config
 from pymeshmap.models import Base
 
 # this is the Alembic Config object, which provides
@@ -38,10 +38,8 @@ def run_migrations_offline():
     script output.
 
     """
-    settings = get_settings()
-    url = settings["database.url"]
     context.configure(
-        url=url,
+        url=app_config.db_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -58,9 +56,7 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        get_settings(), prefix="database.", poolclass=pool.NullPool
-    )
+    connectable = create_engine(app_config.db_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)

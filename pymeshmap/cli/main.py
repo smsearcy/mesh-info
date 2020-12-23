@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import click
 
-from pymeshmap import config
 from pymeshmap.cli import map_network, network_report, scrub
+from pymeshmap.config import app_config
 
 
 @click.group()
 @click.pass_context
 def main(ctx):
-    settings = config.get_settings()
-    ctx.obj = settings
+    ctx.obj = app_config
     return
 
 

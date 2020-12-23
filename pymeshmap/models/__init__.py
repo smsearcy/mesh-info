@@ -6,10 +6,12 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Dict, Iterator
+from typing import Iterator
 
-from sqlalchemy import engine_from_config
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, configure_mappers, sessionmaker
+
+from ..config import AppConfig
 
 # import or define all models here to ensure they are attached to the
 # Base.metadata prior to any initialization routines
@@ -25,8 +27,8 @@ from .node import Node  # noqa
 configure_mappers()
 
 
-def get_engine(settings: Dict, prefix="database."):
-    return engine_from_config(settings, prefix)
+def get_engine(app_config: AppConfig):
+    return create_engine(app_config.db_url)
 
 
 def get_session_factory(engine) -> sessionmaker:

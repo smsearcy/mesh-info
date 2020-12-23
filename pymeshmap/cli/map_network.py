@@ -8,13 +8,14 @@ import time
 from collections import defaultdict
 from datetime import datetime, timedelta
 from operator import attrgetter
-from typing import DefaultDict, Dict, List, Optional
+from typing import DefaultDict, List, Optional
 
 import click
 from loguru import logger
 from sqlalchemy.orm import Session
 
 from .. import models
+from ..config import AppConfig
 from ..models import Link, LinkStatus, Node, NodeStatus
 from ..poller import LinkInfo, Poller, SystemInfo
 
@@ -45,37 +46,28 @@ MODEL_TO_SYSINFO_ATTRS = {
 
 
 @click.command()
-@click.argument("hostname", default="")
 @click.pass_obj
-def main(settings: Dict, hostname: str):
+def main(app_config: AppConfig):
     """Map the network and store information in the database."""
 
-    log_level = settings["pymeshmap.log_level"]
+    log_level = app_config.log_level
     logger.remove()
     logger.add(sys.stderr, level=log_level)
 
-    hostname = hostname or settings["pymeshmap.local_node"]
-
     try:
-        session_factory = models.get_session_factory(models.get_engine(settings))
+        session_factory = models.get_session_factory(models.get_engine(app_config))
     except Exception as exc:
         logger.exception("Failed to connect to database")
         raise click.ClickException(f"Failed to connect to database: {exc!s}")
 
     with models.session_scope(session_factory) as dbsession:
         # TODO: switch to configuration objects then pass that
-        expire_data(dbsession, settings["map.inactive_days"])
+        expire_data(dbsession, app_config.collector)
 
     start_time = time.monotonic()
 
     async_debug = log_level == "DEBUG"
-    poller = Poller(
-        hostname,
-        read_timeout=settings["poller.read_timeout"],
-        connect_timeout=settings["poller.connect_timeout"],
-        total_timeout=settings["poller.total_timeout"],
-        max_connections=settings["poller.max_connections"],
-    )
+    poller = Poller.from_config(app_config.poller)
     nodes, links, errors = asyncio.run(poller.network_info(), debug=async_debug)
 
     poller_finished = time.monotonic()
@@ -98,11 +90,10 @@ def main(settings: Dict, hostname: str):
     return
 
 
-def expire_data(dbsession: Session, inactive_days: int):
+def expire_data(dbsession: Session, config: AppConfig.Collector):
     """Update the status of nodes/links that have not been seen recently."""
 
-    inactive_cutoff = datetime.utcnow() - timedelta(days=inactive_days)
-
+    inactive_cutoff = datetime.utcnow() - timedelta(days=config.link_inactive)
     count = (
         dbsession.query(Link)
         .filter(
@@ -117,6 +108,7 @@ def expire_data(dbsession: Session, inactive_days: int):
         inactive_cutoff,
     )
 
+    inactive_cutoff = datetime.utcnow() - timedelta(days=config.node_inactive)
     count = (
         dbsession.query(Node)
         .filter(

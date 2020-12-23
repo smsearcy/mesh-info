@@ -1,4 +1,4 @@
-all: format lint tests
+all: format lint mypy tests
 
 format:
 	pre-commit run --all-files
@@ -6,7 +6,10 @@ format:
 lint:
 	poetry run flake8
 
+mypy:
+	poetry run mypy pymeshmap
+
 tests:
 	poetry run pytest
 
-.PHONY: all format lint tests
+.PHONY: all format lint mypy tests
