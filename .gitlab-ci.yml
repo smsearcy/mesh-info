@@ -31,6 +31,7 @@ pre-commit:
     paths:
       - .cache/pip
       - .cache/pre-commit
+    policy: pull
 
 # Template to prepare Poetry (for use with `extends`)
 .poetry:
@@ -94,3 +95,12 @@ pytest 3.8:
       - .cache/pip
       - .cache/pypoetry
     policy: pull
+
+pytest 3.9:
+  extends: .pytest
+  image: python:3.9
+  cache:
+    key: poetry39
+    paths:
+      - .cache/pip
+      - .cache/pypoetry

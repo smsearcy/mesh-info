@@ -5,7 +5,7 @@ Application for mapping and displaying displaying information about an
 [AREDN](https://arednmesh.org/) Mesh Network, based on KG6WXC's
 [MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap).
 
-Uses Python's `asyncio` library to concurrently query nodes for (hopefully) much faster polling times.
+Uses Python's `asyncio` library to concurrently query nodes for faster polling times.
 
 
 Getting Started
@@ -16,7 +16,7 @@ uses [Poetry](https://python-poetry.org/) to manage dependencies
 so you will need that [installed](https://python-poetry.org/docs/#installation).
 
 *Some of required packages might need a C compiler as well,
-that's why the goal is a container for easy deployment.*
+that's why one future goal is a container for easy deployment.*
 
 ```shell script
 $ git clone https://gitlab.com/smsearcy/pymeshmap.git
@@ -57,16 +57,17 @@ This project started because I wanted to play with the `asyncio` library in Pyth
 and crawling potentially slow AREDN mesh networks seemed like a good opportunity.
 Thus I'm building off the work of KG6WXC's [MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap),
 rather than re-inventing the wheel.
-My initial goal is to keep the same database design
+While I was thinking of keeping the same database design
 (so this could be a drop-in replacement for the mapper)
-but there are some future changes I'm thinking of as well
-(such as tracking old/inactive nodes as a status within the single table).
+I've decided to initially focus on storing historical time-series data and
+thus will be architecting the database for that
+(while including enough information to be able to render current-state maps).
 
 **Other Goals:**
 
 * Unit tests for validating the parsing of `sysinfo.json` for different versions of the AREDN firmware.
 * A basic logical map of the mesh without need for geography tiles via [NetworkX](https://networkx.github.io/documentation/stable/index.html).
-* Simpler deployment via containers
+* Deployment via containers
 (possibly with in-memory SQLite database for very basic setup).
 * Eventually, geographic based map similar to [MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap).
 
