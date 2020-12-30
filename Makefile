@@ -10,6 +10,6 @@ mypy:
 	poetry run mypy pymeshmap
 
 tests:
-	poetry run pytest
+	poetry run pytest --cov=pymeshmap
 
 .PHONY: all format lint mypy tests
