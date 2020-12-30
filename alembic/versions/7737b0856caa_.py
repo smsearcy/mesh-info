@@ -1,8 +1,8 @@
-"""Initialize the database for pyMeshMap.
+"""Initialize the 'node' and 'link' tables in the MeshMap database.
 
-Revision ID: 40b49bb57292
+Revision ID: 7737b0856caa
 Revises:
-Create Date: 2020-12-22 12:53:03.571174
+Create Date: 2020-12-29 13:32:53.206903
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "40b49bb57292"
+revision = "7737b0856caa"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,7 +29,7 @@ def upgrade():
         sa.Column("wlan_ip", sa.String(length=15), nullable=False),
         sa.Column("description", sa.Unicode(length=200), nullable=False),
         sa.Column("wlan_mac_address", sa.String(length=12), nullable=False),
-        sa.Column("last_seen", sa.DateTime(), nullable=False),
+        sa.Column("last_seen", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("up_time", sa.String(length=25), nullable=False),
         sa.Column(
             "load_averages", postgresql.ARRAY(sa.Float(), dimensions=1), nullable=True
@@ -52,8 +52,8 @@ def upgrade():
         sa.Column(
             "system_info", postgresql.JSON(astext_type=sa.Text()), nullable=False
         ),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column("last_updated_at", sa.DateTime(), nullable=False),
+        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column("last_updated_at", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("node_id", name=op.f("pk_node")),
     )
     op.create_index(
@@ -86,12 +86,12 @@ def upgrade():
             sa.Enum("CURRENT", "RECENT", "INACTIVE", name="linkstatus"),
             nullable=False,
         ),
-        sa.Column("last_seen", sa.DateTime(), nullable=False),
+        sa.Column("last_seen", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("olsr_cost", sa.Float(), nullable=True),
         sa.Column("distance", sa.Float(), nullable=True),
         sa.Column("bearing", sa.Float(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column("last_updated_at", sa.DateTime(), nullable=False),
+        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column("last_updated_at", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(
             ["destination_id"],
             ["node.node_id"],

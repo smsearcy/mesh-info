@@ -1,6 +1,4 @@
-from datetime import datetime
-
-from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Index, Integer
+from sqlalchemy import TIMESTAMP, Column, Enum, Float, ForeignKey, Index, Integer, func
 from sqlalchemy.orm import relationship
 
 from .meta import Base, LinkStatus
@@ -14,7 +12,7 @@ class Link(Base):
     source_id = Column(Integer, ForeignKey("node.node_id"), primary_key=True)
     destination_id = Column(Integer, ForeignKey("node.node_id"), primary_key=True)
     status = Column(Enum(LinkStatus), nullable=False)
-    last_seen = Column(DateTime, nullable=False)
+    last_seen = Column(TIMESTAMP(timezone=True), nullable=False, default=func.now())
 
     olsr_cost = Column(Float)
     distance = Column(Float)
@@ -30,9 +28,12 @@ class Link(Base):
     # link_quality = Column(Float)
     # neighbor_link_quality = Column(Float)
 
-    created_at = Column(DateTime, default=datetime.utcnow(), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), default=func.now(), nullable=False)
     last_updated_at = Column(
-        DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow(), nullable=False
+        TIMESTAMP(timezone=True),
+        default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )
 
     source = relationship("Node", foreign_keys="Link.source_id", back_populates="links")

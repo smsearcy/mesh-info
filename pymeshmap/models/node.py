@@ -1,15 +1,14 @@
-from datetime import datetime
-
 from sqlalchemy import (
+    TIMESTAMP,
     Boolean,
     Column,
-    DateTime,
     Enum,
     Float,
     Index,
     Integer,
     String,
     Unicode,
+    func,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlalchemy.orm import relationship
@@ -32,7 +31,7 @@ class Node(Base):
     # store MAC addresses without colons
     wlan_mac_address = Column(String(12), nullable=False)
 
-    last_seen = Column(DateTime, nullable=False)
+    last_seen = Column(TIMESTAMP(timezone=True), nullable=False)
 
     up_time = Column(String(25), nullable=False)
     load_averages = Column(ARRAY(Float, dimensions=1))
@@ -58,9 +57,12 @@ class Node(Base):
 
     system_info = Column(JSON(), nullable=False)
 
-    created_at = Column(DateTime, default=datetime.utcnow(), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), default=func.now(), nullable=False)
     last_updated_at = Column(
-        DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow(), nullable=False
+        TIMESTAMP(timezone=True),
+        default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )
 
     links = relationship("Link", foreign_keys="Link.source_id", back_populates="source")
