@@ -2,4 +2,4 @@
 
 
 def test_cli_loads():
-    from pymeshmap import cli  # noqa
+    from pymeshmap.cli import main  # noqa
