@@ -3,10 +3,8 @@ max-line-length = 80
 select = C,E,F,W,B,B950
 ignore = E203, E501, E722, W503
 max_complexity = 12
-
-[tool:pytest]
-strict = true
-xfail_strict = true
-addopts = -ra
-testpaths = tests
-log_level = INFO
+exclude =
+    .git
+    .tox
+    __pycache__
+    alembic/versions

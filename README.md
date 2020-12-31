@@ -104,6 +104,7 @@ and `cd` to that directory in a terminal.
 3. To configure your IDE to use the correct virtual environment
 run `poetry env info`
 and update your IDE to use the Virtualenv path specified.
-4. To run the `pymeshmap` command either
-execute `poetry run pymeshmap [sub-command]`
-or if the virtual environment is active just run `pymeshmap [sub-command]`
+4. A PostgreSQL database can be started via `docker-compose start`.
+Copy `.env.example` to `.env` so that local development will connect to that database.
+5. To run the `pymeshmap` command execute `poetry run pymeshmap [sub-command]`.
+6. A `Makefile` is included to simplify various tasks such as running `pre-commit`, tests, and linters.
