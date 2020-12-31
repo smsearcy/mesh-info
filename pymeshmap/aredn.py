@@ -206,7 +206,9 @@ class SystemInfo:
     active_tunnel_count: int = attr.ib()
     tunnel_installed: bool = attr.ib()
     services: List[Service] = attr.ib()
+    services_json: List[Dict] = attr.ib()
     status: str = attr.ib()
+    source_json: Dict = attr.ib()
     description: str = attr.ib(default="")
     frequency: str = attr.ib(default="")
     up_time: str = attr.ib(default="")
@@ -240,7 +242,7 @@ class SystemInfo:
 
     @property
     def wifi_mac_address(self) -> str:
-        return getattr(self.wifi_interface, "mac_address", "")
+        return getattr(self.wifi_interface, "mac_address", "").replace(":", "").lower()
 
     @property
     def band(self) -> str:
@@ -292,6 +294,8 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
             Service.from_json(service_data)
             for service_data in json_data.get("services_local", [])
         ],
+        "services_json": json_data.get("services_local", []),
+        "source_json": json_data,
     }
 
     # generally newer versions add data in nested dictionaries

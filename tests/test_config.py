@@ -1,22 +1,31 @@
 """Test the configuration module."""
 
-from pymeshmap import config
+from pymeshmap.config import AppConfig, Environment
 
 
-def test_get_settings(mocker):
-    # prevent local .env file from being loaded for tests
-    mocker.patch("pymeshmap.config.load_dotenv")
+def test_default_config():
+    """Verify that no configuration works."""
+    app_config: AppConfig = AppConfig.from_environ({})
 
-    settings = config.get_settings()
+    assert app_config.env == Environment.PROD
+    assert app_config.log_level == "SUCCESS"
+    assert app_config.poller.node == "localnode.local.mesh"
 
-    assert settings["pymeshmap.env"] == config.Environment.PROD
-    assert settings["pymeshmap.local_node"] == "localnode.local.mesh"
-    # not particularly concerned about the values for these, just that they are set
-    assert "pymeshmap.log_level" in settings
-    assert "poller.max_connections" in settings
-    assert "poller.connect_timeout" in settings
-    assert "poller.read_timeout" in settings
-    assert "poller.total_timeout" in settings
-    assert "database.url" in settings
-    assert "aredn.current_firmware" in settings
-    assert "aredn.current_api_version" in settings
+
+def test_config():
+    """Verify that the environment variables are working as expected."""
+    app_config: AppConfig = AppConfig.from_environ(
+        {
+            "MESHMAP_ENV": "development",
+            "MESHMAP_LOG_LEVEL": "DEBUG",
+            "MESHMAP_DB_URL": "foobar",
+            "MESHMAP_POLLER_MAX_CONNECTIONS": "25",
+            "MESHMAP_COLLECTOR_NODE_INACTIVE": "25",
+        }
+    )
+
+    assert app_config.env == Environment.DEV
+    assert app_config.log_level == "DEBUG"
+    assert app_config.db_url == "foobar"
+    assert app_config.poller.max_connections == 25
+    assert app_config.collector.node_inactive == 25

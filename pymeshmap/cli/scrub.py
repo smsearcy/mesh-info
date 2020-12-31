@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import random
 import re
 import string
 from typing import Any, Dict, List
 
 import attr
+import click
 from faker import Faker  # type: ignore
 from loguru import logger
 
@@ -70,6 +72,19 @@ class ScrubJsonSample:
             return new_value
 
         return value
+
+
+@click.command(help="Scrub identifiable information from data files for testing.")
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", type=click.File("w"))
+def main(filename, output):
+    """Scrub JSON files before adding to repository for tests."""
+
+    sys_info = json.load(filename)
+    # I'm assuming we always start with a dictionary
+    scrubber = ScrubJsonSample()
+    scrubbed_info = scrubber.scrub_dict(sys_info)
+    json.dump(scrubbed_info, output, indent=2)
 
 
 def random_grid_square():
