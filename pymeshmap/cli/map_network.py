@@ -72,7 +72,10 @@ def main(app_config: AppConfig):
 
     poller_finished = time.monotonic()
     poller_elapsed = poller_finished - start_time
-    click.secho(f"Network polling took {poller_elapsed}s ({poller_elapsed / 60:.2f}m)")
+    click.secho(
+        f"Network polling took {poller_elapsed:.2f}s ({poller_elapsed / 60:.2f}m)",
+        fg="blue",
+    )
 
     with models.session_scope(session_factory) as dbsession:
         save_nodes(nodes, dbsession)
@@ -82,11 +85,14 @@ def main(app_config: AppConfig):
     updates_elapsed = updates_finished - poller_finished
 
     click.secho(
-        f"Database updates took {updates_elapsed}s ({updates_elapsed / 60:.2f}m)"
+        f"Database updates took {updates_elapsed:.2f}s ({updates_elapsed / 60:.2f}m)",
+        fg="blue",
     )
 
     total_elapsed = time.monotonic() - start_time
-    click.secho(f"Total time: {total_elapsed}s ({total_elapsed / 60:.2f}m)")
+    click.secho(
+        f"Total time: {total_elapsed:.2f}s ({total_elapsed / 60:.2f}m)", fg="blue"
+    )
     return
 
 
@@ -224,13 +230,21 @@ def save_links(links: List[LinkInfo], dbsession: Session):
         source: Node = (
             dbsession.query(Node)
             .filter(Node.wlan_ip == link.source, Node.status == NodeStatus.ACTIVE)
-            .one()
+            .one_or_none()
         )
         destination: Node = (
             dbsession.query(Node)
             .filter(Node.wlan_ip == link.destination, Node.status == NodeStatus.ACTIVE)
-            .one()
+            .one_or_none()
         )
+        if source is None or destination is None:
+            logger.warning(
+                "Failed to save link {} -> {}, node missing from database",
+                link.source,
+                link.destination,
+            )
+            count["errors"] += 1
+            continue
         model = (
             dbsession.query(Link)
             .filter(
