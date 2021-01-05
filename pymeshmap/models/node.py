@@ -26,7 +26,7 @@ class Node(Base):
     status = Column(Enum(NodeStatus), nullable=False)
 
     wlan_ip = Column(String(15), nullable=False)
-    description = Column(Unicode(200), nullable=False)
+    description = Column(Unicode(1024), nullable=False)
 
     # store MAC addresses without colons
     wlan_mac_address = Column(String(12), nullable=False)

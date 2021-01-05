@@ -164,6 +164,28 @@ def test_lan_interface_eth0_0(data_folder):
     assert system_info.lan_ip_address == "10.66.236.21"
 
 
+def test_with_tunnel_1_7(data_folder):
+    """Load information from a "tunnel" node, no WiFi and mulitple tunnels."""
+
+    with open(data_folder / "sysinfo-1.7-tunnel-installed.json", "r") as f:
+        json_data = json.load(f)
+    system_info = poller._load_node_data(json_data)
+
+    # I could just construct a second object but I'm not checking everything
+    assert system_info.node_name == "CALL1-HAPACL-300-P1"
+    assert len(system_info.interfaces) == 8
+    assert system_info.interfaces["eth0"].ip_address is None
+    assert system_info.status == "on"
+    assert system_info.ssid == "mesh-10-v3"
+    assert system_info.api_version == "1.7"
+    assert len(system_info.load_averages) == 3
+    assert system_info.tunnel_installed
+    assert isinstance(system_info.tunnel_installed, bool)
+    assert system_info.active_tunnel_count == 0
+    assert system_info.wifi_ip_address == "10.1.2.3"
+    assert system_info.lan_ip_address == "10.3.2.1"
+
+
 @pytest.mark.asyncio
 async def test_get_nodes(data_folder):
     """Test the parsing of nodes from the OLSR data."""
