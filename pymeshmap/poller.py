@@ -429,7 +429,7 @@ def _load_node_data(json_data: Dict[str, Any]) -> SystemInfo:
     if "tunnels" in json_data:
         tunnels = json_data["tunnels"]
         data["active_tunnel_count"] = int(tunnels["active_tunnel_count"])
-        data["tunnel_installed"] = bool(tunnels["tunnel_installed"])
+        data["tunnel_installed"] = str(tunnels["tunnel_installed"]).lower() == "true"
     else:
         data["active_tunnel_count"] = int(json_data["active_tunnel_count"])
         # "tunnel_installed" is a string in API 1.0
