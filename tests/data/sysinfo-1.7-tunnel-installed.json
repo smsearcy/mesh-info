@@ -1,0 +1,77 @@
+{
+  "lon": "-86.488241",
+  "sysinfo": {
+    "uptime": "1 days, 8:33:00",
+    "loads": [
+      0.01,
+      0.01,
+      0
+    ]
+  },
+  "interfaces": [
+    {
+      "mac": "CC:2D:E0:2D:69:34",
+      "name": "br-lan",
+      "ip": "10.3.2.1"
+    },
+    {
+      "name": "eth1.0",
+      "mac": "CC:2D:E0:2D:69:34"
+    },
+    {
+      "mac": "CC:2D:E0:2C:69:34",
+      "name": "wlan1",
+      "ip": "10.1.2.3"
+    },
+    {
+      "mac": "CC:2D:E0:2D:69:34",
+      "name": "eth1.2",
+      "ip": "10.3.2.1"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "wlan0",
+      "mac": "CC:2D:E0:2C:69:33"
+    },
+    {
+      "name": "eth0",
+      "mac": "CC:2D:E0:2C:69:2E"
+    },
+    {
+      "name": "eth1",
+      "mac": "CC:2D:E0:2D:69:34"
+    }
+  ],
+  "api_version": "1.7",
+  "meshrf": {
+    "ssid": "mesh-10-v3",
+    "channel": "-2",
+    "status": "on",
+    "freq": "2.397 GHz",
+    "chanbw": "10"
+  },
+  "services_local": [
+    {
+      "name": "IperfSpeed",
+      "protocol": "tcp",
+      "link": "http://CALL1-HAPACL-300-P1:8080/iperfspeed"
+    }
+  ],
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": "true"
+  },
+  "lat": "36.004231",
+  "grid_square": "",
+  "node": "CALL1-HAPACL-300-P1",
+  "node_details": {
+    "description": "CALL1-Garage (x-K4ABC FD 2020 @W1ABC (Somewhere, US) | 2.4 Ghz Microtik hAP AC Lite Portable Node | Tunnel Client to Somewhere | CALL1-MESH-300-5G CH36 AP | CALL1-FP4 + CALL1-LG5 WAN Wi-Fi Client | x- W4ABC QTH 6/25/20",
+    "model": "MikroTik RouterBOARD 952Ui-5ac2nD",
+    "board_id": "0x0000",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "38-3faf42c"
+  }
+}
