@@ -124,15 +124,15 @@ def pprint_node(node: SystemInfo):
     click.echo("Name: ", nl=False)
     click.secho(node.node_name, fg="blue")
     click.echo("MAC: ", nl=False)
-    if node.wifi_mac_address:
-        click.secho(node.wifi_mac_address, fg="green")
+    if node.wlan_mac_address:
+        click.secho(node.wlan_mac_address, fg="green")
     else:
         click.secho("No MAC address found!", fg="red")
     click.echo(f"Model: {node.model}")
 
     # TODO: add check for current firmware (and "Linux?")
     click.echo(f"Firmware: {node.firmware_manufacturer} {node.firmware_version}")
-    click.echo(f"LAN IP: {node.lan_ip_address}\tWAN IP: {node.wifi_ip_address}")
+    click.echo(f"LAN IP: {node.lan_ip_address}\tWLAN IP: {node.wlan_ip_address}")
     click.echo("Location: ", nl=False)
     if node.latitude and node.longitude:
         click.secho(f"{node.latitude}, {node.longitude}", fg="green")

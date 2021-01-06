@@ -21,9 +21,9 @@ from ..poller import LinkInfo, Poller, SystemInfo
 
 MODEL_TO_SYSINFO_ATTRS = {
     "name": "node_name",
-    "wlan_ip": "wifi_ip_address",
+    "wlan_ip": "wlan_ip_address",
     "description": "description",
-    "wlan_mac_address": "wifi_mac_address",
+    "wlan_mac_address": "wlan_mac_address",
     "up_time": "up_time",
     "load_averages": "load_averages",
     "model": "model",
@@ -169,7 +169,7 @@ def get_db_model(dbsession: Session, node: SystemInfo) -> Optional[Node]:
     """Get the best match database record for this node."""
     # Find the most recently seen node that matches both name and MAC address
     query = dbsession.query(Node).filter(
-        Node.wlan_mac_address == node.wifi_mac_address,
+        Node.wlan_mac_address == node.wlan_mac_address,
         Node.name == node.node_name,
     )
     model = _get_most_recent(query.all())
@@ -178,7 +178,7 @@ def get_db_model(dbsession: Session, node: SystemInfo) -> Optional[Node]:
 
     # Find active node with same hardware
     query = dbsession.query(Node).filter(
-        Node.wlan_mac_address == node.wifi_mac_address, Node.status == NodeStatus.ACTIVE
+        Node.wlan_mac_address == node.wlan_mac_address, Node.status == NodeStatus.ACTIVE
     )
     model = _get_most_recent(query.all())
     if model:
