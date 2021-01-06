@@ -192,7 +192,7 @@ def test_with_tunnel_1_7_with_truish_tunnel_value(data_folder):
     assert system_info.lan_ip_address == "10.3.2.1"
 
 
-def test_with_tunnel_1_7_with_False_tunnel_value(data_folder):
+def test_with_tunnel_1_7_with_false_tunnel_value(data_folder):
     """Load information from a non-"tunnel" node Version 1.7"""
 
     with open(data_folder / "sysinfo-1.7-tunnel-installed.json", "r") as f:
@@ -223,3 +223,16 @@ def test_lan_interface_eth0_0(data_folder):
     system_info = aredn.load_system_info(json_data)
 
     assert system_info.lan_ip_address == "10.66.236.21"
+
+
+def test_wlan_mac_address_standardization(data_folder):
+    """Confirm that MAC addresses are being standardized."""
+
+    with open(data_folder / "sysinfo-1.7-link_info.json", "r") as f:
+        json_data = json.load(f)
+    system_info = aredn.load_system_info(json_data)
+
+    wlan_interface = system_info.wlan_interface
+    assert wlan_interface.mac_address != system_info.wlan_mac_address
+    assert ":" not in system_info.wlan_mac_address
+    assert system_info.wlan_mac_address == system_info.wlan_mac_address.lower()
