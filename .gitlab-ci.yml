@@ -33,6 +33,12 @@ pre-commit:
       - .cache/pre-commit
     policy: pull
 
+safety:
+  stage: test
+  script:
+    - pip install poetry safety
+    - poetry export -f requirements.txt | safety check --stdin
+
 # Template to prepare Poetry (for use with `extends`)
 .poetry:
   before_script:
