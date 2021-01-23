@@ -9,8 +9,10 @@ from pathlib import Path
 import click
 from loguru import logger
 
+from .. import poller
+from ..aredn import SystemInfo
 from ..config import AppConfig
-from ..poller import LinkInfo, NodeError, Poller, SystemInfo
+from ..poller import LinkInfo, NodeError
 from . import VERBOSE_TO_LOGGING
 
 # TODO: replace these with proper configuration
@@ -63,8 +65,7 @@ def main(
     output_path = Path(path)
 
     async_debug = log_level == "DEBUG"
-    poller = Poller.from_config(app_config.poller)
-    nodes, links, errors = asyncio.run(poller.network_info(), debug=async_debug)
+    nodes, links, errors = asyncio.run(poller.run(app_config.poller), debug=async_debug)
 
     for node in nodes:
         pprint_node(node)
@@ -80,14 +81,14 @@ def main(
     elif len(nodes) > 0 and len(links) == 0:
         click.secho(
             f"Gathered results for {len(nodes):,d} nodes but 0 links!\n"
-            "This could be due to a timing issue querying OLSR.  "
+            "Is your node connected to a mesh network?  "
             "Please run with -v for more information and/or report the issue",
             fg="yellow",
         )
     elif len(nodes) == 0 and len(links) > 0:
         click.secho(
             f"Gathered results for {len(links):,d} links but 0 nodes!\n"
-            f"This could be due to a timing issue querying OLSR.  "
+            f"This really should not happen.  "
             "Please run with -v for more information and/or report the issue",
             fg="yellow",
         )
