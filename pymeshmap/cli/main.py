@@ -8,7 +8,7 @@ from pymeshmap.cli import map_network, network_report, scrub
 from pymeshmap.config import app_config
 
 
-@click.group()
+@click.group(name="pymeshmap")
 @click.pass_context
 def main(ctx):
     ctx.obj = app_config
