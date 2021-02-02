@@ -63,22 +63,14 @@ I've decided to initially focus on storing historical time-series data and
 thus will be architecting the database for that
 (while including enough information to be able to render current-state maps).
 
-**Other Goals:**
-
-* Unit tests for validating the parsing of `sysinfo.json` for different versions of the AREDN firmware.
-* A basic logical map of the mesh without need for geography tiles via [NetworkX](https://networkx.github.io/documentation/stable/index.html).
-* Deployment via containers
-(possibly with in-memory SQLite database for very basic setup).
-* Eventually, geographic based map similar to [MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap).
-
-While much of that is surely possible in PHP I am much more experience and fluent in Python,
-hence the port instead of contributing to the existing project.
+Checkout the [road map](ROADMAP.md) for more details.
 
 
 Acknowledgements
 ----------------
 
-As mentioned above, this is based on the work done by Eric Satterlee (KG6WXC) and licensed under the GPL v3.
+As mentioned above, this is based on the work done by Eric Satterlee (KG6WXC),
+who has been very helpful when I had questions.
 
 From the [MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap) site:
 
