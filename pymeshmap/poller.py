@@ -16,16 +16,18 @@ import enum
 import json
 import re
 import time
-from collections import defaultdict
+from asyncio import Lock, StreamReader, StreamWriter
+from collections import defaultdict, deque
 from typing import (
-    AsyncIterable,
     AsyncIterator,
     Awaitable,
     DefaultDict,
+    Deque,
     Dict,
     List,
     NamedTuple,
     Optional,
+    Set,
     Tuple,
     Union,
 )
@@ -38,6 +40,171 @@ from .aredn import SystemInfo, load_system_info
 from .config import AppConfig
 
 
+async def run(config: AppConfig.Poller) -> NetworkInfo:
+    olsr = await OlsrData.connect(config.node)
+    poller = Poller(olsr, config)
+    return await poller.network_info()
+
+
+class OlsrData:
+    """Provides access to the nodes and links available in the OLSR data."""
+
+    NODE_REGEX = re.compile(r"^\"(\d{2}\.\d{1,3}\.\d{1,3}\.\d{1,3})\" -> \"\d+")
+    LINK_REGEX = re.compile(
+        r"^\"(10\.\d{1,3}\.\d{1,3}\.\d{1,3})\" -> "
+        r"\"(10\.\d{1,3}\.\d{1,3}\.\d{1,3})\"\[label=\"(.+?)\"\];"
+    )
+
+    class LineGenerator:
+        def __init__(self, olsr: OlsrData, lock: Lock):
+            self._olsr = olsr
+            self._lock = lock
+            self.queue: Deque[Union[str, LinkInfo]] = deque()
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            if len(self.queue) > 0:
+                return self.queue.popleft()
+
+            while len(self.queue) == 0 and not self._olsr.finished:
+                async with self._lock:
+                    await self._olsr._populate_queues()
+
+            if self._olsr.finished:
+                raise StopAsyncIteration()
+
+            return self.queue.popleft()
+
+    def __init__(self, reader: StreamReader, writer: StreamWriter):
+        self.reader = reader
+        self.writer = writer
+        self.finished = False
+        olsr_lock = Lock()
+        self.nodes: AsyncIterator[str] = self.LineGenerator(self, olsr_lock)
+        self.links: AsyncIterator[LinkInfo] = self.LineGenerator(self, olsr_lock)
+        self.stats: DefaultDict[str, int] = defaultdict(int)
+        self._nodes_seen: Set[str] = set()
+        self._links_seen: Set[Tuple[str, str, str]] = set()
+
+    @classmethod
+    async def connect(
+        cls, host_name: str = "localnode.local.mesh", port: int = 2004
+    ) -> OlsrData:
+        """Connect to an OLSR daemon and create an `OlsrData` wrapper.
+
+        Args:
+            host_name: Name of host to connect to OLSR daemon
+            port: Port the OLSR daemon is running on
+
+        """
+        logger.trace("Connecting to OLSR daemon {}:{}", host_name, port)
+        try:
+            reader, writer = await asyncio.open_connection(host_name, port)
+        except OSError as e:
+            # Connection errors subclass `OSError`
+            logger.error("Failed to connect to {}:{} ({!s})", host_name, port, e)
+            raise RuntimeError("Failed to connect to OLSR daemon")
+
+        return cls(reader, writer)
+
+    async def _populate_queues(self):
+        """Read data from OLSR and store for processing nodes and links."""
+
+        if self.finished:
+            return
+
+        line_bytes = await self.reader.readline()
+        if not line_bytes:
+            # All data from OLSR has been processed
+            self.finished = True
+            self.writer.close()
+            await self.writer.wait_closed()
+
+            logger.info("OLSR Data Statistics: {}", dict(self.stats))
+            if self.stats["nodes returned"] == 0:
+                logger.warning(
+                    "Failed to find any nodes in {:,d} lines of OLSR data.",
+                    self.stats["lines processed"],
+                )
+            if self.stats["links returned"] == 0:
+                logger.warning(
+                    "Failed to find any links in {:,d} lines of OLSR data.",
+                    self.stats["lines processed"],
+                )
+            return
+
+        # TODO: filter until a useful line is present?
+        self.stats["lines processed"] += 1
+        line_str = line_bytes.decode("utf-8").rstrip()
+        logger.trace("OLSR data: {}", line_str)
+
+        # TODO: Use walrus operator when Python 3.8 is the minimum requirement
+        node_address = self._get_address(line_str)
+        if node_address:
+            self.nodes.queue.append(node_address)
+        link = self._get_link(line_str)
+        if link:
+            self.links.queue.append(link)
+
+        return
+
+    def _get_address(self, line: str) -> str:
+        """Return the IP address of unique nodes from OLSR data lines.
+
+        Based on `wxc_netcat()` in MeshMap the only lines we are interested in
+        (when getting the node list)
+        are the ones that look (generally) like this
+        (sometimes the second address is a CIDR address):
+
+            "10.32.66.190" -> "10.80.213.95"[label="1.000"];
+
+        """
+        match = self.NODE_REGEX.match(line)
+        if not match:
+            return ""
+
+        node_address = match.group(1)
+        if node_address in self._nodes_seen:
+            self.stats["duplicate node"] += 1
+            return ""
+        self._nodes_seen.add(node_address)
+        self.stats["nodes returned"] += 1
+        return node_address
+
+    def _get_link(self, line: str) -> Optional[LinkInfo]:
+        """Return the IP addresses and cost of a link from an OLSR data line.
+
+        Based on `wxc_netcat()` in MeshMap the only lines we are interested in
+        (when getting the node list)
+        are the ones that look like this:
+
+            "10.32.66.190" -> "10.80.213.95"[label="1.000"];
+
+        Records where the second address is in CIDR notation and the label is "HNA"
+        should be excluded via a regular expression for the above.
+
+        """
+        match = self.LINK_REGEX.match(line)
+        if not match:
+            return None
+
+        # apparently there have been issues with duplicate links
+        # so track the ones that have been returned
+        source_node = match.group(1)
+        destination_node = match.group(2)
+        label = match.group(3)
+
+        link = (source_node, destination_node, label)
+        if link in self._links_seen:
+            self.stats["duplicate link"] += 1
+            return None
+        self._links_seen.add(link)
+        self.stats["links returned"] += 1
+        return LinkInfo.from_strings(*link)
+
+
 @attr.s(auto_attribs=True)
 class Poller:
     """Class to handle polling the network nodes and links.
@@ -47,20 +214,8 @@ class Poller:
 
     """
 
-    local_node: str = "localnode.local.mesh"
-    max_connections: int = 50
-    connect_timeout: int = 20
-    read_timeout: int = 20
-    total_timeout: Optional[int] = None
-
-    @classmethod
-    def from_config(cls, config: AppConfig.Poller) -> Poller:
-        return cls(
-            local_node=config.node,
-            max_connections=config.max_connections,
-            connect_timeout=config.connect_timeout,
-            read_timeout=config.read_timeout,
-        )
+    olsr_data: OlsrData
+    config: AppConfig.Poller
 
     async def network_info(self) -> NetworkInfo:
         """Helper function to query node and link information asynchronously.
@@ -73,11 +228,6 @@ class Poller:
         """
 
         node_task = asyncio.create_task(self.network_nodes())
-        # without a 1 second sleep here only one task was able to get data from OLSR
-        # (but I'm on a small network)
-        # if only one task can access that daemon at once then these will need to happen
-        # sequentially (fortunately the links process is super fast)
-        await asyncio.sleep(1)
         link_task = asyncio.create_task(self.network_links())
 
         nodes: NetworkNodes = await node_task
@@ -98,17 +248,15 @@ class Poller:
         start_time = time.monotonic()
 
         tasks: List[Awaitable] = []
-        connector = aiohttp.TCPConnector(limit=self.max_connections)
+        connector = aiohttp.TCPConnector(limit=self.config.max_connections)
         timeout = aiohttp.ClientTimeout(
-            total=self.total_timeout,
-            sock_connect=self.connect_timeout,
-            sock_read=self.read_timeout,
+            sock_connect=self.config.connect_timeout,
+            sock_read=self.config.read_timeout,
         )
         async with aiohttp.ClientSession(
             timeout=timeout, connector=connector
         ) as session:
-            olsr_records = _query_olsr(self.local_node)
-            async for node_address in _get_node_addresses(olsr_records):
+            async for node_address in self.olsr_data.nodes:
                 logger.debug("Creating task to poll {}", node_address)
                 task = asyncio.create_task(poll_node(session, node_address))
                 tasks.append(task)
@@ -157,8 +305,7 @@ class Poller:
 
         """
 
-        olsr_records = _query_olsr(self.local_node)
-        links = [link async for link in _get_node_links(olsr_records)]
+        links = [link async for link in self.olsr_data.links]
         logger.info("Network link count: {}", len(links))
         return links
 
@@ -229,81 +376,6 @@ class LinkInfo:
         return f"{self.source} -> {self.destination} ({self.cost})"
 
 
-async def _query_olsr(host_name: str, port: int = 2004) -> AsyncIterator[str]:
-    """Asynchronously yield lines from OLSR routing daemon.
-
-    This was separated into its own function both for testing purposes and because it
-    is used by several different processes because the local OLSR daemon has a lot
-    of information about the mesh network.
-
-    Args:
-        host_name: Name of host to connect to
-        port: Port to connect to
-
-    Yields:
-        Each line in the OLSR output, converted to UTF-8 and trailing newline removed
-
-    """
-    logger.trace("Connecting to OLSR daemon {}:{}", host_name, port)
-    try:
-        reader, writer = await asyncio.open_connection(host_name, port)
-    except OSError as e:
-        # Connection errors subclass `OSError`
-        logger.error("Failed to connect to {}:{} ({!s})", host_name, port, e)
-        return
-
-    while True:
-        line_bytes = await reader.readline()
-        if not line_bytes:
-            break
-        yield line_bytes.decode("utf-8").rstrip()
-
-    writer.close()
-    await writer.wait_closed()
-
-
-async def _get_node_addresses(olsr_records: AsyncIterable[str]) -> AsyncIterator[str]:
-    """Process OLSR records, yielding the IP addresses of nodes in the network.
-
-    Based on `wxc_netcat()` in MeshMap the only lines we are interested in
-    (when getting the node list)
-    are the ones that look (generally) like this
-    (sometimes the second address is a CIDR address):
-
-        "10.32.66.190" -> "10.80.213.95"[label="1.000"];
-
-    """
-    count: DefaultDict[str, int] = defaultdict(int)
-    # node could show up multiple times so save the ones we've seen
-    nodes_returned = set()
-    node_regex = re.compile(r"^\"(\d{2}\.\d{1,3}\.\d{1,3}\.\d{1,3})\" -> \"\d+")
-
-    async for line in olsr_records:
-        count["lines processed"] += 1
-
-        match = node_regex.match(line)
-        if not match:
-            count["lines skipped"] += 1
-            continue
-        logger.trace(line)
-        node_address = match.group(1)
-        if node_address in nodes_returned:
-            count["duplicate node"] += 1
-            continue
-        nodes_returned.add(node_address)
-        count["nodes returned"] += 1
-        yield node_address
-
-    logger.info("OLSR Node Statistics: {}", dict(count))
-    if count["nodes returned"] == 0:
-        logger.warning(
-            "Failed to find any nodes in {:,d} lines of OLSR data.",
-            count["lines processed"],
-        )
-
-    return
-
-
 async def poll_node(session: aiohttp.ClientSession, node_address: str) -> NodeResult:
     """Query a node via HTTP to get the information about that node.
 
@@ -361,60 +433,3 @@ async def poll_node(session: aiohttp.ClientSession, node_address: str) -> NodeRe
 
     logger.success("Finished polling {}", node_info)
     return NodeResult(node_address, node_info, response_text)
-
-
-async def _get_node_links(olsr_records: AsyncIterable[str]) -> AsyncIterator[LinkInfo]:
-    """Process OLSR records, yielding the link information between nodes in the network.
-
-    Based on `wxc_netcat()` in MeshMap the only lines we are interested in
-    (when getting the node list)
-    are the ones that look like this:
-
-        "10.32.66.190" -> "10.80.213.95"[label="1.000"];
-
-    Records where the second address is in CIDR notation and the label is "HNA" should
-    be excluded via a regular expression for the above.
-
-    Args:
-        olsr_records: Asynchronous iterable of lines from the
-
-    Yields:
-
-
-    """
-    count: DefaultDict[str, int] = defaultdict(int)
-    # apparently there have been issues with duplicate links
-    # so track the ones that have been returned
-    links_returned = set()
-    link_regex = re.compile(
-        r"^\"(10\.\d{1,3}\.\d{1,3}\.\d{1,3})\" -> "
-        r"\"(10\.\d{1,3}\.\d{1,3}\.\d{1,3})\"\[label=\"(.+?)\"\];"
-    )
-
-    async for line in olsr_records:
-        count["lines processed"] += 1
-
-        match = link_regex.match(line)
-        if not match:
-            count["lines skipped"] += 1
-            continue
-        logger.trace(line)
-        source_node = match.group(1)
-        destination_node = match.group(2)
-        label = match.group(3)
-        if (source_node, destination_node) in links_returned:
-            logger.debug("Duplicate link: {}", (source_node, destination_node, label))
-            count["duplicate link"] += 1
-            continue
-        links_returned.add((source_node, destination_node))
-        count["links returned"] += 1
-        yield LinkInfo.from_strings(source_node, destination_node, label)
-
-    logger.info("OLSR Link Statistics: {}", dict(count))
-    if count["links returned"] == 0:
-        logger.warning(
-            "Failed to find any links in {:,d} lines of OLSR data.",
-            count["lines processed"],
-        )
-
-    return

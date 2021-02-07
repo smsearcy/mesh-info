@@ -14,10 +14,11 @@ import click
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from .. import models
+from .. import models, poller
+from ..aredn import SystemInfo
 from ..config import AppConfig
 from ..models import Link, LinkStatus, Node, NodeStatus
-from ..poller import LinkInfo, Poller, SystemInfo
+from ..poller import LinkInfo
 
 MODEL_TO_SYSINFO_ATTRS = {
     "name": "node_name",
@@ -67,8 +68,8 @@ def main(app_config: AppConfig):
     start_time = time.monotonic()
 
     async_debug = log_level == "DEBUG"
-    poller = Poller.from_config(app_config.poller)
-    nodes, links, errors = asyncio.run(poller.network_info(), debug=async_debug)
+
+    nodes, links, errors = asyncio.run(poller.run(app_config.poller), debug=async_debug)
 
     poller_finished = time.monotonic()
     poller_elapsed = poller_finished - start_time
