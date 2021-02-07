@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import html
-from typing import Any, Dict, List, Optional
+from itertools import zip_longest
+from typing import Any, Dict, List, Optional, Tuple
 
 import attr
 from loguru import logger
+
+from .config import AppConfig
 
 # these are defined as constants at the module level so they are only initialized once
 # (if the set was initialize for each function then it wouldn't be faster)
@@ -341,3 +344,72 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
         data["tunnel_installed"] = str(json_data["tunnel_installed"]).lower() == "true"
 
     return SystemInfo(**data)
+
+
+@attr.s(auto_attribs=True)
+class VersionChecker:
+    """Compares versions to the configured most recent version.
+
+    Methods return a number between -1 and 3, where 0 is current, -1 indicates a
+    development version (or other parse error), and 3 is very far behind.
+
+    """
+
+    _firmware: Tuple[int, ...]
+    _api: Tuple[int, ...]
+
+    @classmethod
+    def from_config(cls, config: AppConfig.Aredn) -> VersionChecker:
+        api_version = tuple(int(value) for value in config.current_api.split("."))
+        firmware_version = tuple(
+            int(value) for value in config.current_firmware.split(".")
+        )
+        return cls(firmware_version, api_version)
+
+    def firmware(self, version: str) -> int:
+        """Check how current the firmware version is."""
+        try:
+            current = tuple(int(value) for value in version.split("."))
+        except ValueError:
+            return -1
+        return _version_delta(current, self._firmware)
+
+    def api(self, version: str) -> int:
+        """Check how current the API version is."""
+        try:
+            current = tuple(int(value) for value in version.split("."))
+        except ValueError:
+            return -1
+        return _version_delta(current, self._api)
+
+
+def _version_delta(sample: Tuple[int, ...], standard: Tuple[int, ...]) -> int:
+    """Weight the difference between two versions on a scale of 0 to 3."""
+    length = max(len(standard), len(sample))
+    for position, (current, goal) in enumerate(
+        zip_longest(sample, standard, fillvalue=0), start=1
+    ):
+        delta = goal - current
+        if delta < 0:
+            logger.warning(
+                "Current version ({}) out of date?  Checked against {}",
+                ".".join(str(v) for v in standard),
+                ".".join(str(v) for v in sample),
+            )
+        if delta == 0:
+            continue
+        elif position == 1:
+            # major version is behind
+            return 3
+        elif position == length:
+            # reached the final value
+            if length == 2:
+                # if there are only two parts then treat the lsat number more severely
+                return 1 if delta < 2 else 2
+            else:
+                return 1 if delta < 4 else 2
+        else:
+            # some middle value
+            return 2 if delta < 2 else 3
+
+    return 0

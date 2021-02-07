@@ -21,7 +21,7 @@ def test_parse_all_sysinfo_examples(filename):
     assert system_info is not None
 
     # Make sure we identified the wireless IP address
-    assert system_info.wlan_ip_address != ""
+    assert system_info.wlan_ip_address
 
 
 def test_api_version_1_0(data_folder):
@@ -236,3 +236,39 @@ def test_wlan_mac_address_standardization(data_folder):
     assert wlan_interface.mac_address != system_info.wlan_mac_address
     assert ":" not in system_info.wlan_mac_address
     assert system_info.wlan_mac_address == system_info.wlan_mac_address.lower()
+
+
+def test_version_checker():
+    checker = aredn.VersionChecker((3, 20, 2, 0), (1, 7))
+    assert checker.firmware("3.20.2.0") == 0
+    assert checker.api("1.7") == 0
+
+
+def test_version_checker_develop():
+    checker = aredn.VersionChecker((3, 20, 2, 0), (1, 7))
+    assert checker.firmware("develop-169-d18d14f3") == -1
+
+
+@pytest.mark.parametrize(
+    "sample, standard, expected",
+    [
+        ("1.7", "1.7", 0),
+        ("1.6", "1.7", 1),
+        ("1.5", "1.7", 2),
+        ("1.5", "2.0", 3),
+        ("1.0", "3.0", 3),
+        ("3.20.1", "3.20.1", 0),
+        ("3.20.0", "3.20.1", 1),
+        ("3.20.0", "3.20.2", 1),
+        ("3.20.0", "3.20.3", 1),
+        ("3.19.4", "3.20.1", 2),
+        ("3.18.4", "3.20.1", 3),
+        ("2.15.4", "3.3.0", 3),
+        ("3.20", "3.20.1", 1),
+    ],
+)
+def test_version_delta(sample, standard, expected):
+    standard_parts = tuple(int(value) for value in standard.split("."))
+    sample_parts = tuple(int(value) for value in sample.split("."))
+    calculated = aredn._version_delta(sample_parts, standard_parts)
+    assert calculated == expected

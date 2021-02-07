@@ -1,3 +1,3 @@
-from pymeshmap.cli import main
+from pymeshmap import cli
 
-main.main()
+cli.main()
