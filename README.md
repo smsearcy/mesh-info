@@ -31,9 +31,9 @@ If you want to contribute then leave that off to get extra dependencies for deve
 Commands
 --------
 
-### network-report
+### Network Report
 ```shell script
-$ poetry run pymeshmap network-report [-v] [--save-errors] [--path=.] [HOSTNAME]
+$ poetry run pymeshmap report [-v] [--save-errors] [--path=.] [HOSTNAME]
 ```
 
 Prints node and link details *after* polling all the nodes on the network.
@@ -43,11 +43,16 @@ this command collects and displays information about an AREDN network
 but does not require a database.
 Amount of information logged to the console can be increased by passing `-v` up to `-vvv`.
 
-By default it will connect to `localnode.local.mesh`.
+By default it connects to `localnode.local.mesh`.
 
 If you pass `--save-errors` then the response from any nodes that have issues
 will be saved as `{ip_address}-response.txt`.
 Change the directory those are saved with `--path`.
+
+### Collector Service
+```shell script
+$ poetry run pymeshmap collect
+```
 
 
 Goals

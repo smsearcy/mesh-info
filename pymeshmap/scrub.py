@@ -9,7 +9,6 @@ import string
 from typing import Any, Dict, List
 
 import attr
-import click
 from faker import Faker  # type: ignore
 from loguru import logger
 
@@ -74,9 +73,6 @@ class ScrubJsonSample:
         return value
 
 
-@click.command(help="Scrub identifiable information from data files for testing.")
-@click.argument("filename", type=click.File("r"))
-@click.argument("output", type=click.File("w"))
 def main(filename, output):
     """Scrub JSON files before adding to repository for tests."""
 

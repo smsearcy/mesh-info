@@ -10,15 +10,14 @@ from datetime import datetime, timedelta
 from operator import attrgetter
 from typing import DefaultDict, List, Optional
 
-import click
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from .. import models, poller
-from ..aredn import SystemInfo
-from ..config import AppConfig
-from ..models import Link, LinkStatus, Node, NodeStatus
-from ..poller import LinkInfo
+from . import models, poller
+from .aredn import SystemInfo
+from .config import AppConfig
+from .models import Link, LinkStatus, Node, NodeStatus
+from .poller import LinkInfo
 
 MODEL_TO_SYSINFO_ATTRS = {
     "name": "node_name",
@@ -46,8 +45,6 @@ MODEL_TO_SYSINFO_ATTRS = {
 }
 
 
-@click.command()
-@click.pass_obj
 def main(app_config: AppConfig):
     """Map the network and store information in the database."""
 
@@ -59,10 +56,9 @@ def main(app_config: AppConfig):
         session_factory = models.get_session_factory(models.get_engine(app_config))
     except Exception as exc:
         logger.exception("Failed to connect to database")
-        raise click.ClickException(f"Failed to connect to database: {exc!s}")
+        return f"Failed to connect to database: {exc!s}"
 
     with models.session_scope(session_factory) as dbsession:
-        # TODO: switch to configuration objects then pass that
         expire_data(dbsession, app_config.collector)
 
     start_time = time.monotonic()
@@ -73,9 +69,8 @@ def main(app_config: AppConfig):
 
     poller_finished = time.monotonic()
     poller_elapsed = poller_finished - start_time
-    click.secho(
-        f"Network polling took {poller_elapsed:.2f}s ({poller_elapsed / 60:.2f}m)",
-        fg="blue",
+    logger.info(
+        "Network polling took {:.2f}s ({:.2f}m)", poller_elapsed, poller_elapsed / 60
     )
 
     with models.session_scope(session_factory) as dbsession:
@@ -85,15 +80,12 @@ def main(app_config: AppConfig):
     updates_finished = time.monotonic()
     updates_elapsed = updates_finished - poller_finished
 
-    click.secho(
-        f"Database updates took {updates_elapsed:.2f}s ({updates_elapsed / 60:.2f}m)",
-        fg="blue",
+    logger.info(
+        "Database updates took {:.2f}s ({:.2f}m)", updates_elapsed, updates_elapsed / 60
     )
 
     total_elapsed = time.monotonic() - start_time
-    click.secho(
-        f"Total time: {total_elapsed:.2f}s ({total_elapsed / 60:.2f}m)", fg="blue"
-    )
+    logger.info("Total time: {:.2f}s ({:.2f}m)", total_elapsed, total_elapsed / 60)
     return
 
 
