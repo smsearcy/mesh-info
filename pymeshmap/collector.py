@@ -13,11 +13,11 @@ from typing import DefaultDict, List, Optional
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from . import models, poller
+from . import models
 from .aredn import SystemInfo
 from .config import AppConfig
 from .models import Link, LinkStatus, Node, NodeStatus
-from .poller import LinkInfo
+from .poller import LinkInfo, OlsrData, Poller
 
 MODEL_TO_SYSINFO_ATTRS = {
     "name": "node_name",
@@ -53,46 +53,106 @@ def main(app_config: AppConfig):
     logger.add(sys.stderr, level=log_level)
 
     try:
-        session_factory = models.get_session_factory(models.get_engine(app_config))
+        dbsession_factory = models.get_session_factory(models.get_engine(app_config))
     except Exception as exc:
         logger.exception("Failed to connect to database")
         return f"Failed to connect to database: {exc!s}"
 
-    with models.session_scope(session_factory) as dbsession:
-        expire_data(dbsession, app_config.collector)
-
-    start_time = time.monotonic()
-
     async_debug = log_level == "DEBUG"
-
-    nodes, links, errors = asyncio.run(poller.run(app_config.poller), debug=async_debug)
-
-    poller_finished = time.monotonic()
-    poller_elapsed = poller_finished - start_time
-    logger.info(
-        "Network polling took {:.2f}s ({:.2f}m)", poller_elapsed, poller_elapsed / 60
+    asyncio.run(
+        service(
+            app_config.poller.node,
+            Poller.from_config(app_config.poller),
+            dbsession_factory,
+            polling_period=app_config.collector.period,
+            nodes_expire=app_config.collector.node_inactive,
+            links_expire=app_config.collector.link_inactive,
+        ),
+        debug=async_debug,
     )
-
-    with models.session_scope(session_factory) as dbsession:
-        save_nodes(nodes, dbsession)
-        save_links(links, dbsession)
-
-    updates_finished = time.monotonic()
-    updates_elapsed = updates_finished - poller_finished
-
-    logger.info(
-        "Database updates took {:.2f}s ({:.2f}m)", updates_elapsed, updates_elapsed / 60
-    )
-
-    total_elapsed = time.monotonic() - start_time
-    logger.info("Total time: {:.2f}s ({:.2f}m)", total_elapsed, total_elapsed / 60)
     return
 
 
-def expire_data(dbsession: Session, config: AppConfig.Collector):
-    """Update the status of nodes/links that have not been seen recently."""
+async def service(
+    local_node: str,
+    poller: Poller,
+    session_factory,
+    *,
+    polling_period: int,
+    nodes_expire: int,
+    links_expire: int,
+    run_once: bool = False,
+):
+    """
 
-    inactive_cutoff = datetime.utcnow() - timedelta(days=config.link_inactive)
+    Args:
+        local_node: Name of the local node to connect to
+        poller: Poller for getting information from the AREDN network
+        session_factory: SQLAlchemy session factory
+        polling_period: Period (in minutes) between polling the network
+        nodes_expire: Number of days before absent nodes are marked inactive
+        links_expire: Number of days before absent links are marked inactive
+        run_once: Only run the network collection once
+
+    """
+
+    run_period_seconds = polling_period * 60
+    while True:
+        start_time = time.monotonic()
+
+        with models.session_scope(session_factory) as dbsession:
+            expire_data(dbsession, nodes_expire=nodes_expire, links_expire=links_expire)
+
+        olsr_data = await OlsrData.connect(local_node)
+        nodes, links, errors = await poller.network_info(olsr_data)
+
+        poller_finished = time.monotonic()
+        poller_elapsed = poller_finished - start_time
+        logger.info(
+            "Network polling took {:.2f}s ({:.2f}m)",
+            poller_elapsed,
+            poller_elapsed / 60,
+        )
+
+        with models.session_scope(session_factory) as dbsession:
+            save_nodes(nodes, dbsession)
+            save_links(links, dbsession)
+
+        updates_finished = time.monotonic()
+        updates_elapsed = updates_finished - poller_finished
+
+        logger.info(
+            "Database updates took {:.2f}s ({:.2f}m)",
+            updates_elapsed,
+            updates_elapsed / 60,
+        )
+
+        total_elapsed = time.monotonic() - start_time
+        logger.info("Total time: {:.2f}s ({:.2f}m)", total_elapsed, total_elapsed / 60)
+
+        if run_once:
+            break
+
+        remaining_time = run_period_seconds - (total_elapsed % run_period_seconds)
+        logger.debug(
+            "Sleeping {:.2f}s until next querying network again", remaining_time
+        )
+        await asyncio.sleep(remaining_time)
+
+    return
+
+
+def expire_data(dbsession: Session, *, nodes_expire: int, links_expire: int):
+    """Update the status of nodes/links that have not been seen recently.
+
+    Args:
+        dbsession: SQLAlchemy database session
+        nodes_expire: Number of days a node is not seen before marked inactive
+        links_expire: Number of days a link is not seen before marked inactive
+
+    """
+
+    inactive_cutoff = datetime.utcnow() - timedelta(days=links_expire)
     count = (
         dbsession.query(Link)
         .filter(
@@ -107,7 +167,7 @@ def expire_data(dbsession: Session, config: AppConfig.Collector):
         inactive_cutoff,
     )
 
-    inactive_cutoff = datetime.utcnow() - timedelta(days=config.node_inactive)
+    inactive_cutoff = datetime.utcnow() - timedelta(days=nodes_expire)
     count = (
         dbsession.query(Node)
         .filter(

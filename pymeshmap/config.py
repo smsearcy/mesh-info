@@ -33,6 +33,7 @@ class AppConfig:
     class Collector:
         node_inactive: int = environ.var(default=7, converter=int)
         link_inactive: int = environ.var(default=1, converter=int)
+        period: int = environ.var(default=10, converter=int)
 
     env: Environment = environ.var(default=Environment.PROD, converter=Environment)
     log_level: str = environ.var(default="SUCCESS")
