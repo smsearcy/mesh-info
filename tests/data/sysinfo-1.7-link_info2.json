@@ -1,0 +1,97 @@
+{
+  "lon": "55.038618",
+  "sysinfo": {
+    "uptime": "73 days, 10:49:08",
+    "loads": [
+      0.59,
+      0.22,
+      0.08
+    ]
+  },
+  "interfaces": [
+    {
+      "mac": "EE:49:4B:17:C5:5B",
+      "name": "eth0.2",
+      "ip": "10.123.183.8"
+    },
+    {
+      "mac": "92:52:B2:A3:48:87",
+      "name": "wlan0",
+      "ip": "10.122.183.8"
+    },
+    {
+      "mac": "EE:49:4B:17:C5:5B",
+      "name": "br-lan",
+      "ip": "10.213.184.65"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "eth0",
+      "mac": "EE:49:4B:17:C5:5B"
+    },
+    {
+      "name": "eth0.1",
+      "mac": "EE:49:4B:17:C5:5B"
+    }
+  ],
+  "api_version": "1.7",
+  "lat": "78.245033",
+  "meshrf": {
+    "ssid": "ArednMeshNetwork",
+    "channel": "-2",
+    "status": "on",
+    "freq": "2.397 GHz",
+    "chanbw": "10"
+  },
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": false
+  },
+  "link_info": {
+    "10.150.4.228": {
+      "neighborLinkQuality": 0.94,
+      "noise": -91,
+      "linkQuality": 0.94,
+      "linkType": "RF",
+      "hostname": "N0CALL-RKM2-1-Medford-OR.local.mesh",
+      "tx_rate": 19.5,
+      "olsrInterface": "wlan0",
+      "rx_rate": 26,
+      "signal": -82
+    },
+    "10.132.59.103": {
+      "neighborLinkQuality": 1,
+      "noise": -91,
+      "linkQuality": 0.831,
+      "linkType": "RF",
+      "hostname": "N0CALL-bm2-1.local.mesh",
+      "tx_rate": 1,
+      "olsrInterface": "wlan0",
+      "rx_rate": 0,
+      "signal": -85
+    },
+    "10.114.62.116": {
+      "neighborLinkQuality": 0.497,
+      "noise": -91,
+      "linkQuality": 0.164,
+      "linkType": "RF",
+      "hostname": "N0CALL-NSM2-3-East-Medford-OR.local.mesh",
+      "tx_rate": 1,
+      "olsrInterface": "wlan0",
+      "rx_rate": 0,
+      "signal": -87
+    }
+  },
+  "grid_square": "BN62rs",
+  "node": "N0CALL-NSM2-1",
+  "node_details": {
+    "description": "Temporarily sitting inside...",
+    "model": "Ubiquiti Nanostation M (XW)",
+    "board_id": "0xe866",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "3.20.3.0"
+  }
+}

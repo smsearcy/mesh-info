@@ -37,7 +37,7 @@ import aiohttp
 import attr
 from loguru import logger
 
-from .aredn import SystemInfo, load_system_info
+from .aredn import LinkType, SystemInfo, load_system_info
 from .config import AppConfig
 
 
@@ -243,9 +243,12 @@ class Poller:
         links = [link async for link in olsr_data.links]
         logger.info("Network link count: {}", len(links))
 
-        nodes: NetworkNodes = await node_task
+        node_results: NetworkNodes = await node_task
+        nodes_by_ip, errors = node_results
 
-        return NetworkInfo(nodes.nodes, links, nodes.errors)
+        _add_extra_link_info(links, nodes_by_ip)
+
+        return NetworkInfo(list(nodes_by_ip.values()), links, errors)
 
     async def node_information(
         self, node_addresses: AsyncIterable[str]
@@ -272,35 +275,36 @@ class Poller:
         ) as session:
             async for node_address in node_addresses:
                 logger.debug("Creating task to poll {}", node_address)
-                task = asyncio.create_task(poll_node(session, node_address))
+                task = asyncio.create_task(_poll_node(session, node_address))
                 tasks.append(task)
 
             # collect all the results in a single list
-            node_details: List[NodeResult] = await asyncio.gather(
+            node_results: List[Tuple[str, NodeResult]] = await asyncio.gather(
                 *tasks, return_exceptions=True
             )
 
         crawler_finished = time.monotonic()
         logger.info("Querying nodes took {:.2f} seconds", crawler_finished - start_time)
 
-        nodes = []
+        nodes = {}
         errors = {}
         count: DefaultDict[str, int] = defaultdict(int)
-        for node in node_details:
+        for result in node_results:
             count["total"] += 1
-            if isinstance(node, Exception):
+            if isinstance(result, Exception):
                 # this shouldn't happen but just in case
                 count["exceptions"] += 1
-                logger.error("Unhandled exception polling a node: {!r}", node)
+                logger.error("Unhandled exception polling a node: {!r}", result)
                 continue
-            if isinstance(node.result, NodeError):
+            ip_address, response = result
+            if isinstance(response, NodeError):
                 # this error would have already been logged
                 count["errors (total)"] += 1
-                count[f"errors ({node.result!s})"] += 1
-                errors[node.ip_address] = (node.result, node.raw_response)
+                count[f"errors ({response.error!s})"] += 1
+                errors[ip_address] = response
                 continue
             count["successes"] += 1
-            nodes.append(node.result)
+            nodes[ip_address] = response
 
         logger.info("Network nodes summary: {}", dict(count))
         return NetworkNodes(nodes, errors)
@@ -316,22 +320,26 @@ class NetworkInfo(NamedTuple):
 
     nodes: List[SystemInfo]
     links: List[LinkInfo]
-    errors: Dict[str, Tuple[NodeError, str]]
+    errors: Dict[str, NodeError]
 
 
 class NetworkNodes(NamedTuple):
-    """Results of querying the nodes on the network.
+    """Results of querying the nodes on the network, indexed by the IP address."""
 
-    Errors are stored as a dictionary, indexed by the IP address and storing the error
-    and any message in a tuple.
-
-    """
-
-    nodes: List[SystemInfo]
-    errors: Dict[str, Tuple[NodeError, str]]
+    nodes: Dict[str, SystemInfo]
+    errors: Dict[str, NodeError]
 
 
-class NodeError(enum.Enum):
+@attr.s(auto_attribs=True)
+class NodeError:
+    error: PollingError
+    response: str
+
+    def __str__(self):
+        return f"{self.error} ('{self.response[10:]}...')"
+
+
+class PollingError(enum.Enum):
     """Enumerates possible errors when polling a node."""
 
     INVALID_RESPONSE = enum.auto()
@@ -347,12 +355,7 @@ class NodeError(enum.Enum):
         return self.name.replace("_", " ").title()
 
 
-class NodeResult(NamedTuple):
-    """Results from polling a single node."""
-
-    ip_address: str
-    result: Union[SystemInfo, NodeError]
-    raw_response: str
+NodeResult = Union[SystemInfo, NodeError]
 
 
 @attr.s(slots=True, auto_attribs=True)
@@ -362,6 +365,13 @@ class LinkInfo:
     source: str
     destination: str
     cost: float
+    type: Optional[LinkType] = None
+    quality: Optional[float] = None
+    neighbor_quality: Optional[float] = None
+    signal: Optional[int] = None
+    noise: Optional[int] = None
+    tx_rate: Optional[float] = None
+    rx_rate: Optional[float] = None
 
     @classmethod
     def from_strings(cls, source: str, destination: str, label: str) -> LinkInfo:
@@ -372,12 +382,14 @@ class LinkInfo:
         return f"{self.source} -> {self.destination} ({self.cost})"
 
 
-async def poll_node(session: aiohttp.ClientSession, node_address: str) -> NodeResult:
+async def _poll_node(
+    session: aiohttp.ClientSession, ip_address: str
+) -> Tuple[str, NodeResult]:
     """Query a node via HTTP to get the information about that node.
 
     Args:
         session: aiohttp session object (docs recommend to pass around single object)
-        node_address: IP address of the node to query
+        ip_address: IP address of the node to query
 
     Returns:
         Named tuple with the IP address,
@@ -386,13 +398,13 @@ async def poll_node(session: aiohttp.ClientSession, node_address: str) -> NodeRe
 
     """
 
-    logger.debug("{} begin polling...", node_address)
+    logger.debug("{} begin polling...", ip_address)
 
-    params = {"services_local": 1}
+    params = {"services_local": 1, "link_info": 1}
 
     try:
         async with session.get(
-            f"http://{node_address}:8080/cgi-bin/sysinfo.json", params=params
+            f"http://{ip_address}:8080/cgi-bin/sysinfo.json", params=params
         ) as resp:
             status = resp.status
             response = await resp.read()
@@ -401,31 +413,57 @@ async def poll_node(session: aiohttp.ClientSession, node_address: str) -> NodeRe
             response_text = response.decode("utf-8", "replace")
     except asyncio.TimeoutError as e:
         # catch this first, because some exceptions use multiple inheritance
-        logger.error("{}: {}", node_address, e)
-        return NodeResult(node_address, NodeError.TIMEOUT_ERROR, "Timeout error")
+        logger.error("{}: {}", ip_address, e)
+        return ip_address, NodeError(PollingError.TIMEOUT_ERROR, "Timeout error")
     except aiohttp.ClientError as e:
-        logger.error("{}: {}", node_address, e)
-        return NodeResult(node_address, NodeError.CONNECTION_ERROR, str(e))
+        logger.error("{}: {}", ip_address, e)
+        return ip_address, NodeError(PollingError.CONNECTION_ERROR, str(e))
     except Exception as e:
-        logger.error("{}: Unknown error connecting: {!r}", node_address, e)
-        return NodeResult(node_address, NodeError.CONNECTION_ERROR, str(e))
+        logger.error("{}: Unknown error connecting: {!r}", ip_address, e)
+        return ip_address, NodeError(PollingError.CONNECTION_ERROR, str(e))
 
     if status != 200:
         message = f"{status}: {response_text}"
-        logger.error("{}: HTTP error {}", node_address, message)
-        return NodeResult(node_address, NodeError.HTTP_ERROR, message)
+        logger.error("{}: HTTP error {}", ip_address, message)
+        return ip_address, NodeError(PollingError.HTTP_ERROR, message)
 
     try:
         json_data = json.loads(response_text)
     except json.JSONDecodeError as e:
-        logger.error("{}: Invalid JSON response: {}", node_address, e)
-        return NodeResult(node_address, NodeError.INVALID_RESPONSE, response_text)
+        logger.error("{}: Invalid JSON response: {}", ip_address, e)
+        return ip_address, NodeError(PollingError.INVALID_RESPONSE, response_text)
 
     try:
         node_info = load_system_info(json_data)
     except Exception as e:
-        logger.error("{}: Parsing node information failed: {}", node_address, e)
-        return NodeResult(node_address, NodeError.PARSE_ERROR, response_text)
+        logger.error("{}: Parsing node information failed: {}", ip_address, e)
+        return ip_address, NodeError(PollingError.PARSE_ERROR, response_text)
 
     logger.success("Finished polling {}", node_info)
-    return NodeResult(node_address, node_info, response_text)
+    return ip_address, node_info
+
+
+def _add_extra_link_info(links: List[LinkInfo], nodes_by_ip: Dict[str, SystemInfo]):
+    """Modifies the links in place, adding extra data."""
+
+    count: DefaultDict[str, int] = defaultdict(int)
+    for link in links:
+        count["total"] += 1
+        # Look up extra link information from the AREDN SystemInfo response
+        if link.source not in nodes_by_ip:
+            count["node not found"] += 1
+            continue
+        if link.destination not in nodes_by_ip[link.source].links:
+            count["link not found"] += 1
+            continue
+        extra_info = nodes_by_ip[link.source].links[link.destination]
+        count["updated"] += 1
+
+        link.quality = extra_info.quality
+        link.neighbor_quality = extra_info.neighbor_quality
+        link.signal = extra_info.signal
+        link.noise = extra_info.noise
+        link.tx_rate = extra_info.tx_rate
+        link.rx_rate = extra_info.rx_rate
+
+    logger.info("Extra link summary: {}", dict(count))

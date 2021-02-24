@@ -11,7 +11,7 @@ from loguru import logger
 from . import poller
 from .aredn import SystemInfo, VersionChecker
 from .config import AppConfig
-from .poller import LinkInfo, NodeError
+from .poller import LinkInfo, PollingError
 
 VERBOSE_TO_LOGGING = {0: "SUCCESS", 1: "INFO", 2: "DEBUG", 3: "TRACE"}
 
@@ -103,17 +103,20 @@ def main(
             print(
                 "Use the --save-errors option to save responses from nodes with errors"
             )
-        for ip_address, (error, response) in errors.items():
+        for ip_address, result in errors.items():
             # TODO: MeshMap did a reverse DNS lookup to get the node name
-            print(f"{WARN}{ip_address}: {error!s}{END}")
+            print(f"{WARN}{ip_address}: {result.error!s}{END}")
             if save_errors:
-                if error == NodeError.PARSE_ERROR:
+                if result.error == PollingError.PARSE_ERROR:
                     filename = f"sysinfo-{ip_address}-error.json"
-                elif error in (NodeError.HTTP_ERROR, NodeError.INVALID_RESPONSE):
+                elif result.error in (
+                    PollingError.HTTP_ERROR,
+                    PollingError.INVALID_RESPONSE,
+                ):
                     filename = f"{ip_address}-response.txt"
                 else:
                     filename = f"{ip_address}-error.txt"
-                open(output_path / filename, "w").write(response)
+                open(output_path / filename, "w").write(result.response)
 
     total_time = time.monotonic() - start_time
     print(f"{NOTE}Network report took {total_time:.2f} seconds{END}")

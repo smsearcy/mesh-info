@@ -1,6 +1,7 @@
 from sqlalchemy import TIMESTAMP, Column, Enum, Float, ForeignKey, Index, Integer, func
 from sqlalchemy.orm import relationship
 
+from ..aredn import LinkType
 from .meta import Base, LinkStatus
 
 
@@ -18,15 +19,13 @@ class Link(Base):
     distance = Column(Float)
     bearing = Column(Float)
 
-    # link_info columns to add later
-    # TODO: make this an enum?
-    # type = Column(String(10))  # "RF", "DTD", "TUN"
-    # signal = Column(Float)
-    # noise = Column(Float)
-    # tx_rate = Column(Float)
-    # rx_rate = Column(Float)
-    # link_quality = Column(Float)
-    # neighbor_link_quality = Column(Float)
+    type = Column(Enum(LinkType))
+    signal = Column(Float)
+    noise = Column(Float)
+    tx_rate = Column(Float)
+    rx_rate = Column(Float)
+    quality = Column(Float)
+    neighbor_quality = Column(Float)
 
     created_at = Column(TIMESTAMP(timezone=True), default=func.now(), nullable=False)
     last_updated_at = Column(

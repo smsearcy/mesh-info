@@ -1,4 +1,4 @@
-"""Test network crawling functionality."""
+"""Test AREDN node parsing functionality."""
 
 import json
 from pathlib import Path
@@ -236,6 +236,90 @@ def test_wlan_mac_address_standardization(data_folder):
     assert wlan_interface.mac_address != system_info.wlan_mac_address
     assert ":" not in system_info.wlan_mac_address
     assert system_info.wlan_mac_address == system_info.wlan_mac_address.lower()
+
+
+def test_radio_link_info_parsing(data_folder):
+    """Confirm that radio link information is parsing correctly."""
+
+    with open(data_folder / "sysinfo-1.7-link_info2.json", "r") as f:
+        json_data = json.load(f)
+    system_info = aredn.load_system_info(json_data)
+
+    assert len(system_info.links) == 3
+
+    sample_link = system_info.links["10.150.4.228"]
+    expected = aredn.Link(
+        quality=0.94,
+        neighbor_quality=0.94,
+        signal=-82,
+        noise=-91,
+        type=aredn.LinkType.RADIO,
+        hostname="N0CALL-RKM2-1-Medford-OR.local.mesh",
+        tx_rate=19.5,
+        rx_rate=26,
+        olsr_interface="wlan0",
+    )
+    assert sample_link == expected
+
+
+def test_dtd_link_info_parsing(data_folder):
+    """Confirm that DTD link information is parsing correctly."""
+
+    with open(data_folder / "sysinfo-1.7-link_info.json", "r") as f:
+        json_data = json.load(f)
+    system_info = aredn.load_system_info(json_data)
+
+    assert len(system_info.links) == 2
+
+    sample_link = system_info.links["10.33.72.151"]
+    expected = aredn.Link(
+        quality=1,
+        neighbor_quality=1,
+        type=aredn.LinkType.DIRECT,
+        hostname="N0CALL-VC-SHACK.local.mesh",
+        olsr_interface="eth0.2",
+    )
+    assert sample_link == expected
+
+
+def test_dtd_link_info_no_type(data_folder):
+    """Confirm that DTD link information is parsing correctly."""
+
+    with open(data_folder / "sysinfo-1.7-dtdlink-info.json", "r") as f:
+        json_data = json.load(f)
+    system_info = aredn.load_system_info(json_data)
+
+    assert len(system_info.links) == 8
+
+    sample_link = system_info.links["10.65.116.119"]
+    expected = aredn.Link(
+        quality=1,
+        neighbor_quality=1,
+        type=aredn.LinkType.DIRECT,
+        hostname="N0CALL-NSM2-1-East-City-OR.local.mesh",
+        olsr_interface="br-dtdlink",
+    )
+    assert sample_link == expected
+
+
+def test_invalid_link_json():
+    """Confirm that an unknown link is gracefully handled."""
+    link_json = {
+        "neighborLinkQuality": 1,
+        "linkQuality": 1,
+        "hostname": "N0CALL-NSM2.local.mesh",
+        "olsrInterface": "eth.0",
+        "linkType": "foobar",
+    }
+    link_info = aredn.Link.from_json(link_json)
+    expected = aredn.Link(
+        quality=1,
+        neighbor_quality=1,
+        type=aredn.LinkType.UNKNOWN,
+        hostname="N0CALL-NSM2.local.mesh",
+        olsr_interface="eth.0",
+    )
+    assert link_info == expected
 
 
 def test_version_checker():

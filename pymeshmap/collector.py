@@ -318,6 +318,17 @@ def save_links(links: List[LinkInfo], dbsession: Session):
         model.status = LinkStatus.CURRENT
         model.last_seen = datetime.utcnow()
 
+        for attribute in [
+            "type",
+            "signal",
+            "noise",
+            "tx_rate",
+            "rx_rate",
+            "quality",
+            "neighbor_quality",
+        ]:
+            setattr(model, attribute, getattr(link, attribute))
+
         if (
             source.longitude is None
             or source.latitude is None
