@@ -103,7 +103,13 @@ async def service(
         with models.session_scope(session_factory) as dbsession:
             expire_data(dbsession, nodes_expire=nodes_expire, links_expire=links_expire)
 
-        olsr_data = await OlsrData.connect(local_node)
+        try:
+            olsr_data = await OlsrData.connect(local_node)
+        except RuntimeError as exc:
+            logger.error(str(exc))
+            await asyncio.sleep(run_period_seconds)
+            continue
+
         nodes, links, errors = await poller.network_info(olsr_data)
 
         poller_finished = time.monotonic()

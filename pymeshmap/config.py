@@ -21,8 +21,8 @@ class AppConfig:
     class Poller:
         node: str = environ.var(default="localnode.local.mesh")
         max_connections: int = environ.var(default=50, converter=int)
-        connect_timeout: int = environ.var(default=20, converter=int)
-        read_timeout: int = environ.var(default=20, converter=int)
+        connect_timeout: int = environ.var(default=15, converter=int)
+        read_timeout: int = environ.var(default=15, converter=int)
 
     @environ.config
     class Aredn:
