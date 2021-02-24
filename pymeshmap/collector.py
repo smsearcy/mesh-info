@@ -45,7 +45,7 @@ MODEL_TO_SYSINFO_ATTRS = {
 }
 
 
-def main(app_config: AppConfig):
+def main(app_config: AppConfig, *, run_once: bool = False):
     """Map the network and store information in the database."""
 
     log_level = app_config.log_level
@@ -67,6 +67,7 @@ def main(app_config: AppConfig):
             polling_period=app_config.collector.period,
             nodes_expire=app_config.collector.node_inactive,
             links_expire=app_config.collector.link_inactive,
+            run_once=run_once,
         ),
         debug=async_debug,
     )

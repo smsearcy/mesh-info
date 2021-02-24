@@ -51,9 +51,16 @@ Change the directory those are saved with `--path`.
 
 ### Collector Service
 ```shell script
-$ poetry run pymeshmap collect
+$ poetry run pymeshmap collector [--run-once]
 ```
 
+Collects information from the network and stores to the database.
+All configuration is via environment variables.
+By default, it will run repeatedly,
+pausing between runs based on the `MESHMAP_COLLECTOR_PERIOD` setting
+(which specifies the number of minutes between each run).
+
+Use the `--run-once` option to run once and exit.
 
 Goals
 -----
