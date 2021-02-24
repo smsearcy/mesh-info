@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import enum
 import html
 from itertools import zip_longest
 from typing import Any, Dict, List, Optional, Tuple
@@ -173,7 +174,55 @@ class Service:
         )
 
 
-@attr.s(slots=True)
+class LinkType(enum.Enum):
+    RADIO = "RF"
+    TUNNEL = "TUN"
+    DIRECT = "DTD"
+    UNKNOWN = ""
+
+
+@attr.s(auto_attribs=True, slots=True)
+class Link:
+    """Data class to represent the link information available from AREDN."""
+
+    type: LinkType
+    olsr_interface: str
+    quality: float
+    neighbor_quality: float
+    hostname: str
+    signal: Optional[int] = None
+    noise: Optional[int] = None
+    tx_rate: Optional[float] = None
+    rx_rate: Optional[float] = None
+
+    @classmethod
+    def from_json(cls, raw_data: Dict[str, Any]) -> Link:
+        """Construct the `Link` dataclass from the AREDN JSON information."""
+        # fix example of a DTD link that wasn't properly identified as such
+        missing_dtd = (
+            raw_data["linkType"] == "" and raw_data["olsrInterface"] == "br-dtdlink"
+        )
+        type_ = "DTD" if missing_dtd else raw_data["linkType"]
+        try:
+            link_type = LinkType(type_)
+        except ValueError as exc:
+            logger.warning(str(exc))
+            link_type = LinkType.UNKNOWN
+
+        return cls(
+            type=link_type,
+            olsr_interface=raw_data["olsrInterface"],
+            quality=raw_data["linkQuality"],
+            neighbor_quality=raw_data["neighborLinkQuality"],
+            hostname=raw_data["hostname"],
+            signal=raw_data.get("signal"),
+            noise=raw_data.get("noise"),
+            tx_rate=raw_data.get("tx_rate"),
+            rx_rate=raw_data.get("rx_rate"),
+        )
+
+
+@attr.s(auto_attribs=True, slots=True)
 class SystemInfo:
     """Data class to represent the node data from 'sysinfo.json'.
 
@@ -193,29 +242,30 @@ class SystemInfo:
 
     """
 
-    node_name: str = attr.ib()
-    api_version: str = attr.ib()
-    grid_square: str = attr.ib()
-    latitude: Optional[float] = attr.ib()
-    longitude: Optional[float] = attr.ib()
-    interfaces: Dict[str, Interface] = attr.ib()
-    ssid: str = attr.ib()
-    channel: str = attr.ib()
-    channel_bandwidth: str = attr.ib()
-    model: str = attr.ib()
-    board_id: str = attr.ib()
-    firmware_version: str = attr.ib()
-    firmware_manufacturer: str = attr.ib()
-    active_tunnel_count: int = attr.ib()
-    tunnel_installed: bool = attr.ib()
-    services: List[Service] = attr.ib()
-    services_json: List[Dict] = attr.ib()
-    status: str = attr.ib()
-    source_json: Dict = attr.ib()
-    description: str = attr.ib(default="")
-    frequency: str = attr.ib(default="")
-    up_time: str = attr.ib(default="")
-    load_averages: Optional[List[float]] = attr.ib(default=None)
+    node_name: str
+    api_version: str
+    grid_square: str
+    latitude: Optional[float]
+    longitude: Optional[float]
+    interfaces: Dict[str, Interface]
+    ssid: str
+    channel: str
+    channel_bandwidth: str
+    model: str
+    board_id: str
+    firmware_version: str
+    firmware_manufacturer: str
+    active_tunnel_count: int
+    tunnel_installed: bool
+    services: List[Service]
+    services_json: List[Dict]
+    status: str
+    source_json: Dict
+    description: str = ""
+    frequency: str = ""
+    up_time: str = ""
+    load_averages: Optional[List[float]] = None
+    links: Dict[str, Link] = attr.Factory(dict)
 
     @property
     def lan_ip_address(self) -> str:
@@ -342,6 +392,11 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
     else:
         data["active_tunnel_count"] = int(json_data["active_tunnel_count"])
         data["tunnel_installed"] = str(json_data["tunnel_installed"]).lower() == "true"
+
+    data["links"] = {
+        ip_address: Link.from_json(link_info)
+        for ip_address, link_info in json_data.get("link_info", {}).items()
+    }
 
     return SystemInfo(**data)
 
