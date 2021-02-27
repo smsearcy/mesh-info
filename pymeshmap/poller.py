@@ -19,6 +19,7 @@ import time
 from asyncio import Lock, StreamReader, StreamWriter
 from collections import defaultdict, deque
 from typing import (
+    AsyncIterable,
     AsyncIterator,
     Awaitable,
     DefaultDict,
@@ -41,9 +42,11 @@ from .config import AppConfig
 
 
 async def run(config: AppConfig.Poller) -> NetworkInfo:
+    """Helper function for polling the network."""
+
     olsr = await OlsrData.connect(config.node)
-    poller = Poller(olsr, config)
-    return await poller.network_info()
+    poller = Poller.from_config(config)
+    return await poller.network_info(olsr)
 
 
 class OlsrData:
@@ -214,10 +217,19 @@ class Poller:
 
     """
 
-    olsr_data: OlsrData
-    config: AppConfig.Poller
+    max_connections: int
+    connect_timeout: int
+    read_timeout: int
 
-    async def network_info(self) -> NetworkInfo:
+    @classmethod
+    def from_config(cls, config: AppConfig.Poller) -> Poller:
+        return cls(
+            max_connections=config.max_connections,
+            connect_timeout=config.connect_timeout,
+            read_timeout=config.read_timeout,
+        )
+
+    async def network_info(self, olsr_data: OlsrData) -> NetworkInfo:
         """Helper function to query node and link information asynchronously.
 
         Returns:
@@ -227,18 +239,20 @@ class Poller:
 
         """
 
-        node_task = asyncio.create_task(self.network_nodes())
-        link_task = asyncio.create_task(self.network_links())
+        node_task = asyncio.create_task(self.node_information(olsr_data.nodes))
+        links = [link async for link in olsr_data.links]
+        logger.info("Network link count: {}", len(links))
 
         node_results: NetworkNodes = await node_task
-        links: List[LinkInfo] = await link_task
         nodes_by_ip, errors = node_results
 
         _add_extra_link_info(links, nodes_by_ip)
 
         return NetworkInfo(list(nodes_by_ip.values()), links, errors)
 
-    async def network_nodes(self) -> NetworkNodes:
+    async def node_information(
+        self, node_addresses: AsyncIterable[str]
+    ) -> NetworkNodes:
         """Asynchronously gets information for all the nodes on the network.
 
         Getting a list of the nodes is done via connecting to the OLSR
@@ -251,15 +265,15 @@ class Poller:
         start_time = time.monotonic()
 
         tasks: List[Awaitable] = []
-        connector = aiohttp.TCPConnector(limit=self.config.max_connections)
+        connector = aiohttp.TCPConnector(limit=self.max_connections)
         timeout = aiohttp.ClientTimeout(
-            sock_connect=self.config.connect_timeout,
-            sock_read=self.config.read_timeout,
+            sock_connect=self.connect_timeout,
+            sock_read=self.read_timeout,
         )
         async with aiohttp.ClientSession(
             timeout=timeout, connector=connector
         ) as session:
-            async for node_address in self.olsr_data.nodes:
+            async for node_address in node_addresses:
                 logger.debug("Creating task to poll {}", node_address)
                 task = asyncio.create_task(_poll_node(session, node_address))
                 tasks.append(task)
@@ -294,24 +308,6 @@ class Poller:
 
         logger.info("Network nodes summary: {}", dict(count))
         return NetworkNodes(nodes, errors)
-
-    async def network_links(self) -> List[LinkInfo]:
-        """Asynchronously gets information about all links between nodes in the network.
-
-        This is rather simple because all that information is available
-        from the OLSR daemon running on the local node.
-        Since this function does not need to crawl the network
-        there is less need to be asynchronous
-        but this way we can re-use a single OLSR query function
-
-        Returns:
-            List of `LinkInfo` data classes for each unique link in the network.
-
-        """
-
-        links = [link async for link in self.olsr_data.links]
-        logger.info("Network link count: {}", len(links))
-        return links
 
 
 class NetworkInfo(NamedTuple):

@@ -21,8 +21,8 @@ class AppConfig:
     class Poller:
         node: str = environ.var(default="localnode.local.mesh")
         max_connections: int = environ.var(default=50, converter=int)
-        connect_timeout: int = environ.var(default=20, converter=int)
-        read_timeout: int = environ.var(default=20, converter=int)
+        connect_timeout: int = environ.var(default=15, converter=int)
+        read_timeout: int = environ.var(default=15, converter=int)
 
     @environ.config
     class Aredn:
@@ -33,6 +33,7 @@ class AppConfig:
     class Collector:
         node_inactive: int = environ.var(default=7, converter=int)
         link_inactive: int = environ.var(default=1, converter=int)
+        period: int = environ.var(default=10, converter=int)
 
     env: Environment = environ.var(default=Environment.PROD, converter=Environment)
     log_level: str = environ.var(default="SUCCESS")

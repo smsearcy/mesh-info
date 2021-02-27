@@ -22,7 +22,7 @@ def main(argv: list = None):
     app_config = config.app_config
 
     if args.command == "collector":
-        result = collector.main(app_config)
+        result = collector.main(app_config, run_once=args.run_once)
     elif args.command == "report":
         if not args.path.is_dir():
             parser.error("output path must be an existing directory")
@@ -76,10 +76,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     # Network Collector
-    sub_parsers.add_parser(
+    collector_parser = sub_parsers.add_parser(
         "collector",
         help="collect network information and store to database",
         description="Polls the network and stores the information to the database",
+    )
+    collector_parser.add_argument(
+        "--run-once", action="store_true", help="collect information once then quit"
     )
 
     # Scrub Sample Files
