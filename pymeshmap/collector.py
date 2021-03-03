@@ -1,4 +1,4 @@
-"""Maps the network, storing the result in the database."""
+"""Repeatedly collects data about the network and stores it to the database."""
 from __future__ import annotations
 
 import asyncio
@@ -11,6 +11,7 @@ from operator import attrgetter
 from typing import DefaultDict, List, Optional
 
 from loguru import logger
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from . import models
@@ -55,23 +56,38 @@ def main(app_config: AppConfig, *, run_once: bool = False):
     try:
         dbsession_factory = models.get_session_factory(models.get_engine(app_config))
     except Exception as exc:
-        logger.exception("Failed to connect to database")
-        return f"Failed to connect to database: {exc!s}"
+        logger.error(f"Failed to configure database connection: {exc!r}")
+        return "Database configuration failed, review logs for details"
 
     async_debug = log_level == "DEBUG"
-    asyncio.run(
-        service(
-            app_config.poller.node,
-            Poller.from_config(app_config.poller),
-            dbsession_factory,
-            polling_period=app_config.collector.period,
-            nodes_expire=app_config.collector.node_inactive,
-            links_expire=app_config.collector.link_inactive,
-            run_once=run_once,
-        ),
-        debug=async_debug,
-    )
+    try:
+        asyncio.run(
+            service(
+                app_config.poller.node,
+                Poller.from_config(app_config.poller),
+                dbsession_factory,
+                polling_period=app_config.collector.period,
+                nodes_expire=app_config.collector.node_inactive,
+                links_expire=app_config.collector.link_inactive,
+                max_retries=app_config.collector.max_retries,
+                run_once=run_once,
+            ),
+            debug=async_debug,
+        )
+    except ServiceError as exc:
+        return str(exc)
+    except OperationalError as exc:
+        logger.error(repr(exc))
+        return "Database error, review logs for details"
+    except KeyboardInterrupt:
+        pass
     return
+
+
+class ServiceError(Exception):
+    """Custom exception for known issues to report on the command line."""
+
+    pass
 
 
 async def service(
@@ -83,8 +99,9 @@ async def service(
     nodes_expire: int,
     links_expire: int,
     run_once: bool = False,
+    max_retries: int = 5,
 ):
-    """
+    """Service function to repeatedly poll the network and save the data.
 
     Args:
         local_node: Name of the local node to connect to
@@ -94,10 +111,12 @@ async def service(
         nodes_expire: Number of days before absent nodes are marked inactive
         links_expire: Number of days before absent links are marked inactive
         run_once: Only run the network collection once
+        max_retries: Number of consecutive connection failures before aborting
 
     """
 
     run_period_seconds = polling_period * 60
+    connection_failures = 0
     while True:
         start_time = time.monotonic()
 
@@ -107,9 +126,18 @@ async def service(
         try:
             olsr_data = await OlsrData.connect(local_node)
         except RuntimeError as exc:
-            logger.error(str(exc))
+            connection_failures += 1
+            logger.error(f"{exc!s} (tries: {connection_failures})")
+            if connection_failures >= max_retries or run_once:
+                raise ServiceError(
+                    f"Failed to connect to '{local_node}' for network data "
+                    f"{connection_failures} times in a row.  Aborting."
+                )
             await asyncio.sleep(run_period_seconds)
             continue
+
+        # reset the error counter
+        connection_failures = 0
 
         nodes, links, errors = await poller.network_info(olsr_data)
 
@@ -257,7 +285,7 @@ def get_db_model(dbsession: Session, node: SystemInfo) -> Optional[Node]:
 
 
 def _get_most_recent(results: List[Node]) -> Optional[Node]:
-    """Get the most recently seen node, optionally marking the others inactive."""
+    """Get the most recently seen node, marking the others inactive."""
     if len(results) == 0:
         return None
 

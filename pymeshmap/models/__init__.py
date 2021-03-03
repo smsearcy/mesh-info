@@ -28,7 +28,7 @@ configure_mappers()
 
 
 def get_engine(app_config: AppConfig):
-    return create_engine(app_config.db_url)
+    return create_engine(app_config.db_url, pool_pre_ping=True)
 
 
 def get_session_factory(engine) -> sessionmaker:
