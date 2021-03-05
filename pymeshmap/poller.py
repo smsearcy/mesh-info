@@ -93,18 +93,24 @@ class OlsrData:
 
     @classmethod
     async def connect(
-        cls, host_name: str = "localnode.local.mesh", port: int = 2004
+        cls, host_name: str = "localnode.local.mesh", port: int = 2004, timeout: int = 5
     ) -> OlsrData:
         """Connect to an OLSR daemon and create an `OlsrData` wrapper.
 
         Args:
             host_name: Name of host to connect to OLSR daemon
             port: Port the OLSR daemon is running on
+            timeout: Connection timeout in seconds
 
         """
         logger.trace("Connecting to OLSR daemon {}:{}", host_name, port)
         try:
-            reader, writer = await asyncio.open_connection(host_name, port)
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(host_name, port), timeout
+            )
+        except asyncio.TimeoutError:
+            logger.error("Timeout attempting to connect to {}:{}", host_name, port)
+            raise RuntimeError("Timeout connecting to OLSR daemon")
         except OSError as e:
             # Connection errors subclass `OSError`
             logger.error("Failed to connect to {}:{} ({!s})", host_name, port, e)

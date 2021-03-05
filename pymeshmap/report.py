@@ -63,7 +63,12 @@ def main(
     start_time = time.monotonic()
 
     async_debug = log_level == "DEBUG"
-    nodes, links, errors = asyncio.run(poller.run(app_config.poller), debug=async_debug)
+    try:
+        nodes, links, errors = asyncio.run(
+            poller.run(app_config.poller), debug=async_debug
+        )
+    except RuntimeError as exc:
+        return str(exc)
 
     version_checker = VersionChecker.from_config(app_config.aredn)
 

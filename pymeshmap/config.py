@@ -36,14 +36,23 @@ class AppConfig:
         period: int = environ.var(default=10, converter=int)
         max_retries: int = environ.var(default=5, converter=int)
 
-    env: Environment = environ.var(default=Environment.PROD, converter=Environment)
+    @environ.config
+    class Web:
+        host: str = environ.var(default="127.0.0.1")
+        port: int = environ.var(default=6543, converter=int)
+        # debug_hosts
+
+    env: Environment = environ.var(default="production", converter=Environment)
     log_level: str = environ.var(default="SUCCESS")
     db_url: str = environ.var(
         default="postgresql+psycopg2://postgres:pyMeshMap@db:5432/postgres"
     )
+    site_name: str = environ.var(default="pyMeshMap")
+
     poller: Poller = environ.group(Poller)
     aredn: Aredn = environ.group(Aredn)
     collector: Collector = environ.group(Collector)
+    web: Web = environ.group(Web)
 
 
 # walks up the folder path looking for `.env` file

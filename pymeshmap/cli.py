@@ -6,7 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from pymeshmap import collector, config, report, scrub
+from pymeshmap import __version__, collector, config, report, scrub, web
 
 
 def main(argv: list = None):
@@ -16,7 +16,7 @@ def main(argv: list = None):
 
     args = parser.parse_args(argv)
     if args.version:
-        print("version")
+        print(f"pymeshmap version {__version__}")
         return
 
     app_config = config.app_config
@@ -35,6 +35,10 @@ def main(argv: list = None):
         )
     elif args.command == "scrub":
         result = scrub.main(args.filename, args.output)
+    elif args.command == "web":
+        result = web.main(
+            app_config, host=args.host, port=args.port, reload=args.reload
+        )
     else:
         result = "no command specified"
 
@@ -100,6 +104,26 @@ def build_parser() -> argparse.ArgumentParser:
         "output",
         type=argparse.FileType("w"),
         help="output file to write to",
+    )
+
+    # Web Service
+    web_parser = sub_parsers.add_parser(
+        "web",
+        help="run web service",
+        description="Run web service",
+    )
+    web_parser.add_argument(
+        "--host",
+        help="ip address to listen on (defaults to 127.0.0.1)",
+    )
+    web_parser.add_argument(
+        "--port",
+        help="port to listen on (defaults to 6543)",
+    )
+    web_parser.add_argument(
+        "--reload",
+        action="store_true",
+        help="automatically reload when source changes",
     )
 
     return parser
