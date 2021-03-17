@@ -5,13 +5,14 @@ import asyncio
 import sys
 import time
 from pathlib import Path
+from typing import Dict
 
 from loguru import logger
 
 from . import poller
 from .aredn import SystemInfo, VersionChecker
 from .config import AppConfig
-from .poller import LinkInfo, PollingError
+from .poller import LinkInfo, NodeError, PollingError
 
 VERBOSE_TO_LOGGING = {0: "SUCCESS", 1: "INFO", 2: "DEBUG", 3: "TRACE"}
 
@@ -89,39 +90,9 @@ def main(
             "Is your node connected to a mesh network?  "
             f"Please run with -v for more information and/or report the issue{END}",
         )
-    elif len(nodes) == 0 and len(links) > 0:
-        print(
-            f"{BAD}Gathered results for {len(links):,d} links but 0 nodes!\n"
-            f"This really should not happen.  "
-            f"Please run with -v for more information and/or report the issue{END}",
-        )
-    else:
-        print(
-            f"{BAD}Failed to gather any results!  "
-            f"Connection issue to local node?\n{END}"
-        )
+
     if len(errors) > 0:
-        print(f"{BAD}Encountered errors with {len(errors):,d} nodes{END}")
-        if save_errors:
-            print("Saving responses for nodes with errors")
-        else:
-            print(
-                "Use the --save-errors option to save responses from nodes with errors"
-            )
-        for ip_address, result in errors.items():
-            # TODO: MeshMap did a reverse DNS lookup to get the node name
-            print(f"{WARN}{ip_address}: {result.error!s}{END}")
-            if save_errors:
-                if result.error == PollingError.PARSE_ERROR:
-                    filename = f"sysinfo-{ip_address}-error.json"
-                elif result.error in (
-                    PollingError.HTTP_ERROR,
-                    PollingError.INVALID_RESPONSE,
-                ):
-                    filename = f"{ip_address}-response.txt"
-                else:
-                    filename = f"{ip_address}-error.txt"
-                open(output_path / filename, "w").write(result.response)
+        handle_errors(errors, output_path, save=save_errors)
 
     total_time = time.monotonic() - start_time
     print(f"{NOTE}Network report took {total_time:.2f} seconds{END}")
@@ -201,3 +172,27 @@ def _colorize_load(value: float) -> str:
     else:
         color = OK
     return f"{color}{value}{END}"
+
+
+def handle_errors(errors: Dict[str, NodeError], output: Path, *, save: bool):
+    """Report on the nodes that had errors."""
+
+    print(f"{BAD}Encountered errors with {len(errors):,d} nodes{END}")
+    if save:
+        print("Saving responses for nodes with errors")
+    else:
+        print("Use the --save-errors option to save responses from nodes with errors")
+    for ip_address, result in errors.items():
+        # TODO: MeshMap did a reverse DNS lookup to get the node name
+        print(f"{WARN}{ip_address}: {result.error!s}{END}")
+        if save:
+            if result.error == PollingError.PARSE_ERROR:
+                filename = f"sysinfo-{ip_address}-error.json"
+            elif result.error in (
+                PollingError.HTTP_ERROR,
+                PollingError.INVALID_RESPONSE,
+            ):
+                filename = f"{ip_address}-response.txt"
+            else:
+                filename = f"{ip_address}-error.txt"
+            open(output / filename, "w").write(result.response)
