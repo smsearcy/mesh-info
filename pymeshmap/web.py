@@ -1,5 +1,7 @@
 """Main entry point for the Pyramid web application."""
 
+from typing import Any, Dict
+
 import hupper
 import waitress
 from pyramid.config import Configurator
@@ -27,17 +29,18 @@ def main(
 def make_wsgi_app(app_config: AppConfig):
     """Create the Pyramid WSGI application"""
 
-    settings = {"app_config": app_config}
+    settings: Dict[str, Any] = {
+        "app_config": app_config,
+    }
 
-    # TODO: add development checks, etc
-    if app_config.env == Environment.PROD:
-        settings["pyramid.reload_templates"] = False
+    if app_config.env == Environment.DEV:
+        settings["pyramid.reload_all"] = True
         settings["pyramid.debug_authorization"] = False
         settings["pyramid.debug_notfound"] = False
         settings["pyramid.debug_routematch"] = False
         settings["pyramid.default_locale_name"] = "en"
-    elif app_config.env == Environment.DEV:
-        settings["pyramid.reload_templates"] = True
+    else:
+        settings["pyramid.reload_templates"] = False
         settings["pyramid.debug_authorization"] = False
         settings["pyramid.debug_notfound"] = False
         settings["pyramid.debug_routematch"] = False
