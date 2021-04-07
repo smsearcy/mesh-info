@@ -15,6 +15,7 @@ from ..config import AppConfig
 
 # import or define all models here to ensure they are attached to the
 # Base.metadata prior to any initialization routines
+from .collector import CollectorStat  # noqa
 from .link import Link  # noqa
 from .meta import Base, LinkStatus, NodeStatus  # noqa
 from .node import Node  # noqa
