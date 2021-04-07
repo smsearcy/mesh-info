@@ -8,12 +8,11 @@ from sqlalchemy import (
     Integer,
     String,
     Unicode,
-    func,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlalchemy.orm import relationship
 
-from .meta import Base, NodeStatus
+from .meta import Base, NodeStatus, utcnow
 
 
 class Node(Base):
@@ -57,11 +56,11 @@ class Node(Base):
 
     system_info = Column(JSON(), nullable=False)
 
-    created_at = Column(TIMESTAMP(timezone=True), default=func.now(), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), default=utcnow(), nullable=False)
     last_updated_at = Column(
         TIMESTAMP(timezone=True),
-        default=func.now(),
-        onupdate=func.now(),
+        default=utcnow(),
+        onupdate=utcnow(),
         nullable=False,
     )
 

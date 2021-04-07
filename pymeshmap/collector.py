@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from . import models
 from .aredn import SystemInfo
 from .config import AppConfig
-from .models import Link, LinkStatus, Node, NodeStatus
+from .models import CollectorStat, Link, LinkStatus, Node, NodeStatus
 from .poller import LinkInfo, OlsrData, Poller
 
 MODEL_TO_SYSINFO_ATTRS = {
@@ -118,10 +118,8 @@ async def service(
     run_period_seconds = polling_period * 60
     connection_failures = 0
     while True:
+        started_at = datetime.utcnow()
         start_time = time.monotonic()
-
-        with models.session_scope(session_factory) as dbsession:
-            expire_data(dbsession, nodes_expire=nodes_expire, links_expire=links_expire)
 
         try:
             olsr_data = await OlsrData.connect(local_node)
@@ -149,18 +147,39 @@ async def service(
             poller_elapsed / 60,
         )
 
+        summary: DefaultDict[str, int] = defaultdict(int)
         with models.session_scope(session_factory) as dbsession:
-            save_nodes(nodes, dbsession)
-            save_links(links, dbsession)
+            expire_data(
+                dbsession,
+                nodes_expire=nodes_expire,
+                links_expire=links_expire,
+                count=summary,
+            )
+            save_nodes(nodes, dbsession, count=summary)
+            save_links(links, dbsession, count=summary)
+            dbsession.flush()
 
-        updates_finished = time.monotonic()
-        updates_elapsed = updates_finished - poller_finished
+            updates_finished = time.monotonic()
+            updates_elapsed = updates_finished - poller_finished
 
-        logger.info(
-            "Database updates took {:.2f}s ({:.2f}m)",
-            updates_elapsed,
-            updates_elapsed / 60,
-        )
+            logger.info(
+                "Database updates took {:.2f}s ({:.2f}m)",
+                updates_elapsed,
+                updates_elapsed / 60,
+            )
+
+            # TODO: fill in "other_stats" with error types and node/link details
+            dbsession.add(
+                CollectorStat(
+                    started_at=started_at,
+                    node_count=len(nodes),
+                    link_count=len(links),
+                    error_count=len(errors),
+                    polling_duration=poller_elapsed,
+                    total_duration=time.monotonic() - start_time,
+                    other_stats=dict(summary),
+                )
+            )
 
         total_elapsed = time.monotonic() - start_time
         logger.info("Total time: {:.2f}s ({:.2f}m)", total_elapsed, total_elapsed / 60)
@@ -177,7 +196,13 @@ async def service(
     return
 
 
-def expire_data(dbsession: Session, *, nodes_expire: int, links_expire: int):
+def expire_data(
+    dbsession: Session,
+    *,
+    nodes_expire: int,
+    links_expire: int,
+    count: DefaultDict[str, int] = None,
+):
     """Update the status of nodes/links that have not been seen recently.
 
     Args:
@@ -187,8 +212,10 @@ def expire_data(dbsession: Session, *, nodes_expire: int, links_expire: int):
 
     """
 
+    if count is None:
+        count = defaultdict(int)
     inactive_cutoff = datetime.utcnow() - timedelta(days=links_expire)
-    count = (
+    count["expired: links"] = (
         dbsession.query(Link)
         .filter(
             Link.status == LinkStatus.RECENT,
@@ -198,12 +225,12 @@ def expire_data(dbsession: Session, *, nodes_expire: int, links_expire: int):
     )
     logger.info(
         "Marked {:,d} links inactive that have not been seen since {}",
-        count,
+        count["expired: links"],
         inactive_cutoff,
     )
 
     inactive_cutoff = datetime.utcnow() - timedelta(days=nodes_expire)
-    count = (
+    count["expired: nodes"] = (
         dbsession.query(Node)
         .filter(
             Node.status == NodeStatus.ACTIVE,
@@ -213,21 +240,24 @@ def expire_data(dbsession: Session, *, nodes_expire: int, links_expire: int):
     )
     logger.info(
         "Marked {:,d} nodes inactive that have not been seen since {}",
-        count,
+        count["expired: nodes"],
         inactive_cutoff,
     )
     return
 
 
-def save_nodes(nodes: List[SystemInfo], dbsession: Session):
+def save_nodes(
+    nodes: List[SystemInfo], dbsession: Session, *, count: DefaultDict[str, int] = None
+):
     """Saves node information to the database.
 
     Looks for existing nodes by WLAN MAC address and name.
 
     """
-    count: DefaultDict[str, int] = defaultdict(int)
+    if count is None:
+        count = defaultdict(int)
     for node in nodes:
-        count["total"] += 1
+        count["nodes: total"] += 1
         # check to see if node exists in database by name and WLAN MAC address
 
         model = get_db_model(dbsession, node)
@@ -235,13 +265,13 @@ def save_nodes(nodes: List[SystemInfo], dbsession: Session):
         if model is None:
             # create new database model
             logger.debug("Saving {} to database", node)
-            count["added"] += 1
+            count["nodes: added"] += 1
             model = Node()
             dbsession.add(model)
         else:
             # update database model
             logger.debug("Updating {} in database with {}", model, node)
-            count["updated"] += 1
+            count["nodes: updated"] += 1
 
         model.last_seen = datetime.utcnow()
         model.status = NodeStatus.ACTIVE
@@ -298,7 +328,9 @@ def _get_most_recent(results: List[Node]) -> Optional[Node]:
     return results[0]
 
 
-def save_links(links: List[LinkInfo], dbsession: Session):
+def save_links(
+    links: List[LinkInfo], dbsession: Session, *, count: DefaultDict[str, int] = None
+):
     """Saves link data to the database.
 
     This implements the bearing/distance functionality in Python
@@ -306,7 +338,8 @@ def save_links(links: List[LinkInfo], dbsession: Session):
     thus the MeshMap triggers will need to be deleted/disabled.
 
     """
-    count: DefaultDict[str, int] = defaultdict(int)
+    if count is None:
+        count = defaultdict(int)
 
     # Downgrade all "current" links to "recent" so that only ones updated are "current"
     dbsession.query(Link).filter(Link.status == LinkStatus.CURRENT).update(
@@ -314,7 +347,7 @@ def save_links(links: List[LinkInfo], dbsession: Session):
     )
 
     for link in links:
-        count["total"] += 1
+        count["links: total"] += 1
         source: Node = (
             dbsession.query(Node)
             .filter(Node.wlan_ip == link.source, Node.status == NodeStatus.ACTIVE)
@@ -331,7 +364,7 @@ def save_links(links: List[LinkInfo], dbsession: Session):
                 link.source,
                 link.destination,
             )
-            count["errors"] += 1
+            count["links: errors"] += 1
             continue
         model = (
             dbsession.query(Link)
@@ -343,11 +376,11 @@ def save_links(links: List[LinkInfo], dbsession: Session):
         )
 
         if model is None:
-            count["new"] += 1
+            count["links: new"] += 1
             model = Link(source=source, destination=destination)
             dbsession.add(model)
         else:
-            count["updated"] += 1
+            count["links: updated"] += 1
 
         model.olsr_cost = link.cost
         model.status = LinkStatus.CURRENT
@@ -370,11 +403,11 @@ def save_links(links: List[LinkInfo], dbsession: Session):
             or destination.longitude is None
             or destination.latitude is None
         ):
-            count["missing location info"] += 1
+            count["links: missing location info"] += 1
             model.distance = None
             model.bearing = None
         else:
-            count["location calculated"] += 1
+            count["links: location calculated"] += 1
             # calculate the bearing/distance
             model.distance = distance(
                 source.latitude,
