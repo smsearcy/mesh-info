@@ -81,7 +81,7 @@ Checkout the [road map](ROADMAP.md) for more details.
 Acknowledgements
 ----------------
 
-As mentioned above, this is based on the work done by Eric Satterlee (KG6WXC),
+As mentioned above, this is based on the work done by Eric (KG6WXC),
 who has been very helpful when I had questions.
 
 From the [MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap) site:
