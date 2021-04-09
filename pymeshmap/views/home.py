@@ -9,7 +9,7 @@ from ..models import CollectorStat, Link, LinkStatus, Node, NodeStatus
 @view_config(route_name="home", renderer="pymeshmap:templates/home.mako")
 def overview(request: Request):
 
-    dbsession: Session = request.find_service(name="db")
+    dbsession: Session = request.dbsession
 
     node_count = (
         dbsession.query(Node).filter(Node.status != NodeStatus.INACTIVE).count()

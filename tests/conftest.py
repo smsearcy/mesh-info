@@ -1,20 +1,31 @@
 import os
 from pathlib import Path
 
+import alembic.command
+import alembic.config
 import pytest
 import transaction
 import webtest
-from pyramid.paster import get_appsettings
 from pyramid.scripting import prepare
 from pyramid.testing import DummyRequest, testConfig
-from pyramid_scaffold import main
+from pytest_postgresql import factories
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 
-import alembic
-import alembic.command
-import alembic.config
 from pymeshmap import models
 from pymeshmap.config import AppConfig
 from pymeshmap.models.meta import Base
+from pymeshmap.web import make_wsgi_app
+
+if os.environ.get("CI"):
+    postgresql = factories.postgresql_noproc(
+        host="postgres",  # needs to match service in .gitlab-ci.yml
+        user=os.environ.get("POSTGRES_USER", "postgres"),
+        password=os.environ.get("POSTGRES_PASSWORD", ""),
+        dbname=os.environ.get("POSTGRES_DB", "postgres"),
+    )
+else:
+    postgresql = factories.postgresql("postgresql_proc")
 
 
 @pytest.fixture(scope="module")
@@ -23,40 +34,45 @@ def data_folder() -> Path:
     return Path(__file__).parent / "data"
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def app_config():
-    return AppConfig.from_environ({"MESHMAP_POLLER_NODE": "127.0.0.1"})
+    return AppConfig.from_environ(
+        {
+            "MESHMAP_POLLER_NODE": "127.0.0.1",
+        }
+    )
 
 
-def pytest_addoption(parser):
-    parser.addoption("--ini", action="store", metavar="INI_FILE")
+@pytest.fixture
+def dbengine(postgresql):
 
+    try:
+        # psycopg2 connection has connection information in attribute
+        dbinfo = postgresql.info
+    except AttributeError:
+        # noop has parameters directly on the object
+        dbinfo = postgresql
 
-@pytest.fixture(scope="session")
-def ini_file(request):
-    # potentially grab this path from a pytest option
-    return os.path.abspath(request.config.option.ini or "testing.ini")
+    user = dbinfo.user
+    password = dbinfo.password
+    host = dbinfo.host
+    port = dbinfo.port
+    dbname = dbinfo.dbname
+    db_url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
 
+    alembic_cfg = alembic.config.Config("alembic.ini")
 
-@pytest.fixture(scope="session")
-def app_settings(ini_file):
-    return get_appsettings(ini_file)
+    engine = create_engine(db_url, poolclass=NullPool)
 
+    alembic_cfg.attributes["connection"] = engine
 
-@pytest.fixture(scope="session")
-def dbengine(app_settings, ini_file):
-    engine = models.get_engine(app_settings)
-
-    alembic_cfg = alembic.config.Config(ini_file)
     Base.metadata.drop_all(bind=engine)
-    alembic.command.stamp(alembic_cfg, None, purge=True)
 
     # run migrations to initialize the database
     # depending on how we want to initialize the database from scratch
     # we could alternatively call:
-    # Base.metadata.create_all(bind=engine)
-    # alembic.command.stamp(alembic_cfg, "head")
-    alembic.command.upgrade(alembic_cfg, "head")
+    Base.metadata.create_all(bind=engine)
+    alembic.command.stamp(alembic_cfg, "head")
 
     yield engine
 
@@ -64,9 +80,9 @@ def dbengine(app_settings, ini_file):
     alembic.command.stamp(alembic_cfg, None, purge=True)
 
 
-@pytest.fixture(scope="session")
-def app(app_settings, dbengine):
-    return main({}, dbengine=dbengine, **app_settings)
+@pytest.fixture
+def app(app_config, dbengine):
+    return make_wsgi_app(app_config, dbengine=dbengine)
 
 
 @pytest.fixture
@@ -106,8 +122,7 @@ def testapp(app, tm, dbsession):
 
 @pytest.fixture
 def app_request(app, tm, dbsession):
-    """
-    A real request.
+    """A real request.
 
     This request is almost identical to a real request but it has some
     drawbacks in tests as it's harder to mock data and is heavier.
@@ -128,8 +143,7 @@ def app_request(app, tm, dbsession):
 
 @pytest.fixture
 def dummy_request(tm, dbsession):
-    """
-    A lightweight dummy request.
+    """A lightweight dummy request.
 
     This request is ultra-lightweight and should be used only when the request
     itself is not a large focus in the call-stack.  It is much easier to mock
@@ -149,10 +163,10 @@ def dummy_request(tm, dbsession):
 
 @pytest.fixture
 def dummy_config(dummy_request):
-    """
-    A dummy :class:`pyramid.config.Configurator` object.  This allows for
-    mock configuration, including configuration for ``dummy_request``, as well
-    as pushing the appropriate threadlocals.
+    """A dummy :class:`pyramid.config.Configurator` object.
+
+    This allows for mock configuration, including configuration for ``dummy_request``,
+    as well as pushing the appropriate threadlocals.
 
     """
     with testConfig(request=dummy_request) as config:

@@ -26,12 +26,14 @@ def main(
     waitress.serve(app, host=host, port=port)
 
 
-def make_wsgi_app(app_config: AppConfig):
+def make_wsgi_app(app_config: AppConfig, **kwargs):
     """Create the Pyramid WSGI application"""
 
     settings: Dict[str, Any] = {
         "app_config": app_config,
     }
+    # Use for Pyramid testing
+    settings.update(**kwargs)
 
     if app_config.env == Environment.DEV:
         settings["pyramid.reload_all"] = True
@@ -55,6 +57,6 @@ def make_wsgi_app(app_config: AppConfig):
         if app_config.env == Environment.DEV:
             config.include("pyramid_debugtoolbar")
 
-        config.scan()
+        config.scan(".views")
 
     return config.make_wsgi_app()

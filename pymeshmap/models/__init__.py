@@ -114,9 +114,8 @@ def includeme(config):
     session_factory = get_session_factory(dbengine)
     config.registry["dbsession_factory"] = session_factory
 
-    # register "db" service with Pyramid services
-    # `dbsession: Session = request.find_service(name="db")`
-    def dbsession_factory(context, request):
+    # make request.dbsession available for use in Pyramid
+    def dbsession_factory(request):
         # hook to share the dbsession fixture in testing
         dbsession = request.environ.get("app.dbsession")
         if dbsession is None:
@@ -124,4 +123,4 @@ def includeme(config):
             dbsession = get_tm_session(session_factory, request.tm, request=request)
         return dbsession
 
-    config.register_service_factory(dbsession_factory, name="db")
+    config.add_request_method(dbsession_factory, "dbsession", reify=True)

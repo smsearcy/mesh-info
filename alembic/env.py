@@ -1,8 +1,8 @@
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import create_engine, pool
 
-from alembic import context
 from pymeshmap.config import app_config
 from pymeshmap.models import Base
 
@@ -16,8 +16,6 @@ fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -56,7 +54,10 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = create_engine(app_config.db_url, poolclass=pool.NullPool)
+    connectable = config.attributes.get("connection")
+
+    if connectable is None:
+        connectable = create_engine(app_config.db_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)

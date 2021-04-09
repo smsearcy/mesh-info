@@ -1,11 +1,4 @@
-from pyramid_scaffold import models
-
-
 def test_my_view_success(testapp, dbsession):
-    model = models.MyModel(name="one", value=55)
-    dbsession.add(model)
-    dbsession.flush()
-
     res = testapp.get("/", status=200)
     assert res.body
 

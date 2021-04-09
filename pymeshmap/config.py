@@ -45,7 +45,7 @@ class AppConfig:
     env: Environment = environ.var(default="production", converter=Environment)
     log_level: str = environ.var(default="SUCCESS")
     db_url: str = environ.var(
-        default="postgresql+psycopg2://postgres:pyMeshMap@db:5432/postgres"
+        default="postgresql+psycopg2://postgres:@localhost:5432/postgres"
     )
     site_name: str = environ.var(default="pyMeshMap")
 

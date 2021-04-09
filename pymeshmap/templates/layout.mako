@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="aredn wireless mesh network map">
-  <meta name="author" content="Scott Searcy">
   <link rel="shortcut icon" type="image/png" sizes="16x16" href="${ req.static_url('pymeshmap:static/mesh-network-16x16.png') }">
   <link rel="shortcut icon" type="image/png" sizes="32x32" href="${ req.static_url('pymeshmap:static/mesh-network-32x32.png') }">
 

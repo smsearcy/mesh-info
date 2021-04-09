@@ -1,22 +1,29 @@
-from pyramid_scaffold import models
-from pyramid_scaffold.views.default import my_view
-from pyramid_scaffold.views.notfound import notfound_view
+from datetime import datetime, timezone
 
-
-def test_my_view_failure(app_request):
-    info = my_view(app_request)
-    assert info.status_int == 500
+from pymeshmap import models
+from pymeshmap.views.home import overview
+from pymeshmap.views.notfound import notfound_view
 
 
 def test_my_view_success(app_request, dbsession):
-    model = models.MyModel(name="one", value=55)
-    dbsession.add(model)
+    stats = models.CollectorStat(
+        started_at=datetime(2021, 4, 27, 11, 23, 35, tzinfo=timezone.utc),
+        finished_at=datetime(2021, 4, 27, 11, 24, 35, tzinfo=timezone.utc),
+        node_count=24,
+        link_count=80,
+        error_count=1,
+        polling_duration=45.45,
+        total_duration=60,
+        other_stats={},
+    )
+    dbsession.add(stats)
     dbsession.flush()
 
-    info = my_view(app_request)
+    info = overview(app_request)
     assert app_request.response.status_int == 200
-    assert info["one"].name == "one"
-    assert info["project"] == "Pyramid Scaffold"
+    assert info["node_count"] == 0
+    assert info["link_count"] == 0
+    assert info["last_run"] == stats
 
 
 def test_notfound_view(app_request):
