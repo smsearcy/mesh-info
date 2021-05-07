@@ -60,3 +60,9 @@ def make_wsgi_app(app_config: AppConfig, **kwargs):
         config.scan(".views")
 
     return config.make_wsgi_app()
+
+
+def app_factory(global_config, **settings):
+    from .config import app_config
+
+    return make_wsgi_app(app_config, **settings)
