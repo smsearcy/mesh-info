@@ -1,5 +1,10 @@
-def test_my_view_success(testapp, dbsession):
+def test_overview_success(testapp, dbsession):
     res = testapp.get("/", status=200)
+    assert res.body
+
+
+def test_nodes_success(testapp, dbsession):
+    res = testapp.get("/nodes", status=200)
     assert res.body
 
 

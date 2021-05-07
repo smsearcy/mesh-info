@@ -2,10 +2,13 @@ from datetime import datetime, timezone
 
 from pymeshmap import models
 from pymeshmap.views.home import overview
+from pymeshmap.views.nodes import node_list
 from pymeshmap.views.notfound import notfound_view
 
+# TODO: Create a unified set of demo/test data
 
-def test_my_view_success(app_request, dbsession):
+
+def test_overview_view_success(app_request, dbsession):
     stats = models.CollectorStat(
         started_at=datetime(2021, 4, 27, 11, 23, 35, tzinfo=timezone.utc),
         finished_at=datetime(2021, 4, 27, 11, 24, 35, tzinfo=timezone.utc),
@@ -24,6 +27,12 @@ def test_my_view_success(app_request, dbsession):
     assert info["node_count"] == 0
     assert info["link_count"] == 0
     assert info["last_run"] == stats
+
+
+def test_nodes_view_success(app_request, dbsession):
+    info = node_list(app_request)
+    assert app_request.response.status_int == 200
+    assert len(info["nodes"]) == 0
 
 
 def test_notfound_view(app_request):

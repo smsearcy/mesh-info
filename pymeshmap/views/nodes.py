@@ -6,10 +6,11 @@ from ..models import Node, NodeStatus
 
 
 @view_config(route_name="nodes", renderer="pymeshmap:templates/nodes.mako")
-def overview(request: Request):
+def node_list(request: Request):
 
-    dbsession: Session = request.find_service(name="db")
+    dbsession: Session = request.dbsession
 
+    # TODO: parameters to determine which nodes to return
     query = dbsession.query(Node).filter(Node.status != NodeStatus.INACTIVE)
     nodes = query.all()
 
