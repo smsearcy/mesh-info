@@ -4,7 +4,7 @@
 
 <div class="container">
   <h1 class="title">Nodes</h1>
-  <table class="table">
+  <table class="table is-striped is-narrow">
     <thead>
     <tr>
       <th>Name</th>

@@ -65,6 +65,7 @@ class Node(Base):
     )
 
     links = relationship("Link", foreign_keys="Link.source_id", back_populates="source")
+    # TODO: add active_links relationship
 
     Index(
         "active_name", name, unique=True, postgresql_where=status == NodeStatus.ACTIVE

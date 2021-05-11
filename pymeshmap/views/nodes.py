@@ -7,6 +7,7 @@ from ..models import Node, NodeStatus
 
 @view_config(route_name="nodes", renderer="pymeshmap:templates/nodes.mako")
 def node_list(request: Request):
+    """View a list of nodes as a web page."""
 
     dbsession: Session = request.dbsession
 

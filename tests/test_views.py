@@ -38,4 +38,4 @@ def test_nodes_view_success(app_request, dbsession):
 def test_notfound_view(app_request):
     info = notfound_view(app_request)
     assert app_request.response.status_int == 404
-    assert info == {}
+    assert info == {"message": "Sorry, the specified page does not exist."}

@@ -45,6 +45,12 @@ class Link(Base):
         postgresql_where=status.in_((LinkStatus.CURRENT, LinkStatus.RECENT)),
     )
 
+    @property
+    def signal_noise_ratio(self):
+        if self.signal is None or self.noise is None:
+            return None
+        return self.signal - self.noise
+
     def __repr__(self):
         return (
             f"<models.Link(source_id={self.source_id!r}, "
