@@ -2,7 +2,7 @@ from pyramid.request import Request
 from pyramid.view import notfound_view_config
 
 
-@notfound_view_config(renderer="pymeshmap:templates/404.mako")
+@notfound_view_config(renderer="pymeshmap:templates/404.jinja2")
 def notfound_view(request: Request):
     request.response.status = 404
     if request.matched_route is not None:

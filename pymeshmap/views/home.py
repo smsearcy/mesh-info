@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from ..models import CollectorStat, Link, LinkStatus, Node, NodeStatus
 
 
-@view_config(route_name="home", renderer="pymeshmap:templates/home.mako")
+@view_config(route_name="home", renderer="pymeshmap:templates/home.jinja2")
 def overview(request: Request):
 
     dbsession: Session = request.dbsession

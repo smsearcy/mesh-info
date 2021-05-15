@@ -19,6 +19,6 @@ indent_size = 4
 [Makefile]
 indent_style = tab
 
-[*.{js,json,mako,yml,yaml}]
+[*.{jinja2,js,json,yml,yaml}]
 indent_style = space
 indent_size = 2

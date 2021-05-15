@@ -228,6 +228,20 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "jinja2"
+version = "2.11.3"
+description = "A very fast and expressive template engine."
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+
+[package.dependencies]
+MarkupSafe = ">=0.23"
+
+[package.extras]
+i18n = ["Babel (>=0.8)"]
+
+[[package]]
 name = "junit-xml"
 version = "1.9"
 description = "Creates JUnit XML test result documents that can be read by tools such as Jenkins"
@@ -503,10 +517,28 @@ docs = ["Sphinx (>=1.7.5)", "pylons-sphinx-themes (>=0.3)"]
 testing = ["webtest", "nose", "coverage", "sqlalchemy", "webob"]
 
 [[package]]
+name = "pyramid-jinja2"
+version = "2.8"
+description = "Jinja2 template bindings for the Pyramid web framework"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+Jinja2 = ">=2.5.0"
+MarkupSafe = "*"
+pyramid = ">=1.3.0"
+"zope.deprecation" = "*"
+
+[package.extras]
+docs = ["pylons-sphinx-themes (>=0.3)", "Sphinx (>=1.7.5)"]
+testing = ["coverage", "nose (>=1.2.0)", "webtest"]
+
+[[package]]
 name = "pyramid-mako"
 version = "1.1.0"
 description = "Mako template bindings for the Pyramid web framework"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -945,7 +977,7 @@ test = ["zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "0c6f5c4f37f503e3bae7f9ca7298f074a98fb8cff510dd265e275c84b262b6e0"
+content-hash = "653d2f10860757d971bdd3ee54b3e9bdeba5c5e6731578cc565dc84ed1d5a0dc"
 
 [metadata.files]
 aiohttp = [
@@ -1155,6 +1187,10 @@ importlib-metadata = [
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
+]
+jinja2 = [
+    {file = "Jinja2-2.11.3-py2.py3-none-any.whl", hash = "sha256:03e47ad063331dd6a3f04a43eddca8a966a26ba0c5b7207a9a9e4e08f1b29419"},
+    {file = "Jinja2-2.11.3.tar.gz", hash = "sha256:a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6"},
 ]
 junit-xml = [
     {file = "junit_xml-1.9-py2.py3-none-any.whl", hash = "sha256:ec5ca1a55aefdd76d28fcc0b135251d156c7106fa979686a4b48d62b761b4732"},
@@ -1394,6 +1430,10 @@ pyramid = [
 pyramid-debugtoolbar = [
     {file = "pyramid_debugtoolbar-4.9-py2.py3-none-any.whl", hash = "sha256:27bb6f3187381b5831bd5f9c3b4e08c3971d86d459395bffa958548604434560"},
     {file = "pyramid_debugtoolbar-4.9.tar.gz", hash = "sha256:5a1fd20bad4b8a1172f0ef4d22191ba382181206d0e566ffcf03d066b88429d7"},
+]
+pyramid-jinja2 = [
+    {file = "pyramid_jinja2-2.8-py2.py3-none-any.whl", hash = "sha256:c7ce77a2ec5cfb7b29c9eabec9e5c167698d13adb2524c0c47cc6fe6a0a09ab1"},
+    {file = "pyramid_jinja2-2.8.tar.gz", hash = "sha256:81e0615cb3108f2a251ff3141ad0d698a5d03685819f3a836ea84787e8489502"},
 ]
 pyramid-mako = [
     {file = "pyramid_mako-1.1.0-py2.py3-none-any.whl", hash = "sha256:76104592d292b6974cf7080aa52405c51f396a621535f01e274d7fe546e85a43"},

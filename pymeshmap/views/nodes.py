@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..models import Node, NodeStatus
 
 
-@view_config(route_name="nodes", renderer="pymeshmap:templates/nodes.mako")
+@view_config(route_name="nodes", renderer="pymeshmap:templates/nodes.jinja2")
 def node_list(request: Request):
     """View a list of nodes as a web page."""
 

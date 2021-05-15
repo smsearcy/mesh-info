@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from ..models import Node
 
 
-@view_config(route_name="node", renderer="pymeshmap:templates/node.mako")
+@view_config(route_name="node", renderer="pymeshmap:templates/node.jinja2")
 def node_detail(request: Request):
     """Detailed view of a single node."""
 

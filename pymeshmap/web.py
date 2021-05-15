@@ -9,6 +9,18 @@ from pyramid.config import Configurator
 from .config import AppConfig, Environment
 
 
+def _duration(value):
+    if value > 120:
+        return f"{value / 60}m"
+    else:
+        return f"{value}s"
+
+
+def _timestamp(value):
+    # FIXME: add timezone
+    return value.strftime("%Y-%m-%d %H:%M:%S")
+
+
 def main(
     app_config: AppConfig, *, host: str = "", port: int = None, reload: bool = False
 ):
@@ -32,8 +44,14 @@ def make_wsgi_app(app_config: AppConfig, **kwargs):
     settings: Dict[str, Any] = {
         "app_config": app_config,
     }
-    # Use for Pyramid testing
+    # Used for Pyramid testing
     settings.update(**kwargs)
+
+    # define Jinja filters
+    settings["jinja2.filters"] = {
+        "duration": _duration,
+        "timestamp": _timestamp,
+    }
 
     if app_config.env == Environment.DEV:
         settings["pyramid.reload_all"] = True
@@ -49,8 +67,8 @@ def make_wsgi_app(app_config: AppConfig, **kwargs):
         settings["pyramid.default_locale_name"] = "en"
 
     with Configurator(settings=settings) as config:
-        config.include("pyramid_mako")
         config.include("pyramid_services")
+        config.include("pyramid_jinja2")
         config.include(".routes")
         config.include(".models")
 
