@@ -3,7 +3,7 @@ from pyramid.request import Request
 from pyramid.view import view_config
 from sqlalchemy.orm import Session, joinedload
 
-from ..models import Node
+from ..models import Link, LinkStatus, Node
 
 
 @view_config(route_name="node", renderer="pymeshmap:templates/node.jinja2")
@@ -18,4 +18,18 @@ def node_detail(request: Request):
     if node is None:
         raise HTTPNotFound("Sorry, the specified node could not be found")
 
-    return {"node": node}
+    query = (
+        dbsession.query(Link, Node.name)
+        .join(Link.destination)
+        .filter(
+            Link.source_id == node.id,
+            Link.status == LinkStatus.RECENT,
+        )
+    )
+
+    links = []
+    for link, name in query.all():
+        link.name = name
+        links.append(link)
+
+    return {"node": node, "links": links}

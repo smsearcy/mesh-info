@@ -3,22 +3,12 @@
 from typing import Any, Dict
 
 import hupper
+import pendulum
 import waitress
+from loguru import logger
 from pyramid.config import Configurator
 
 from .config import AppConfig, Environment
-
-
-def _duration(value):
-    if value > 120:
-        return f"{value / 60}m"
-    else:
-        return f"{value}s"
-
-
-def _timestamp(value):
-    # FIXME: add timezone
-    return value.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def main(
@@ -49,8 +39,9 @@ def make_wsgi_app(app_config: AppConfig, **kwargs):
 
     # define Jinja filters
     settings["jinja2.filters"] = {
-        "duration": _duration,
-        "timestamp": _timestamp,
+        "duration": "pymeshmap.filters.duration",
+        "timestamp": "pymeshmap.filters.timestamp",
+        "local_tz": "pymeshmap.filters.local_tz",
     }
 
     if app_config.env == Environment.DEV:
@@ -74,6 +65,26 @@ def make_wsgi_app(app_config: AppConfig, **kwargs):
 
         if app_config.env == Environment.DEV:
             config.include("pyramid_debugtoolbar")
+
+        server_timezone = pendulum.local_timezone()
+
+        def client_timezone(request):
+            if "local_tz" in request.cookies:
+                try:
+                    client_tz = pendulum.timezone(request.cookies["local_tz"])
+                except Exception as exc:
+                    # TODO: identify client?
+                    logger.warning(
+                        "Invalid timezone specified: {} ({!r})",
+                        request.cookies["local_tz"],
+                        exc,
+                    )
+                    client_tz = server_timezone
+                return client_tz.name
+            else:
+                return server_timezone.name
+
+        config.add_request_method(lambda r: client_timezone(r), "timezone", reify=True)
 
         config.scan(".views")
 

@@ -1,10 +1,11 @@
 import enum
 
+import pendulum
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import MetaData
 from sqlalchemy.sql import expression
-from sqlalchemy.types import DateTime
+from sqlalchemy.types import TIMESTAMP, DateTime, TypeDecorator
 
 # Recommended naming convention used by Alembic, as various different database
 # providers will autogenerate vastly different names making migrations more
@@ -40,6 +41,27 @@ class LinkStatus(enum.Enum):
 
     def __str__(self):
         return self.name.title()
+
+
+class PDateTime(TypeDecorator):
+    """SQLAlchemy type to wrap `pendulum.datetime` instead of `datetime.datetime`."""
+
+    impl = TIMESTAMP(timezone=True)
+    cache_ok = False
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            if not isinstance(value, pendulum.DateTime):
+                # Pendulum enforces non-naive datetime objects
+                raise TypeError(f"Expected pendulum.datetime, not {value!r}")
+            value = value.in_tz("UTC")
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = pendulum.instance(value)
+
+        return value
 
 
 class utcnow(expression.FunctionElement):

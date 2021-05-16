@@ -1,7 +1,7 @@
-from sqlalchemy import TIMESTAMP, Column, Integer, Numeric
+from sqlalchemy import Column, Integer, Numeric
 from sqlalchemy.dialects.postgresql import JSON
 
-from .meta import Base, utcnow
+from .meta import Base, PDateTime, utcnow
 
 
 class CollectorStat(Base):
@@ -9,8 +9,8 @@ class CollectorStat(Base):
 
     __tablename__ = "collector_stat"
 
-    started_at = Column(TIMESTAMP(timezone=True), primary_key=True)
-    finished_at = Column(TIMESTAMP(timezone=True), default=utcnow(), nullable=False)
+    started_at = Column(PDateTime(), primary_key=True)
+    finished_at = Column(PDateTime(), default=utcnow(), nullable=False)
     node_count = Column(Integer, nullable=False)
     link_count = Column(Integer, nullable=False)
     error_count = Column(Integer, nullable=False)

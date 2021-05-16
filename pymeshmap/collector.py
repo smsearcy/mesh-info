@@ -6,10 +6,10 @@ import math
 import sys
 import time
 from collections import defaultdict
-from datetime import datetime, timedelta
 from operator import attrgetter
 from typing import DefaultDict, List, Optional
 
+import pendulum
 from loguru import logger
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
@@ -118,7 +118,7 @@ async def service(
     run_period_seconds = polling_period * 60
     connection_failures = 0
     while True:
-        started_at = datetime.utcnow()
+        started_at = pendulum.now()
         start_time = time.monotonic()
 
         try:
@@ -212,9 +212,11 @@ def expire_data(
 
     """
 
+    timestamp = pendulum.now()
+
     if count is None:
         count = defaultdict(int)
-    inactive_cutoff = datetime.utcnow() - timedelta(days=links_expire)
+    inactive_cutoff = timestamp.subtract(days=links_expire)
     count["expired: links"] = (
         dbsession.query(Link)
         .filter(
@@ -229,7 +231,7 @@ def expire_data(
         inactive_cutoff,
     )
 
-    inactive_cutoff = datetime.utcnow() - timedelta(days=nodes_expire)
+    inactive_cutoff = timestamp.subtract(days=nodes_expire)
     count["expired: nodes"] = (
         dbsession.query(Node)
         .filter(
@@ -273,7 +275,7 @@ def save_nodes(
             logger.debug("Updating {} in database with {}", model, node)
             count["nodes: updated"] += 1
 
-        model.last_seen = datetime.utcnow()
+        model.last_seen = pendulum.now()
         model.status = NodeStatus.ACTIVE
 
         for model_attr, node_attr in MODEL_TO_SYSINFO_ATTRS.items():
@@ -384,7 +386,7 @@ def save_links(
 
         model.olsr_cost = link.cost
         model.status = LinkStatus.CURRENT
-        model.last_seen = datetime.utcnow()
+        model.last_seen = pendulum.now()
 
         for attribute in [
             "type",

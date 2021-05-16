@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+import pendulum
 
 from pymeshmap import models
 from pymeshmap.views.home import overview
@@ -10,8 +10,8 @@ from pymeshmap.views.notfound import notfound_view
 
 def test_overview_view_success(app_request, dbsession):
     stats = models.CollectorStat(
-        started_at=datetime(2021, 4, 27, 11, 23, 35, tzinfo=timezone.utc),
-        finished_at=datetime(2021, 4, 27, 11, 24, 35, tzinfo=timezone.utc),
+        started_at=pendulum.datetime(2021, 4, 27, 11, 23, 35, tz="UTC"),
+        finished_at=pendulum.datetime(2021, 4, 27, 11, 24, 35, tz="UTC"),
         node_count=24,
         link_count=80,
         error_count=1,

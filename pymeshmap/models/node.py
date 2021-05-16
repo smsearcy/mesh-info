@@ -1,18 +1,8 @@
-from sqlalchemy import (
-    TIMESTAMP,
-    Boolean,
-    Column,
-    Enum,
-    Float,
-    Index,
-    Integer,
-    String,
-    Unicode,
-)
+from sqlalchemy import Boolean, Column, Enum, Float, Index, Integer, String, Unicode
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlalchemy.orm import relationship
 
-from .meta import Base, NodeStatus, utcnow
+from .meta import Base, NodeStatus, PDateTime, utcnow
 
 
 class Node(Base):
@@ -30,7 +20,7 @@ class Node(Base):
     # store MAC addresses without colons
     wlan_mac_address = Column(String(12), nullable=False)
 
-    last_seen = Column(TIMESTAMP(timezone=True), nullable=False)
+    last_seen = Column(PDateTime(), nullable=False)
 
     up_time = Column(String(25), nullable=False)
     load_averages = Column(ARRAY(Float, dimensions=1))
@@ -56,9 +46,9 @@ class Node(Base):
 
     system_info = Column(JSON(), nullable=False)
 
-    created_at = Column(TIMESTAMP(timezone=True), default=utcnow(), nullable=False)
+    created_at = Column(PDateTime(), default=utcnow(), nullable=False)
     last_updated_at = Column(
-        TIMESTAMP(timezone=True),
+        PDateTime(),
         default=utcnow(),
         onupdate=utcnow(),
         nullable=False,
