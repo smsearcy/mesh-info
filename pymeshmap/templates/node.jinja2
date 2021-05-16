@@ -9,6 +9,11 @@
     {{ node.description}}
   </div>
 
+{#
+  This layout was just a stop gap for MVP.
+  Switch to cards in several columns?
+#}
+
   <h2 class="subtitle">Details</h2>
   <table class="table">
     <tbody>
@@ -106,11 +111,11 @@
       <tr>
         <td>
           <a href="{{ req.route_url("node", id=link.destination_id) }}">
-            {{ link.name }}
+            {{ link.destination.name }}
           </a>
         </td>
         <td>{{ link.status }}</td>
-        <td>{{ link.type.name.title() }}</td>
+        <td>{{ link.type.name|title if link.type else "Unknown" }}</td>
         <td>{{ link.signal_noise_ratio }}</td>
         <td>{{ link.quality }}</td>
         <td>{{ link.neighbor_quality }}</td>

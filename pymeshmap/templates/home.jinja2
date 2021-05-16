@@ -41,7 +41,7 @@
               <tbody>
               <tr>
                 <th>Last Ran:</th>
-                <td>{{ last_run.started_at }}</td>
+                <td>{{ last_run.started_at|local_tz }}</td>
               </tr>
               <tr>
                 <th>Node Count:</th>

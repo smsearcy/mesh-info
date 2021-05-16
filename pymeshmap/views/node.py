@@ -13,23 +13,20 @@ def node_detail(request: Request):
     node_id = int(request.matchdict["id"])
     dbsession: Session = request.dbsession
 
-    node = dbsession.query(Node).options(joinedload(Node.links)).get(node_id)
+    node = dbsession.query(Node).get(node_id)
 
     if node is None:
         raise HTTPNotFound("Sorry, the specified node could not be found")
 
     query = (
-        dbsession.query(Link, Node.name)
-        .join(Link.destination)
+        dbsession.query(Link)
+        .options(joinedload(Link.destination).load_only("name"))
         .filter(
             Link.source_id == node.id,
-            Link.status == LinkStatus.RECENT,
+            Link.status != LinkStatus.INACTIVE,
         )
     )
 
-    links = []
-    for link, name in query.all():
-        link.name = name
-        links.append(link)
+    links = query.all()
 
     return {"node": node, "links": links}

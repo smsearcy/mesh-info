@@ -6,9 +6,9 @@ from pyramid.threadlocal import get_current_request
 
 def duration(value):
     if value > 120:
-        return f"{value / 60}m"
+        return f"{value / 60:.2f}m"
     else:
-        return f"{value}s"
+        return f"{value:.2f}s"
 
 
 def timestamp(dt):

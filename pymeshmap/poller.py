@@ -465,6 +465,7 @@ def _add_extra_link_info(links: List[LinkInfo], nodes_by_ip: Dict[str, SystemInf
         extra_info = nodes_by_ip[link.source].links[link.destination]
         count["updated"] += 1
 
+        link.type = extra_info.type
         link.quality = extra_info.quality
         link.neighbor_quality = extra_info.neighbor_quality
         link.signal = extra_info.signal

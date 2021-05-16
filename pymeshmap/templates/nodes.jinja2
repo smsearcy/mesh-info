@@ -5,7 +5,7 @@
 {% block title %}Nodes{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container is-fluid">
   <h1 class="title">Nodes</h1>
   <table class="table is-striped is-narrow">
     <thead>
@@ -28,15 +28,17 @@
     <tbody>
     {% for node in nodes %}
       <tr>
-        <td>{{ node.name }}</td>
+        <td>
+          <a href="{{ req.route_url("node", id=node.id) }}">{{ node.name }}</a>
+        </td>
         <td>{{ node.status }}</td>
         <td>{{ node.band }}</td>
-        <td>{{ len(node.services) }}</td>
-        <td>{{ len(node.links) }}</td>
+        <td>{{ node.services|length }}</td>
+        <td>{{ link_counts[node.id]|default(0) }}</td>
         <td>{{ 'Yes' if node.tunnel_installed else 'No' }}</td>
         <td>{{ node.active_tunnel_count }}</td>
         <td>{{ node.up_time }}</td>
-        <td>{{ node.last_seen }}</td>
+        <td>{{ node.last_seen|local_tz }}</td>
         <td>{{ node.wlan_ip }}</td>
         <td>{{ node.firmware_version }}</td>
         <td>{{ node.api_version }}</td>

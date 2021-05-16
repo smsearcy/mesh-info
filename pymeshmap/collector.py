@@ -149,14 +149,16 @@ async def service(
 
         summary: DefaultDict[str, int] = defaultdict(int)
         with models.session_scope(session_factory) as dbsession:
+            save_nodes(nodes, dbsession, count=summary)
+            save_links(links, dbsession, count=summary)
+            # expire data after the data has been refreshed
+            # (otherwise the first run after a long gap will mark current stuff expired)
             expire_data(
                 dbsession,
                 nodes_expire=nodes_expire,
                 links_expire=links_expire,
                 count=summary,
             )
-            save_nodes(nodes, dbsession, count=summary)
-            save_links(links, dbsession, count=summary)
             dbsession.flush()
 
             updates_finished = time.monotonic()
