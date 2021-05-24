@@ -11,8 +11,10 @@ def duration(value):
         return f"{value:.2f}s"
 
 
-def timestamp(dt):
-    return dt.in_tz("utc").format("YYYY-MM-DD HH:mm:ss zz")
+def in_tz(dt, tz="utc"):
+    if tz == "server":
+        tz = "local"
+    return dt.in_tz(tz).format("YYYY-MM-DD HH:mm:ss zz")
 
 
 @jinja2.pass_context

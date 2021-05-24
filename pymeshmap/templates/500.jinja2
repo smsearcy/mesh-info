@@ -7,7 +7,7 @@
     <p>{{ message }}</p>
     <p>
       Please contact the site admin and let them know you saw this at
-      {{ timestamp|timestamp }} so they can review the logs.
+      {{ timestamp|in_tz("server") }} so they can review the logs.
     </p>
   </div>
 </div>

@@ -38,11 +38,10 @@ def make_wsgi_app(app_config: AppConfig, **kwargs):
     settings.update(**kwargs)
 
     # define Jinja filters
-    settings["jinja2.filters"] = {
-        "duration": "pymeshmap.filters.duration",
-        "timestamp": "pymeshmap.filters.timestamp",
-        "local_tz": "pymeshmap.filters.local_tz",
-    }
+    filters = settings.setdefault("jinja2.filters", {})
+    filters.setdefault("duration", "pymeshmap.filters.duration")
+    filters.setdefault("in_tz", "pymeshmap.filters.in_tz")
+    filters.setdefault("local_tz", "pymeshmap.filters.local_tz")
 
     if app_config.env == Environment.DEV:
         settings["pyramid.reload_all"] = True
