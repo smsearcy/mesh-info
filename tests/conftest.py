@@ -13,9 +13,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
 from pymeshmap import models
-from pymeshmap.config import AppConfig
+from pymeshmap.config import AppConfig, configure
 from pymeshmap.models.meta import Base
-from pymeshmap.web import make_wsgi_app
 
 if os.environ.get("CI"):
     postgresql = factories.postgresql_noproc(
@@ -82,7 +81,8 @@ def dbengine(postgresql):
 
 @pytest.fixture
 def app(app_config, dbengine):
-    return make_wsgi_app(app_config, dbengine=dbengine)
+    config = configure({"dbengine": dbengine}, app_config=app_config)
+    return config.make_wsgi_app()
 
 
 @pytest.fixture

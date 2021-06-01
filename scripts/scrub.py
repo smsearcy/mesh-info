@@ -1,11 +1,13 @@
-"""Functionality for scrubbing JSON system info."""
+"""Scrub JSON system info for inclusion in test data."""
 
 from __future__ import annotations
 
+import argparse
 import json
 import random
 import re
 import string
+import sys
 from typing import Any, Dict, List
 
 import attr
@@ -73,14 +75,28 @@ class ScrubJsonSample:
         return value
 
 
-def main(filename, output):
+def main(argv: list = None):
     """Scrub JSON files before adding to repository for tests."""
+    # Scrub Sample Files
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "filename",
+        type=argparse.FileType("r"),
+        help="source file to scrub",
+    )
+    parser.add_argument(
+        "output",
+        type=argparse.FileType("w"),
+        help="output file to write to",
+    )
 
-    sys_info = json.load(filename)
+    args = parser.parse_args(argv)
+
+    sys_info = json.load(args.filename)
     # I'm assuming we always start with a dictionary
     scrubber = ScrubJsonSample()
     scrubbed_info = scrubber.scrub_dict(sys_info)
-    json.dump(scrubbed_info, output, indent=2)
+    json.dump(scrubbed_info, args.output, indent=2)
 
 
 def random_grid_square():
@@ -103,3 +119,7 @@ def random_grid_square():
         + lowercase[values[5]]
     )
     return grid_square
+
+
+if __name__ == "__main__":
+    sys.exit(main())

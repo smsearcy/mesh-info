@@ -5,10 +5,8 @@ import contextlib
 from typing import Iterator
 
 import zope.sqlalchemy
-from sqlalchemy import create_engine
+from sqlalchemy import engine_from_config
 from sqlalchemy.orm import Session, configure_mappers, sessionmaker
-
-from ..config import AppConfig
 
 # import or define all models here to ensure they are attached to the
 # Base.metadata prior to any initialization routines
@@ -22,8 +20,8 @@ from .node import Node  # noqa
 configure_mappers()
 
 
-def get_engine(app_config: AppConfig):
-    return create_engine(app_config.db_url, pool_pre_ping=True)
+def get_engine(settings: dict, prefix="db."):
+    return engine_from_config(settings, prefix)
 
 
 def get_session_factory(engine) -> sessionmaker:
@@ -109,7 +107,7 @@ def includeme(config):
     # hook to share the dbengine fixture in testing
     dbengine = settings.get("dbengine")
     if not dbengine:
-        dbengine = get_engine(settings["app_config"])
+        dbengine = get_engine(settings)
 
     session_factory = get_session_factory(dbengine)
     config.registry["dbsession_factory"] = session_factory

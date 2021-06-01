@@ -1,7 +1,9 @@
 """Smoke tests for the CLI commands."""
 
 from pymeshmap import cli
-from pymeshmap.config import app_config
+from pymeshmap.config import from_env
+
+app_config = from_env()
 
 
 def test_collector_cli(mocker):
@@ -9,7 +11,7 @@ def test_collector_cli(mocker):
     mocker.patch("sys.exit")
 
     cli.main(["collector"])
-    mock.assert_called_once_with(app_config, run_once=False)
+    mock.assert_called_once()
 
 
 def test_collector_cli_run_once(mocker):
@@ -17,7 +19,7 @@ def test_collector_cli_run_once(mocker):
     mocker.patch("sys.exit")
 
     cli.main(["collector", "--run-once"])
-    mock.assert_called_once_with(app_config, run_once=True)
+    mock.assert_called_once()
 
 
 def test_report_cli(mocker):
@@ -25,16 +27,4 @@ def test_report_cli(mocker):
     mocker.patch("sys.exit")
 
     cli.main(["report"])
-    mock.assert_called_once()
-
-
-def test_scrub_cli(mocker, tmp_path):
-    mock = mocker.patch("pymeshmap.scrub.main")
-    mocker.patch("sys.exit")
-
-    source = tmp_path / "test.json"
-    source.touch()
-    output = tmp_path / "output.json"
-
-    cli.main(["scrub", str(source), str(output)])
     mock.assert_called_once()

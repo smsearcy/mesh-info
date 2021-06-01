@@ -9,10 +9,8 @@ from typing import Dict
 
 from loguru import logger
 
-from . import poller
 from .aredn import SystemInfo, VersionChecker
-from .config import AppConfig
-from .poller import LinkInfo, NodeError, PollingError
+from .poller import LinkInfo, NetworkInfo, NodeError, OlsrData, Poller, PollingError
 
 VERBOSE_TO_LOGGING = {0: "SUCCESS", 1: "INFO", 2: "DEBUG", 3: "TRACE"}
 
@@ -36,8 +34,9 @@ VERSION_COLOR = {
 
 
 def main(
-    app_config: AppConfig,
-    hostname: str = "",
+    local_node: str,
+    poller: Poller,
+    version_checker: VersionChecker,
     *,
     verbose: int = 0,
     save_errors: bool = False,
@@ -54,7 +53,6 @@ def main(
 
     """
 
-    app_config.poller.node = hostname or app_config.poller.node
     output_path = output_path or Path(".")
 
     log_level = VERBOSE_TO_LOGGING.get(verbose, "SUCCESS")
@@ -66,12 +64,10 @@ def main(
     async_debug = log_level == "DEBUG"
     try:
         nodes, links, errors = asyncio.run(
-            poller.run(app_config.poller), debug=async_debug
+            network_info(local_node, poller), debug=async_debug
         )
     except RuntimeError as exc:
         return str(exc)
-
-    version_checker = VersionChecker.from_config(app_config.aredn)
 
     for node in nodes:
         pprint_node(node, version_checker)
@@ -96,6 +92,12 @@ def main(
 
     total_time = time.monotonic() - start_time
     print(f"{NOTE}Network report took {total_time:.2f} seconds{END}")
+
+
+async def network_info(node: str, poller: Poller) -> NetworkInfo:
+    """Connect to the OLSR daemon on the local node and get the network information."""
+    olsr = await OlsrData.connect(node)
+    return await poller.network_info(olsr)
 
 
 def pprint_node(node: SystemInfo, checker: VersionChecker):

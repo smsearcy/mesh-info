@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import create_engine, pool
 
-from pymeshmap.config import app_config
+from pymeshmap.config import from_env
 from pymeshmap.models import Base
 
 # this is the Alembic Config object, which provides
@@ -36,6 +36,7 @@ def run_migrations_offline():
     script output.
 
     """
+    app_config = from_env()
     context.configure(
         url=app_config.db_url,
         target_metadata=target_metadata,
@@ -57,6 +58,7 @@ def run_migrations_online():
     connectable = config.attributes.get("connection")
 
     if connectable is None:
+        app_config = from_env()
         connectable = create_engine(app_config.db_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:

@@ -16,6 +16,7 @@ import enum
 import json
 import re
 import time
+import typing
 from asyncio import Lock, StreamReader, StreamWriter
 from collections import defaultdict, deque
 from typing import (
@@ -38,15 +39,9 @@ import attr
 from loguru import logger
 
 from .aredn import LinkType, SystemInfo, load_system_info
-from .config import AppConfig
 
-
-async def run(config: AppConfig.Poller) -> NetworkInfo:
-    """Helper function for polling the network."""
-
-    olsr = await OlsrData.connect(config.node)
-    poller = Poller.from_config(config)
-    return await poller.network_info(olsr)
+if typing.TYPE_CHECKING:
+    from .config import AppConfig
 
 
 class OlsrData:
@@ -149,7 +144,7 @@ class OlsrData:
         line_str = line_bytes.decode("utf-8").rstrip()
         logger.trace("OLSR data: {}", line_str)
 
-        # TODO: Use walrus operator when Python 3.8 is the minimum requirement
+        # TODO: Use walrus operator when Python 3.8 is the minimum requirement (py38)
         node_address = self._get_address(line_str)
         if node_address:
             self.nodes.queue.append(node_address)
@@ -229,7 +224,7 @@ class Poller:
 
     @classmethod
     def from_config(cls, config: AppConfig.Poller) -> Poller:
-        return cls(
+        return Poller(
             max_connections=config.max_connections,
             connect_timeout=config.connect_timeout,
             read_timeout=config.read_timeout,
