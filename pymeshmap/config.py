@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import enum
+import functools
 import sys
 from typing import Any, Dict, Optional
 
@@ -13,7 +14,7 @@ from loguru import logger
 from pyramid.config import Configurator
 
 from .aredn import VersionChecker
-from .poller import Poller
+from .poller import network_info
 
 
 class Environment(enum.Enum):
@@ -149,12 +150,13 @@ def configure(
     config.add_request_method(lambda r: client_timezone(r), "timezone", reify=True)
 
     # Register the `Poller` singleton
-    poller = Poller(
+    poller = functools.partial(
+        network_info,
         max_connections=app_config.poller.max_connections,
         connect_timeout=app_config.poller.connect_timeout,
         read_timeout=app_config.poller.read_timeout,
     )
-    config.register_service(poller, Poller)
+    config.register_service(poller, name="poller")
 
     # Register the `VersionChecker` singleton
     version_checker = VersionChecker.from_config(app_config.aredn)

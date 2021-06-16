@@ -12,7 +12,6 @@ from pyramid.paster import bootstrap
 from pymeshmap import __version__, collector, models, report, web
 from pymeshmap.aredn import VersionChecker
 from pymeshmap.config import configure
-from pymeshmap.poller import Poller
 
 
 def main(argv: list = None):
@@ -42,7 +41,7 @@ def main(argv: list = None):
             logger.error(f"Failed to configure database connection: {exc!r}")
             sys.exit("Database configuration failed, review logs for details")
 
-        poller: Poller = request.find_service(Poller)
+        poller = request.find_service(name="poller")
         version_checker: VersionChecker = request.find_service(VersionChecker)
 
         if args.command == "collector":

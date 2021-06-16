@@ -5,7 +5,7 @@ from faker import Faker
 
 from pymeshmap import report
 from pymeshmap.aredn import Interface, SystemInfo, VersionChecker
-from pymeshmap.poller import NetworkInfo, Poller
+from pymeshmap.poller import NetworkInfo, network_info
 
 fake = Faker()
 
@@ -126,11 +126,10 @@ def test_report_main(mocker, app_config):
     mock_poller = mocker.AsyncMock(return_value=NetworkInfo([], [], {}))
     mocker.patch("pymeshmap.report.network_info", side_effect=mock_poller)
 
-    poller = Poller.from_config(app_config.poller)
     version_checker = VersionChecker.from_config(app_config.aredn)
 
-    report.main("localnode", poller, version_checker)
-    mock_poller.assert_awaited_once_with("localnode", poller)
+    report.main("localnode", network_info, version_checker)
+    mock_poller.assert_awaited_once_with("localnode", network_info)
 
 
 @pytest.mark.parametrize("node", SAMPLE_NODES)

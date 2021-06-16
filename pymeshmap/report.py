@@ -5,12 +5,12 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import Dict
+from typing import Callable, Dict
 
 from loguru import logger
 
 from .aredn import SystemInfo, VersionChecker
-from .poller import LinkInfo, NetworkInfo, NodeError, OlsrData, Poller, PollingError
+from .poller import LinkInfo, NetworkInfo, NodeError, OlsrData, PollingError
 
 VERBOSE_TO_LOGGING = {0: "SUCCESS", 1: "INFO", 2: "DEBUG", 3: "TRACE"}
 
@@ -35,7 +35,7 @@ VERSION_COLOR = {
 
 def main(
     local_node: str,
-    poller: Poller,
+    poller: Callable,
     version_checker: VersionChecker,
     *,
     verbose: int = 0,
@@ -94,10 +94,10 @@ def main(
     print(f"{NOTE}Network report took {total_time:.2f} seconds{END}")
 
 
-async def network_info(node: str, poller: Poller) -> NetworkInfo:
+async def network_info(node: str, poller: Callable) -> NetworkInfo:
     """Connect to the OLSR daemon on the local node and get the network information."""
     olsr = await OlsrData.connect(node)
-    return await poller.network_info(olsr)
+    return await poller(olsr)
 
 
 def pprint_node(node: SystemInfo, checker: VersionChecker):

@@ -7,7 +7,7 @@ import math
 import time
 from collections import defaultdict
 from operator import attrgetter
-from typing import DefaultDict, List, Optional
+from typing import Callable, DefaultDict, List, Optional
 
 import pendulum
 from loguru import logger
@@ -17,7 +17,7 @@ from . import models
 from .aredn import SystemInfo
 from .config import AppConfig
 from .models import CollectorStat, Link, LinkStatus, Node, NodeStatus
-from .poller import LinkInfo, OlsrData, Poller
+from .poller import LinkInfo, OlsrData
 
 MODEL_TO_SYSINFO_ATTRS = {
     "name": "node_name",
@@ -48,14 +48,12 @@ MODEL_TO_SYSINFO_ATTRS = {
 def main(
     local_node: str,
     dbsession_factory,
-    poller: Poller,
+    poller: Callable,
     *,
     config: AppConfig.Collector,
     run_once: bool = False,
 ):
     """Map the network and store information in the database."""
-
-    # TODO: split service() into collect() and service()
 
     collection = functools.partial(
         collector,
@@ -67,6 +65,7 @@ def main(
     )
 
     if run_once:
+        # collect once then quit
         asyncio.run(collection())
         return
 
@@ -126,7 +125,7 @@ async def service(collect, *, polling_period: int, max_retries: int = 5):
 
 async def collector(
     local_node: str,
-    poller: Poller,
+    poller: Callable,
     session_factory,
     *,
     nodes_expire: int,
@@ -143,8 +142,6 @@ async def collector(
 
     """
 
-    # FIXME: separate the service loop from collector()
-
     started_at = pendulum.now()
     start_time = time.monotonic()
 
@@ -155,7 +152,7 @@ async def collector(
             f"Failed to connect to OLSR daemon on {local_node} for network data"
         )
 
-    nodes, links, errors = await poller.network_info(olsr_data)
+    nodes, links, errors = await poller(olsr_data)
 
     poller_finished = time.monotonic()
     poller_elapsed = poller_finished - start_time
@@ -188,7 +185,6 @@ async def collector(
             updates_elapsed / 60,
         )
 
-        # TODO: fill in "other_stats" with error types and node/link details
         dbsession.add(
             CollectorStat(
                 started_at=started_at,
@@ -220,6 +216,7 @@ def expire_data(
         dbsession: SQLAlchemy database session
         nodes_expire: Number of days a node is not seen before marked inactive
         links_expire: Number of days a link is not seen before marked inactive
+        count: Default dictionary for tracking statistics
 
     """
 
