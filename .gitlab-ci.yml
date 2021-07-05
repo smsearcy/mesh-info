@@ -5,6 +5,9 @@ variables:
   PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
   POETRY_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pypoetry
   PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
+  POSTGRES_DB: tests
+  POSTGRES_USER: meshmap
+  POSTGRES_HOST_AUTH_METHOD: trust
 
 stages:
   - prep
@@ -77,6 +80,8 @@ mypy:
 .pytest:
   stage: test
   extends: .poetry
+  services:
+    - postgres:12
   script:
     - poetry run pytest --cov=pymeshmap --junit-xml=pytest-report.xml
   coverage: '/^TOTAL.+?(\d+\%)$/'

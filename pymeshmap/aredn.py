@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import enum
 import html
+import typing
 from itertools import zip_longest
 from typing import Any, Dict, List, Optional, Tuple
 
 import attr
 from loguru import logger
 
-from .config import AppConfig
+if typing.TYPE_CHECKING:
+    from .config import AppConfig
 
 # these are defined as constants at the module level so they are only initialized once
 # (if the set was initialize for each function then it wouldn't be faster)

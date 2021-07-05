@@ -1,8 +1,8 @@
-from sqlalchemy import TIMESTAMP, Column, Enum, Float, ForeignKey, Index, Integer
+from sqlalchemy import Column, Enum, Float, ForeignKey, Index, Integer
 from sqlalchemy.orm import relationship
 
 from ..aredn import LinkType
-from .meta import Base, LinkStatus, utcnow
+from .meta import Base, LinkStatus, PDateTime, utcnow
 
 
 class Link(Base):
@@ -13,7 +13,7 @@ class Link(Base):
     source_id = Column(Integer, ForeignKey("node.node_id"), primary_key=True)
     destination_id = Column(Integer, ForeignKey("node.node_id"), primary_key=True)
     status = Column(Enum(LinkStatus), nullable=False)
-    last_seen = Column(TIMESTAMP(timezone=True), nullable=False, default=utcnow())
+    last_seen = Column(PDateTime(), nullable=False, default=utcnow())
 
     olsr_cost = Column(Float)
     distance = Column(Float)
@@ -27,9 +27,9 @@ class Link(Base):
     quality = Column(Float)
     neighbor_quality = Column(Float)
 
-    created_at = Column(TIMESTAMP(timezone=True), default=utcnow(), nullable=False)
+    created_at = Column(PDateTime(), default=utcnow(), nullable=False)
     last_updated_at = Column(
-        TIMESTAMP(timezone=True),
+        PDateTime(),
         default=utcnow(),
         onupdate=utcnow(),
         nullable=False,
@@ -44,6 +44,12 @@ class Link(Base):
         status,
         postgresql_where=status.in_((LinkStatus.CURRENT, LinkStatus.RECENT)),
     )
+
+    @property
+    def signal_noise_ratio(self):
+        if self.signal is None or self.noise is None:
+            return None
+        return self.signal - self.noise
 
     def __repr__(self):
         return (

@@ -6,7 +6,13 @@ import argparse
 import sys
 from pathlib import Path
 
-from pymeshmap import collector, config, report, scrub
+from loguru import logger
+from pyramid.paster import bootstrap
+
+from pymeshmap import __version__, collector, models, report, web
+from pymeshmap.aredn import VersionChecker
+from pymeshmap.config import configure
+from pymeshmap.poller import Poller
 
 
 def main(argv: list = None):
@@ -16,27 +22,51 @@ def main(argv: list = None):
 
     args = parser.parse_args(argv)
     if args.version:
-        print("version")
+        print(f"pymeshmap version {__version__}")
         return
 
-    app_config = config.app_config
+    if args.command == "web":
+        # web process doesn't need to be bootstrapped
+        config = configure()
+        web.main(config, host=args.host, port=args.port, reload=args.reload)
+        return
 
-    if args.command == "collector":
-        result = collector.main(app_config, run_once=args.run_once)
-    elif args.command == "report":
-        if not args.path.is_dir():
-            parser.error("output path must be an existing directory")
-        result = report.main(
-            app_config,
-            args.hostname,
-            verbose=args.verbose,
-            save_errors=args.save_errors,
-            output_path=args.path,
-        )
-    elif args.command == "scrub":
-        result = scrub.main(args.filename, args.output)
-    else:
-        result = "no command specified"
+    pyramid_ini = str(Path(__file__).parents[1] / "pyramid.ini")
+    with bootstrap(pyramid_ini) as env:
+        settings = env["registry"].settings
+        request = env["request"]
+
+        try:
+            session_factory = models.get_session_factory(models.get_engine(settings))
+        except Exception as exc:
+            logger.error(f"Failed to configure database connection: {exc!r}")
+            sys.exit("Database configuration failed, review logs for details")
+
+        poller: Poller = request.find_service(Poller)
+        version_checker: VersionChecker = request.find_service(VersionChecker)
+
+        if args.command == "collector":
+            result = collector.main(
+                settings["local_node"],
+                session_factory,
+                poller,
+                config=settings["collector"],
+                run_once=args.run_once,
+            )
+        elif args.command == "report":
+            if not args.path.is_dir():
+                parser.error("output path must be an existing directory")
+
+            result = report.main(
+                args.hostname,
+                poller,
+                version_checker,
+                verbose=args.verbose,
+                save_errors=args.save_errors,
+                output_path=args.path,
+            )
+        else:
+            result = "no command specified"
 
     sys.exit(result)
 
@@ -85,21 +115,24 @@ def build_parser() -> argparse.ArgumentParser:
         "--run-once", action="store_true", help="collect information once then quit"
     )
 
-    # Scrub Sample Files
-    scrub_parser = sub_parsers.add_parser(
-        "scrub",
-        help="scrub sensitive information from json sample files",
-        description="Scrub sensitive data from 'sysinfo.json' files for testing",
+    # Web Service
+    web_parser = sub_parsers.add_parser(
+        "web",
+        help="run web service",
+        description="Run web service",
     )
-    scrub_parser.add_argument(
-        "filename",
-        type=argparse.FileType("r"),
-        help="source file to scrub",
+    web_parser.add_argument(
+        "--host",
+        help="ip address to listen on (defaults to 127.0.0.1)",
     )
-    scrub_parser.add_argument(
-        "output",
-        type=argparse.FileType("w"),
-        help="output file to write to",
+    web_parser.add_argument(
+        "--port",
+        help="port to listen on (defaults to 6543)",
+    )
+    web_parser.add_argument(
+        "--reload",
+        action="store_true",
+        help="automatically reload when source changes",
     )
 
     return parser

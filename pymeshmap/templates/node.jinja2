@@ -1,0 +1,132 @@
+{% extends "layout.jinja2" %}
+
+{% block title %}{{ node.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="title">{{ node.name }}</h1>
+  <div class="content">
+    {{ node.description}}
+  </div>
+
+{#
+  This layout was just a stop gap for MVP.
+  Switch to cards in several columns?
+#}
+
+  <h2 class="subtitle">Details</h2>
+  <table class="table">
+    <tbody>
+      <tr>
+        <th>Last Seen</th>
+        <td>{{ node.last_seen|local_tz }}</td>
+      </tr>
+      <tr>
+        <th>AREDN</th>
+        <td>
+          <a href="http://{{ node.wlan_ip }}:8080">AREDN Details</a>
+        </td>
+      </tr>
+      <tr>
+        <th>Status</th>
+        <td>{{ node.status }}</td>
+      </tr>
+      <tr>
+        <th>IP Address</th>
+        <td>{{ node.wlan_ip }}</td>
+      </tr>
+      <tr>
+        <th>Up Time</th>
+        <td>{{ node.up_time }}</td>
+      </tr>
+      <tr>
+        <th>Load Averages</th>
+        <td>{{ node.load_averages }}</td>
+      </tr>
+      <tr>
+        <th>Location</th>
+        <td>{{ node.latitude }}, {{ node.longitude }}</td>
+      </tr>
+      <tr>
+        <th>Grid Square</th>
+        <td>{{ node.grid_square }}</td>
+      </tr>
+      <tr>
+        <th>Model</th>
+        <td>{{ node.model }}</td>
+      </tr>
+      <tr>
+        <th>Board ID</th>
+        <td>{{ node.board_id }}</td>
+      </tr>
+      <tr>
+        <th>Firmware Manufacturer</th>
+        <td>{{ node.firmware_manufacturer }}</td>
+      </tr>
+      <tr>
+        <th>Firmware Version</th>
+        <td>{{ node.firmware_version }}</td>
+      </tr>
+      <tr>
+        <th>API Version</th>
+        <td>{{ node.api_version }}</td>
+      </tr>
+      <tr>
+        <th>SSID</th>
+        <td>{{ node.ssid }}</td>
+      </tr>
+      <tr>
+        <th>Channel</th>
+        <td>{{ node.channel }}</td>
+      </tr>
+      <tr>
+        <th>Band</th>
+        <td>{{ node.band }}</td>
+      </tr>
+      <tr>
+        <th>Channel Bandwidth</th>
+        <td>{{ node.channel_bandwidth }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 class="subtitle">Links</h2>
+  <table class="table">
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Status</th>
+      <th>Type</th>
+      <th><abbr title="Signal to Noise Ratio">SNR</abbr></th>
+      <th><abbr title="Link Quality">LQ</abbr></th>
+      <th><abbr title="Neighbor Link Quality">NLQ</abbr></th>
+      <th>Link Cost</th>
+      <th>Bearing</th>
+      <th>Distance</th>
+      <th>Last Seen</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for link in links %}
+      <tr>
+        <td>
+          <a href="{{ req.route_url("node", id=link.destination_id) }}">
+            {{ link.destination.name }}
+          </a>
+        </td>
+        <td>{{ link.status }}</td>
+        <td>{{ link.type.name|title if link.type else "Unknown" }}</td>
+        <td>{{ link.signal_noise_ratio }}</td>
+        <td>{{ link.quality }}</td>
+        <td>{{ link.neighbor_quality }}</td>
+        <td>{{ link.olsr_cost }}</td>
+        <td>{{ link.bearing }}</td>
+        <td>{{ link.distance }}</td>
+        <td>{{ link.last_seen|local_tz }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import enum
+import sys
+from typing import Any, Dict, Optional
 
 import environ
+import pendulum
 from dotenv import load_dotenv
+from loguru import logger
+from pyramid.config import Configurator
 
-__all__ = ["Environment", "AppConfig", "app_config"]
+from .aredn import VersionChecker
+from .poller import Poller
 
 
 class Environment(enum.Enum):
@@ -21,7 +27,7 @@ class AppConfig:
     class Poller:
         node: str = environ.var(default="localnode.local.mesh")
         max_connections: int = environ.var(default=50, converter=int)
-        connect_timeout: int = environ.var(default=15, converter=int)
+        connect_timeout: int = environ.var(default=10, converter=int)
         read_timeout: int = environ.var(default=15, converter=int)
 
     @environ.config
@@ -33,20 +39,128 @@ class AppConfig:
     class Collector:
         node_inactive: int = environ.var(default=7, converter=int)
         link_inactive: int = environ.var(default=1, converter=int)
-        period: int = environ.var(default=10, converter=int)
+        period: int = environ.var(default=5, converter=int)
         max_retries: int = environ.var(default=5, converter=int)
 
-    env: Environment = environ.var(default=Environment.PROD, converter=Environment)
+    @environ.config
+    class Web:
+        host: str = environ.var(default="127.0.0.1")
+        port: int = environ.var(default=6543, converter=int)
+        # debug_hosts
+
+    env: Environment = environ.var(default="production", converter=Environment)
     log_level: str = environ.var(default="SUCCESS")
     db_url: str = environ.var(
-        default="postgresql+psycopg2://postgres:pyMeshMap@db:5432/postgres"
+        default="postgresql+psycopg2://postgres:@localhost:5432/postgres"
     )
+    site_name: str = environ.var(default="pyMeshMap")
+
     poller: Poller = environ.group(Poller)
     aredn: Aredn = environ.group(Aredn)
     collector: Collector = environ.group(Collector)
+    web: Web = environ.group(Web)
 
 
-# walks up the folder path looking for `.env` file
-# and loads into environment variables
-load_dotenv()
-app_config = environ.to_config(AppConfig)
+def from_env() -> AppConfig:
+    # walks up the folder path looking for `.env` file
+    # and loads into environment variables
+    # (which we then put into the settings dictionary)
+    load_dotenv()
+    return environ.to_config(AppConfig)
+
+
+def configure(
+    settings: Optional[Dict[str, Any]] = None, *, app_config: Optional[AppConfig] = None
+) -> Configurator:
+    """Configure the Pyramid application."""
+
+    if settings is None:
+        settings = {}
+
+    if app_config is None:
+        app_config = from_env()
+
+    settings["environment"] = app_config.env
+    settings["site_name"] = app_config.site_name
+    settings["log_level"] = app_config.log_level
+    settings["db.url"] = app_config.db_url
+    settings["db.pool_pre_ping"] = True
+    settings["local_node"] = app_config.poller.node
+    settings["poller"] = app_config.poller
+    settings["aredn"] = app_config.aredn
+    settings["collector"] = app_config.collector
+    settings["web"] = app_config.web
+
+    # define Jinja filters
+    filters = settings.setdefault("jinja2.filters", {})
+    filters.setdefault("duration", "pymeshmap.filters.duration")
+    filters.setdefault("in_tz", "pymeshmap.filters.in_tz")
+    filters.setdefault("local_tz", "pymeshmap.filters.local_tz")
+
+    if app_config.env == Environment.DEV:
+        settings["pyramid.reload_all"] = True
+        settings["pyramid.debug_authorization"] = False
+        settings["pyramid.debug_notfound"] = False
+        settings["pyramid.debug_routematch"] = False
+        settings["pyramid.default_locale_name"] = "en"
+    else:
+        settings["pyramid.reload_templates"] = False
+        settings["pyramid.debug_authorization"] = False
+        settings["pyramid.debug_notfound"] = False
+        settings["pyramid.debug_routematch"] = False
+        settings["pyramid.default_locale_name"] = "en"
+
+    # configure logging
+    logger.remove()
+    logger.add(sys.stderr, level=settings["log_level"])
+
+    # configure Pyramid application
+    config = Configurator(settings=settings)
+
+    config.add_settings({"pyramid.retry": 3})
+
+    config.include("pyramid_retry")
+    config.include("pyramid_services")
+    config.include("pyramid_jinja2")
+    config.include(".routes")
+    config.include(".models")
+
+    if app_config.env == Environment.DEV:
+        config.include("pyramid_debugtoolbar")
+
+    server_timezone = pendulum.tz.local_timezone()
+
+    def client_timezone(request):
+        if "local_tz" in request.cookies:
+            try:
+                client_tz = pendulum.timezone(request.cookies["local_tz"])
+            except Exception as exc:
+                # TODO: identify client?
+                logger.warning(
+                    "Invalid timezone specified: {} ({!r})",
+                    request.cookies["local_tz"],
+                    exc,
+                )
+                client_tz = server_timezone
+            return client_tz.name
+        else:
+            return server_timezone.name
+
+    config.add_request_method(lambda r: client_timezone(r), "timezone", reify=True)
+
+    # Register the `Poller` singleton
+    poller = Poller(
+        max_connections=app_config.poller.max_connections,
+        connect_timeout=app_config.poller.connect_timeout,
+        read_timeout=app_config.poller.read_timeout,
+    )
+    config.register_service(poller, Poller)
+
+    # Register the `VersionChecker` singleton
+    version_checker = VersionChecker.from_config(app_config.aredn)
+    config.register_service(version_checker, VersionChecker)
+
+    config.scan(".views")
+
+    config.commit()
+    return config

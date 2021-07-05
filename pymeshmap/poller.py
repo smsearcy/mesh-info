@@ -16,6 +16,7 @@ import enum
 import json
 import re
 import time
+import typing
 from asyncio import Lock, StreamReader, StreamWriter
 from collections import defaultdict, deque
 from typing import (
@@ -38,15 +39,9 @@ import attr
 from loguru import logger
 
 from .aredn import LinkType, SystemInfo, load_system_info
-from .config import AppConfig
 
-
-async def run(config: AppConfig.Poller) -> NetworkInfo:
-    """Helper function for polling the network."""
-
-    olsr = await OlsrData.connect(config.node)
-    poller = Poller.from_config(config)
-    return await poller.network_info(olsr)
+if typing.TYPE_CHECKING:
+    from .config import AppConfig
 
 
 class OlsrData:
@@ -93,18 +88,24 @@ class OlsrData:
 
     @classmethod
     async def connect(
-        cls, host_name: str = "localnode.local.mesh", port: int = 2004
+        cls, host_name: str = "localnode.local.mesh", port: int = 2004, timeout: int = 5
     ) -> OlsrData:
         """Connect to an OLSR daemon and create an `OlsrData` wrapper.
 
         Args:
             host_name: Name of host to connect to OLSR daemon
             port: Port the OLSR daemon is running on
+            timeout: Connection timeout in seconds
 
         """
         logger.trace("Connecting to OLSR daemon {}:{}", host_name, port)
         try:
-            reader, writer = await asyncio.open_connection(host_name, port)
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(host_name, port), timeout
+            )
+        except asyncio.TimeoutError:
+            logger.error("Timeout attempting to connect to {}:{}", host_name, port)
+            raise RuntimeError("Timeout connecting to OLSR daemon")
         except OSError as e:
             # Connection errors subclass `OSError`
             logger.error("Failed to connect to {}:{} ({!s})", host_name, port, e)
@@ -143,7 +144,7 @@ class OlsrData:
         line_str = line_bytes.decode("utf-8").rstrip()
         logger.trace("OLSR data: {}", line_str)
 
-        # TODO: Use walrus operator when Python 3.8 is the minimum requirement
+        # TODO: Use walrus operator when Python 3.8 is the minimum requirement (py38)
         node_address = self._get_address(line_str)
         if node_address:
             self.nodes.queue.append(node_address)
@@ -223,7 +224,7 @@ class Poller:
 
     @classmethod
     def from_config(cls, config: AppConfig.Poller) -> Poller:
-        return cls(
+        return Poller(
             max_connections=config.max_connections,
             connect_timeout=config.connect_timeout,
             read_timeout=config.read_timeout,
@@ -459,6 +460,7 @@ def _add_extra_link_info(links: List[LinkInfo], nodes_by_ip: Dict[str, SystemInf
         extra_info = nodes_by_ip[link.source].links[link.destination]
         count["updated"] += 1
 
+        link.type = extra_info.type
         link.quality = extra_info.quality
         link.neighbor_quality = extra_info.neighbor_quality
         link.signal = extra_info.signal

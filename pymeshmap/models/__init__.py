@@ -1,17 +1,12 @@
-"""Configuration of SQLAlchemy database, copied from Pyramid Cookiecutter.
-
-(Because the plan is to implement the web portion in Pyramid.)
-
-"""
+"""Configuration of SQLAlchemy database, copied from Pyramid Cookiecutter."""
 from __future__ import annotations
 
 import contextlib
 from typing import Iterator
 
-from sqlalchemy import create_engine
+import zope.sqlalchemy
+from sqlalchemy import engine_from_config
 from sqlalchemy.orm import Session, configure_mappers, sessionmaker
-
-from ..config import AppConfig
 
 # import or define all models here to ensure they are attached to the
 # Base.metadata prior to any initialization routines
@@ -20,16 +15,13 @@ from .link import Link  # noqa
 from .meta import Base, LinkStatus, NodeStatus  # noqa
 from .node import Node  # noqa
 
-# import zope.sqlalchemy
-
-
 # run configure_mappers after defining all of the models to ensure
 # all relationships can be setup
 configure_mappers()
 
 
-def get_engine(app_config: AppConfig):
-    return create_engine(app_config.db_url, pool_pre_ping=True)
+def get_engine(settings: dict, prefix="db."):
+    return engine_from_config(settings, prefix)
 
 
 def get_session_factory(engine) -> sessionmaker:
@@ -52,56 +44,81 @@ def session_scope(factory: sessionmaker) -> Iterator[Session]:
         session.close()
 
 
-# def get_tm_session(session_factory, transaction_manager):
-#     """
-#     Get a ``sqlalchemy.orm.Session`` instance backed by a transaction.
-#
-#     This function will hook the session to the transaction manager which
-#     will take care of committing any changes.
-#
-#     - When using pyramid_tm it will automatically be committed or aborted
-#       depending on whether an exception is raised.
-#
-#     - When using scripts you should wrap the session in a manager yourself.
-#       For example::
-#
-#           import transaction
-#
-#           engine = get_engine(settings)
-#           session_factory = get_session_factory(engine)
-#           with transaction.manager:
-#               dbsession = get_tm_session(session_factory, transaction.manager)
-#
-#     """
-#     dbsession = session_factory()
-#     zope.sqlalchemy.register(
-#         dbsession, transaction_manager=transaction_manager)
-#     return dbsession
+def get_tm_session(session_factory, transaction_manager, request=None):
+    """Get a ``sqlalchemy.orm.Session`` instance backed by a transaction.
+
+    This function will hook the session to the transaction manager which
+    will take care of committing any changes.
+
+    - When using pyramid_tm it will automatically be committed or aborted
+      depending on whether an exception is raised.
+
+    - When using scripts you should wrap the session in a manager yourself.
+      For example:
+
+      .. code-block:: python
+
+          import transaction
+
+          engine = get_engine(settings)
+          session_factory = get_session_factory(engine)
+          with transaction.manager:
+              dbsession = get_tm_session(session_factory, transaction.manager)
+
+    This function may be invoked with a ``request`` kwarg, such as when invoked
+    by the reified ``.dbsession`` Pyramid request attribute which is configured
+    via the ``includeme`` function below. The default value, for backwards
+    compatibility, is ``None``.
+
+    The ``request`` kwarg is used to populate the ``sqlalchemy.orm.Session``'s
+    "info" dict.  The "info" dict is the official namespace for developers to
+    stash session-specific information.  For more information, please see the
+    SQLAlchemy docs:
+    https://docs.sqlalchemy.org/en/stable/orm/session_api.html#sqlalchemy.orm.session.Session.params.info  # noqa
+
+    By placing the active ``request`` in the "info" dict, developers will be
+    able to access the active Pyramid request from an instance of an SQLAlchemy
+    object in one of two ways:
+
+    - Modern SQLAlchemy. This uses the "Runtime Inspection API":
+
+      .. code-block:: python
+
+          from sqlalchemy import inspect as sa_inspect
+
+          dbsession = sa_inspect(dbObject).session
+          request = dbsession.info["request"]
+    """
+    dbsession = session_factory(info={"request": request})
+    zope.sqlalchemy.register(dbsession, transaction_manager=transaction_manager)
+    return dbsession
 
 
-# def includeme(config):
-#     """
-#     Initialize the model for a Pyramid app.
-#
-#     Activate this setup using ``config.include('tutorial.models')``.
-#
-#     """
-#     settings = config.get_settings()
-#     settings['tm.manager_hook'] = 'pyramid_tm.explicit_manager'
-#
-#     # use pyramid_tm to hook the transaction lifecycle to the request
-#     config.include('pyramid_tm')
-#
-#     # use pyramid_retry to retry a request when transient exceptions occur
-#     config.include('pyramid_retry')
-#
-#     session_factory = get_session_factory(get_engine(settings))
-#     config.registry['dbsession_factory'] = session_factory
-#
-#     # make request.dbsession available for use in Pyramid
-#     config.add_request_method(
-#         # r.tm is the transaction manager used by pyramid_tm
-#         lambda r: get_tm_session(session_factory, r.tm),
-#         'dbsession',
-#         reify=True
-#     )
+def includeme(config):
+    """Initialize the models for a Pyramid app."""
+    settings = config.get_settings()
+    settings["tm.manager_hook"] = "pyramid_tm.explicit_manager"
+
+    config.include("pyramid_tm")
+
+    # use pyramid_retry to retry a request when transient exceptions occur
+    config.include("pyramid_retry")
+
+    # hook to share the dbengine fixture in testing
+    dbengine = settings.get("dbengine")
+    if not dbengine:
+        dbengine = get_engine(settings)
+
+    session_factory = get_session_factory(dbengine)
+    config.registry["dbsession_factory"] = session_factory
+
+    # make request.dbsession available for use in Pyramid
+    def dbsession_factory(request):
+        # hook to share the dbsession fixture in testing
+        dbsession = request.environ.get("app.dbsession")
+        if dbsession is None:
+            # request.tm is the transaction manager used by pyramid_tm
+            dbsession = get_tm_session(session_factory, request.tm, request=request)
+        return dbsession
+
+    config.add_request_method(dbsession_factory, "dbsession", reify=True)

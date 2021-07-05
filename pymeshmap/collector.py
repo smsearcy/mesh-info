@@ -2,16 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import math
-import sys
 import time
 from collections import defaultdict
-from datetime import datetime, timedelta
 from operator import attrgetter
 from typing import DefaultDict, List, Optional
 
+import pendulum
 from loguru import logger
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from . import models
@@ -46,39 +45,41 @@ MODEL_TO_SYSINFO_ATTRS = {
 }
 
 
-def main(app_config: AppConfig, *, run_once: bool = False):
+def main(
+    local_node: str,
+    dbsession_factory,
+    poller: Poller,
+    *,
+    config: AppConfig.Collector,
+    run_once: bool = False,
+):
     """Map the network and store information in the database."""
 
-    log_level = app_config.log_level
-    logger.remove()
-    logger.add(sys.stderr, level=log_level)
+    # TODO: split service() into collect() and service()
 
-    try:
-        dbsession_factory = models.get_session_factory(models.get_engine(app_config))
-    except Exception as exc:
-        logger.error(f"Failed to configure database connection: {exc!r}")
-        return "Database configuration failed, review logs for details"
+    collection = functools.partial(
+        collector,
+        local_node,
+        poller,
+        dbsession_factory,
+        nodes_expire=config.node_inactive,
+        links_expire=config.link_inactive,
+    )
 
-    async_debug = log_level == "DEBUG"
+    if run_once:
+        asyncio.run(collection())
+        return
+
     try:
         asyncio.run(
             service(
-                app_config.poller.node,
-                Poller.from_config(app_config.poller),
-                dbsession_factory,
-                polling_period=app_config.collector.period,
-                nodes_expire=app_config.collector.node_inactive,
-                links_expire=app_config.collector.link_inactive,
-                max_retries=app_config.collector.max_retries,
-                run_once=run_once,
-            ),
-            debug=async_debug,
+                collection,
+                polling_period=config.period,
+                max_retries=config.max_retries,
+            )
         )
     except ServiceError as exc:
         return str(exc)
-    except OperationalError as exc:
-        logger.error(repr(exc))
-        return "Database error, review logs for details"
     except KeyboardInterrupt:
         pass
     return
@@ -90,108 +91,118 @@ class ServiceError(Exception):
     pass
 
 
-async def service(
-    local_node: str,
-    poller: Poller,
-    session_factory,
-    *,
-    polling_period: int,
-    nodes_expire: int,
-    links_expire: int,
-    run_once: bool = False,
-    max_retries: int = 5,
-):
-    """Service function to repeatedly poll the network and save the data.
-
-    Args:
-        local_node: Name of the local node to connect to
-        poller: Poller for getting information from the AREDN network
-        session_factory: SQLAlchemy session factory
-        polling_period: Period (in minutes) between polling the network
-        nodes_expire: Number of days before absent nodes are marked inactive
-        links_expire: Number of days before absent links are marked inactive
-        run_once: Only run the network collection once
-        max_retries: Number of consecutive connection failures before aborting
-
-    """
+async def service(collect, *, polling_period: int, max_retries: int = 5):
 
     run_period_seconds = polling_period * 60
     connection_failures = 0
     while True:
-        started_at = datetime.utcnow()
         start_time = time.monotonic()
 
         try:
-            olsr_data = await OlsrData.connect(local_node)
-        except RuntimeError as exc:
+            await collect()
+        except ConnectionError as exc:
             connection_failures += 1
             logger.error(f"{exc!s} (tries: {connection_failures})")
-            if connection_failures >= max_retries or run_once:
+            if connection_failures >= max_retries:
                 raise ServiceError(
-                    f"Failed to connect to '{local_node}' for network data "
-                    f"{connection_failures} times in a row.  Aborting."
+                    f"{exc!s} {connection_failures} times in a row.  Aborting."
                 )
             await asyncio.sleep(run_period_seconds)
             continue
-
-        # reset the error counter
-        connection_failures = 0
-
-        nodes, links, errors = await poller.network_info(olsr_data)
-
-        poller_finished = time.monotonic()
-        poller_elapsed = poller_finished - start_time
-        logger.info(
-            "Network polling took {:.2f}s ({:.2f}m)",
-            poller_elapsed,
-            poller_elapsed / 60,
-        )
-
-        summary: DefaultDict[str, int] = defaultdict(int)
-        with models.session_scope(session_factory) as dbsession:
-            expire_data(
-                dbsession,
-                nodes_expire=nodes_expire,
-                links_expire=links_expire,
-                count=summary,
-            )
-            save_nodes(nodes, dbsession, count=summary)
-            save_links(links, dbsession, count=summary)
-            dbsession.flush()
-
-            updates_finished = time.monotonic()
-            updates_elapsed = updates_finished - poller_finished
-
-            logger.info(
-                "Database updates took {:.2f}s ({:.2f}m)",
-                updates_elapsed,
-                updates_elapsed / 60,
-            )
-
-            # TODO: fill in "other_stats" with error types and node/link details
-            dbsession.add(
-                CollectorStat(
-                    started_at=started_at,
-                    node_count=len(nodes),
-                    link_count=len(links),
-                    error_count=len(errors),
-                    polling_duration=poller_elapsed,
-                    total_duration=time.monotonic() - start_time,
-                    other_stats=dict(summary),
-                )
-            )
+        else:
+            # reset the failure count if runs successfully
+            connection_failures = 0
 
         total_elapsed = time.monotonic() - start_time
-        logger.info("Total time: {:.2f}s ({:.2f}m)", total_elapsed, total_elapsed / 60)
-
-        if run_once:
-            break
 
         remaining_time = run_period_seconds - (total_elapsed % run_period_seconds)
         logger.debug(
             "Sleeping {:.2f}s until next querying network again", remaining_time
         )
         await asyncio.sleep(remaining_time)
+
+    return
+
+
+async def collector(
+    local_node: str,
+    poller: Poller,
+    session_factory,
+    *,
+    nodes_expire: int,
+    links_expire: int,
+):
+    """Collect the network information and save the data.
+
+    Args:
+        local_node: Name of the local node to connect to
+        poller: Poller for getting information from the AREDN network
+        session_factory: SQLAlchemy session factory
+        nodes_expire: Number of days before absent nodes are marked inactive
+        links_expire: Number of days before absent links are marked inactive
+
+    """
+
+    # FIXME: separate the service loop from collector()
+
+    started_at = pendulum.now()
+    start_time = time.monotonic()
+
+    try:
+        olsr_data = await OlsrData.connect(local_node)
+    except RuntimeError:
+        raise ConnectionError(
+            f"Failed to connect to OLSR daemon on {local_node} for network data"
+        )
+
+    nodes, links, errors = await poller.network_info(olsr_data)
+
+    poller_finished = time.monotonic()
+    poller_elapsed = poller_finished - start_time
+    logger.info(
+        "Network polling took {:.2f}s ({:.2f}m)",
+        poller_elapsed,
+        poller_elapsed / 60,
+    )
+
+    summary: DefaultDict[str, int] = defaultdict(int)
+    with models.session_scope(session_factory) as dbsession:
+        save_nodes(nodes, dbsession, count=summary)
+        save_links(links, dbsession, count=summary)
+        # expire data after the data has been refreshed
+        # (otherwise the first run after a long gap will mark current stuff expired)
+        expire_data(
+            dbsession,
+            nodes_expire=nodes_expire,
+            links_expire=links_expire,
+            count=summary,
+        )
+        dbsession.flush()
+
+        updates_finished = time.monotonic()
+        updates_elapsed = updates_finished - poller_finished
+
+        logger.info(
+            "Database updates took {:.2f}s ({:.2f}m)",
+            updates_elapsed,
+            updates_elapsed / 60,
+        )
+
+        # TODO: fill in "other_stats" with error types and node/link details
+        dbsession.add(
+            CollectorStat(
+                started_at=started_at,
+                node_count=len(nodes),
+                link_count=len(links),
+                error_count=len(errors),
+                polling_duration=poller_elapsed,
+                total_duration=time.monotonic() - start_time,
+                other_stats=dict(summary),
+            )
+        )
+
+    total_elapsed = time.monotonic() - start_time
+    logger.info("Total time: {:.2f}s ({:.2f}m)", total_elapsed, total_elapsed / 60)
 
     return
 
@@ -212,9 +223,11 @@ def expire_data(
 
     """
 
+    timestamp = pendulum.now()
+
     if count is None:
         count = defaultdict(int)
-    inactive_cutoff = datetime.utcnow() - timedelta(days=links_expire)
+    inactive_cutoff = timestamp.subtract(days=links_expire)
     count["expired: links"] = (
         dbsession.query(Link)
         .filter(
@@ -229,7 +242,7 @@ def expire_data(
         inactive_cutoff,
     )
 
-    inactive_cutoff = datetime.utcnow() - timedelta(days=nodes_expire)
+    inactive_cutoff = timestamp.subtract(days=nodes_expire)
     count["expired: nodes"] = (
         dbsession.query(Node)
         .filter(
@@ -273,7 +286,7 @@ def save_nodes(
             logger.debug("Updating {} in database with {}", model, node)
             count["nodes: updated"] += 1
 
-        model.last_seen = datetime.utcnow()
+        model.last_seen = pendulum.now()
         model.status = NodeStatus.ACTIVE
 
         for model_attr, node_attr in MODEL_TO_SYSINFO_ATTRS.items():
@@ -384,7 +397,7 @@ def save_links(
 
         model.olsr_cost = link.cost
         model.status = LinkStatus.CURRENT
-        model.last_seen = datetime.utcnow()
+        model.last_seen = pendulum.now()
 
         for attribute in [
             "type",
