@@ -34,7 +34,7 @@
         <td>{{ node.status }}</td>
         <td>{{ node.band }}</td>
         <td>{{ node.services|length }}</td>
-        <td>{{ link_counts[node.id]|default(0) }}</td>
+        <td>{{ node.link_count }}</td>
         <td>{{ 'Yes' if node.tunnel_installed else 'No' }}</td>
         <td>{{ node.active_tunnel_count }}</td>
         <td>{{ node.up_time }}</td>

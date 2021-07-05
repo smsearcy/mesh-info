@@ -66,6 +66,7 @@ def test_api_version_1_5(data_folder):
     assert system_info.api_version == "1.5"
     assert len(system_info.load_averages) == 3
     assert system_info.up_time == "0 days, 2:39:38"
+    assert system_info.up_time_seconds == 9_578
     assert system_info.active_tunnel_count == 0
     assert not system_info.tunnel_installed
 
@@ -92,6 +93,7 @@ def test_api_version_1_6(data_folder):
     assert system_info.api_version == "1.6"
     assert len(system_info.load_averages) == 3
     assert system_info.up_time == "255 days, 3:00:03"
+    assert system_info.up_time_seconds == 22_042_803
     assert system_info.active_tunnel_count == 0
     assert not system_info.tunnel_installed
     assert len(system_info.services) == 1
@@ -120,6 +122,7 @@ def test_api_version_1_7(data_folder):
     assert system_info.api_version == "1.7"
     assert len(system_info.load_averages) == 3
     assert system_info.up_time == "3 days, 19:44:05"
+    assert system_info.up_time_seconds == 330_245
     assert system_info.active_tunnel_count == 0
     assert not system_info.tunnel_installed
     assert system_info.wlan_ip_address == "10.106.204.11"

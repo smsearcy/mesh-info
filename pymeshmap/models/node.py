@@ -23,6 +23,7 @@ class Node(Base):
     last_seen = Column(PDateTime(), nullable=False)
 
     up_time = Column(String(25), nullable=False)
+    up_time_seconds = Column(Integer)
     load_averages = Column(ARRAY(Float, dimensions=1))
     model = Column(String(50), nullable=False)
     board_id = Column(String(50), nullable=False)
@@ -43,6 +44,11 @@ class Node(Base):
 
     tunnel_installed = Column(Boolean(), nullable=False)
     active_tunnel_count = Column(Integer(), nullable=False)
+
+    link_count = Column(Integer())
+    radio_link_count = Column(Integer())
+    dtd_link_count = Column(Integer())
+    tunnel_link_count = Column(Integer())
 
     system_info = Column(JSON(), nullable=False)
 

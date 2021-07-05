@@ -5,8 +5,10 @@ from __future__ import annotations
 import enum
 import functools
 import sys
+from pathlib import Path
 from typing import Any, Dict, Optional
 
+import appdirs
 import environ
 import pendulum
 from dotenv import load_dotenv
@@ -14,6 +16,7 @@ from loguru import logger
 from pyramid.config import Configurator
 
 from .aredn import VersionChecker
+from .historical import HistoricalStats
 from .poller import network_info
 
 
@@ -42,6 +45,7 @@ class AppConfig:
         link_inactive: int = environ.var(default=1, converter=int)
         period: int = environ.var(default=5, converter=int)
         max_retries: int = environ.var(default=5, converter=int)
+        data_dir: str = environ.var(default="")
 
     @environ.config
     class Web:
@@ -161,6 +165,20 @@ def configure(
     # Register the `VersionChecker` singleton
     version_checker = VersionChecker.from_config(app_config.aredn)
     config.register_service(version_checker, VersionChecker)
+
+    # Register the `HistoricalStats` singleton
+    collector_config: AppConfig.Collector = settings["collector"]
+    if collector_config.data_dir:
+        data_dir = Path(collector_config.data_dir)
+    elif settings["environment"] == Environment.DEV:
+        # should the name really be hard-coded?
+        data_dir = Path(appdirs.user_data_dir("pymeshmap"))
+    else:
+        data_dir = Path(appdirs.site_data_dir("pymeshmap"))
+    logger.info("Collector data path: {}", data_dir)
+    if not data_dir.exists():
+        data_dir.mkdir(parents=True, exist_ok=True)
+    config.register_service(HistoricalStats(data_path=data_dir), HistoricalStats)
 
     config.scan(".views")
 

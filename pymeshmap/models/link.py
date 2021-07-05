@@ -51,6 +51,11 @@ class Link(Base):
             return None
         return self.signal - self.noise
 
+    @property
+    def type_name(self) -> str:
+        """Link type as string (helper for templates)."""
+        return self.type.name if self.type else "UNKNOWN"
+
     def __repr__(self):
         return (
             f"<models.Link(source_id={self.source_id!r}, "

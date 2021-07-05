@@ -145,6 +145,7 @@ def pprint_node(node: SystemInfo, checker: VersionChecker):
         f"Tunnels: {'Yes' if node.tunnel_installed else 'No'}\t"
         f"Count: {node.active_tunnel_count}"
     )
+    print(f"Link Count: {node.link_count}")
     print()
 
 

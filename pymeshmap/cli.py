@@ -12,6 +12,7 @@ from pyramid.paster import bootstrap
 from pymeshmap import __version__, collector, models, report, web
 from pymeshmap.aredn import VersionChecker
 from pymeshmap.config import configure
+from pymeshmap.historical import HistoricalStats
 
 
 def main(argv: list = None):
@@ -45,10 +46,12 @@ def main(argv: list = None):
         version_checker: VersionChecker = request.find_service(VersionChecker)
 
         if args.command == "collector":
+            historical_stats: HistoricalStats = request.find_service(HistoricalStats)
             result = collector.main(
                 settings["local_node"],
                 session_factory,
                 poller,
+                historical_stats,
                 config=settings["collector"],
                 run_once=args.run_once,
             )

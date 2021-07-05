@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import enum
 import html
+import re
 import typing
 from itertools import zip_longest
 from typing import Any, Dict, List, Optional, Tuple
@@ -268,6 +269,7 @@ class SystemInfo:
     up_time: str = ""
     load_averages: Optional[List[float]] = None
     links: Dict[str, Link] = attr.Factory(dict)
+    link_count: Optional[int] = None
 
     @property
     def lan_ip_address(self) -> str:
@@ -313,6 +315,44 @@ class SystemInfo:
             return "5GHz"
         else:
             return "Unknown"
+
+    @property
+    def up_time_seconds(self) -> Optional[int]:
+        """Convert uptime string to seconds."""
+        if self.up_time == "":
+            return None
+        match = re.match(r"^(\d+) days, (\d+):(\d+):(\d+)", self.up_time)
+        if match is None:
+            logger.warning("Failed to parse uptime string: %s", self.up_time)
+            return None
+
+        days = int(match.group(1))
+        hours = int(match.group(2))
+        minutes = int(match.group(3))
+        seconds = int(match.group(4))
+
+        return 86_400 * days + 3_600 * hours + 60 * minutes + seconds
+
+    @property
+    def radio_link_count(self) -> Optional[int]:
+        if not self.links:
+            # the absence of the data presumably means an older API and thus unknown
+            return None
+        return sum(1 for link in self.links.values() if link.type == LinkType.RADIO)
+
+    @property
+    def dtd_link_count(self) -> Optional[int]:
+        if not self.links:
+            # the absence of the data presumably means an older API and thus unknown
+            return None
+        return sum(1 for link in self.links.values() if link.type == LinkType.DIRECT)
+
+    @property
+    def tunnel_link_count(self) -> int:
+        if not self.links:
+            # in the absence of the link info dictionary use the tunnel count
+            return self.active_tunnel_count
+        return sum(1 for link in self.links.values() if link.type == LinkType.TUNNEL)
 
     def __str__(self):
         return f"{self.node_name} ({self.wlan_ip_address})"

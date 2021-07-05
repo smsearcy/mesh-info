@@ -2,131 +2,203 @@
 
 {% block title %}{{ node.name }}{% endblock %}
 
+{% macro version_class(delta) -%}
+  {%- if delta == 0 -%}
+    <span class="icon has-text-success"><i class="fas fa-check-square"></i></span>
+  {%- elif delta == 1 -%}
+    <span class="icon has-text-info"><i class="fas fa-info-circle"></i></span>
+  {%- elif delta == 3 -%}
+    <span class="icon has-text-danger"><i class="fas fa-exclamation-triangle"></i></span>
+  {%- else -%}
+    <span class="icon has-text-warning"><i class="fas fa-exclamation-triangle"></i></span>
+  {%- endif %}
+{%- endmacro %}
+
 {% block content %}
 <div class="container">
   <h1 class="title">{{ node.name }}</h1>
   <div class="content">
     {{ node.description}}
   </div>
+  <div class="columns">
+    <div class="column">
+      <div class="mb-2">
+        <div class="heading">Location</div>
+        <div>
+          {% if node.latitude or node.longitude %}
+            {{ node.latitude }}, {{ node.longitude }}
+          {% else %}
+            Unknown
+          {% endif %}
+          </div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">Grid Square</div>
+        <div>{{ node.grid_square }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">Last Seen</div>
+        <div>{{ node.last_seen|local_tz }}</div>
+      </div>
+      <div class="mb-2">
+        <a href="http://{{ node.wlan_ip }}:8080">AREDN Details</a>
+      </div>
+    </div>
+    <div class="column">
+      <div class="mb-2">
+        <div class="heading">Status</div>
+        <div>{{ node.status }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">IP Address</div>
+        <div>{{ node.wlan_ip }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">Up Time</div>
+        <div>{{ node.up_time }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">Load Averages</div>
+        <div>{{ node.load_averages }}</div>
+      </div>
+    </div>
+    <div class="column">
+      <div class="mb-2">
+        <div class="heading">Model</div>
+        <div>{{ node.model }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">Board ID</div>
+        <div>{{ node.board_id }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">Firmware Manufacturer</div>
+        <div>{{ node.firmware_manufacturer }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">Firmware Version</div>
+        <div>{{ node.firmware_version }} {{ version_class(firmware_status) }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">API Version</div>
+        <div>{{ node.api_version }} {{ version_class(api_status) }}</div>
+      </div>
+    </div>
+    <div class="column">
+      <div class="mb-2">
+        <div class="heading">SSID</div>
+        <div>{{ node.ssid }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">Channel</div>
+        <div>{{ node.channel }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">Band</div>
+        <div>{{ node.band }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="heading">Channel Bandwidth</div>
+        <div>{{ node.channel_bandwidth }}</div>
+      </div>
+    </div>
+  </div>
 
-{#
-  This layout was just a stop gap for MVP.
-  Switch to cards in several columns?
-#}
+{% for graph in ("links", "load", "uptime") %}
+  <div class="columns">
+  {% for period in ("day", "month") %}
+    <div class="column is-narrow">
+    <img src="{{ req.route_path('node-graph', id=node.id, name=graph, _query={"period": period}) }}"
+         alt="node {{ graph }} graph ({{ period }})"
+         width="497"
+         loading="lazy"
+    >
+    </div>
+  {% endfor %}
+  </div>
+{% endfor %}
 
-  <h2 class="subtitle">Details</h2>
-  <table class="table">
-    <tbody>
-      <tr>
-        <th>Last Seen</th>
-        <td>{{ node.last_seen|local_tz }}</td>
-      </tr>
-      <tr>
-        <th>AREDN</th>
-        <td>
-          <a href="http://{{ node.wlan_ip }}:8080">AREDN Details</a>
-        </td>
-      </tr>
-      <tr>
-        <th>Status</th>
-        <td>{{ node.status }}</td>
-      </tr>
-      <tr>
-        <th>IP Address</th>
-        <td>{{ node.wlan_ip }}</td>
-      </tr>
-      <tr>
-        <th>Up Time</th>
-        <td>{{ node.up_time }}</td>
-      </tr>
-      <tr>
-        <th>Load Averages</th>
-        <td>{{ node.load_averages }}</td>
-      </tr>
-      <tr>
-        <th>Location</th>
-        <td>{{ node.latitude }}, {{ node.longitude }}</td>
-      </tr>
-      <tr>
-        <th>Grid Square</th>
-        <td>{{ node.grid_square }}</td>
-      </tr>
-      <tr>
-        <th>Model</th>
-        <td>{{ node.model }}</td>
-      </tr>
-      <tr>
-        <th>Board ID</th>
-        <td>{{ node.board_id }}</td>
-      </tr>
-      <tr>
-        <th>Firmware Manufacturer</th>
-        <td>{{ node.firmware_manufacturer }}</td>
-      </tr>
-      <tr>
-        <th>Firmware Version</th>
-        <td>{{ node.firmware_version }}</td>
-      </tr>
-      <tr>
-        <th>API Version</th>
-        <td>{{ node.api_version }}</td>
-      </tr>
-      <tr>
-        <th>SSID</th>
-        <td>{{ node.ssid }}</td>
-      </tr>
-      <tr>
-        <th>Channel</th>
-        <td>{{ node.channel }}</td>
-      </tr>
-      <tr>
-        <th>Band</th>
-        <td>{{ node.band }}</td>
-      </tr>
-      <tr>
-        <th>Channel Bandwidth</th>
-        <td>{{ node.channel_bandwidth }}</td>
-      </tr>
-    </tbody>
-  </table>
+<h2 class="title is-spaced">Links</h2>
 
-  <h2 class="subtitle">Links</h2>
-  <table class="table">
-    <thead>
-    <tr>
-      <th>Name</th>
-      <th>Status</th>
-      <th>Type</th>
-      <th><abbr title="Signal to Noise Ratio">SNR</abbr></th>
-      <th><abbr title="Link Quality">LQ</abbr></th>
-      <th><abbr title="Neighbor Link Quality">NLQ</abbr></th>
-      <th>Link Cost</th>
-      <th>Bearing</th>
-      <th>Distance</th>
-      <th>Last Seen</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for link in links %}
-      <tr>
-        <td>
-          <a href="{{ req.route_url("node", id=link.destination_id) }}">
-            {{ link.destination.name }}
-          </a>
-        </td>
-        <td>{{ link.status }}</td>
-        <td>{{ link.type.name|title if link.type else "Unknown" }}</td>
-        <td>{{ link.signal_noise_ratio }}</td>
-        <td>{{ link.quality }}</td>
-        <td>{{ link.neighbor_quality }}</td>
-        <td>{{ link.olsr_cost }}</td>
-        <td>{{ link.bearing }}</td>
-        <td>{{ link.distance }}</td>
-        <td>{{ link.last_seen|local_tz }}</td>
-      </tr>
+  {# Links is  #}
+  {% for link_name, link_types in links|groupby("destination.name") %}
+    <h3 class="subtitle">
+      <a href="{{ req.route_url("node", id=link_types[0].destination_id) }}">{{ link_name }}</a>
+    </h3>
+    <div class="columns">
+      <div class="column is-narrow-desktop">
+        <div class="mb-2">
+          <div class="heading">Distance</div>
+          <div>{{ link_types[0].distance }}km</div>
+        </div>
+      </div>
+      <div class="column is-narrow-desktop">
+        <div class="mb-2">
+          <div class="heading">Bearing</div>
+          <div>{{ link_types[0].bearing }}</div>
+        </div>
+      </div>
+    </div>
+    {% for link in link_types %}
+      <h4 class="is-5 block">Type: {{ link.type_name|upper }}</h4>
+      <div class="columns">
+        <div class="column is-narrow">
+          <div class="mb-2">
+            <div class="heading">Status</div>
+            <div>{{ link.status }}</div>
+          </div>
+          <div class="mb-2">
+            <div class="heading">Last Seen</div>
+            <div>{{ link.last_seen|local_tz }}</div>
+          </div>
+          <div class="mb-2">
+            <div class="heading">Route Cost</div>
+            <div>{{ link.olsr_cost }}</div>
+          </div>
+        </div>
+        {% if link.type_name|lower == "radio" %}
+          <div class="column is-narrow">
+            <div class="mb-2">
+              <div class="heading">Signal/Noise Ratio</div>
+              <div>{{ link.signal_noise_ratio }}</div>
+            </div>
+            <div class="mb-2">
+              <div class="heading">Link Quality</div>
+              <div>{{ link.quality }}</div>
+            </div>
+            <div class="mb-2">
+              <div class="heading">Neighbor Link Quality</div>
+              <div>{{ link.neighbor_quality }}</div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+      <div class="columns">
+        {% for period in ("day", "month") %}
+          <div class="column is-narrow">
+            <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, name="cost", _query={"period": period}) }}"
+                 alt="link cost graph ({{ period }})"
+                 loading="lazy">
+          </div>
+        {% endfor %}
+      </div>
+      {% if link.type_name|lower == "radio" %}
+        {% for graph in ("snr", "quality") %}
+          <div class="columns">
+            {% for period in ("day", "month") %}
+              <div class="column is-narrow">
+                <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, name=graph, _query={"period": period}) }}"
+                     alt="link {{ graph }} graph ({{ period }})"
+                     loading="lazy">
+              </div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      {% endif %}
+
     {% endfor %}
-    </tbody>
-  </table>
+
+  {% endfor %}
 </div>
 
 {% endblock %}
