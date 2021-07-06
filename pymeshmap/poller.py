@@ -16,7 +16,6 @@ import enum
 import json
 import re
 import time
-import typing
 from asyncio import Lock, StreamReader, StreamWriter
 from collections import defaultdict, deque
 from typing import (
@@ -40,12 +39,9 @@ from loguru import logger
 
 from .aredn import LinkType, SystemInfo, load_system_info
 
-if typing.TYPE_CHECKING:
-    from .config import AppConfig
-
 
 class OlsrData:
-    """Provides access to the nodes and links available in the OLSR data."""
+    """Yields the node IPs and link information available in the OLSR data."""
 
     NODE_REGEX = re.compile(r"^\"(\d{2}\.\d{1,3}\.\d{1,3}\.\d{1,3})\" -> \"\d+")
     LINK_REGEX = re.compile(
@@ -209,106 +205,97 @@ class OlsrData:
         return LinkInfo.from_strings(*link)
 
 
-@attr.s(auto_attribs=True)
-class Poller:
-    """Class to handle polling the network nodes and links.
+async def network_info(
+    olsr_data: OlsrData,
+    *,
+    max_connections: int = 50,
+    connect_timeout: int = 10,
+    read_timeout: int = 15,
+) -> NetworkInfo:
+    """Helper function to query node and link information asynchronously.
 
-    Mainly this is so we can initialize it with the configuration settings and then
-    call them later.
+    Returns:
+        Named tuple with a list of all the nodes successfully queried,
+        a list of the links on the network,
+        and a dictionary of errors keyed by the IP address.
 
     """
+    timeout = aiohttp.ClientTimeout(
+        sock_connect=connect_timeout,
+        sock_read=read_timeout,
+    )
 
-    max_connections: int
-    connect_timeout: int
-    read_timeout: int
-
-    @classmethod
-    def from_config(cls, config: AppConfig.Poller) -> Poller:
-        return Poller(
-            max_connections=config.max_connections,
-            connect_timeout=config.connect_timeout,
-            read_timeout=config.read_timeout,
+    node_task = asyncio.create_task(
+        node_information(
+            olsr_data.nodes, max_connections=max_connections, timeout=timeout
         )
+    )
+    links = [link async for link in olsr_data.links]
+    logger.info("Network link count: {}", len(links))
 
-    async def network_info(self, olsr_data: OlsrData) -> NetworkInfo:
-        """Helper function to query node and link information asynchronously.
+    node_results: NetworkNodes = await node_task
+    nodes_by_ip, errors = node_results
 
-        Returns:
-            Named tuple with a list of all the nodes successfully queried,
-            a list of the links on the network,
-            and a dictionary of errors keyed by the IP address.
+    _add_extra_link_info(links, nodes_by_ip)
 
-        """
+    return NetworkInfo(list(nodes_by_ip.values()), links, errors)
 
-        node_task = asyncio.create_task(self.node_information(olsr_data.nodes))
-        links = [link async for link in olsr_data.links]
-        logger.info("Network link count: {}", len(links))
 
-        node_results: NetworkNodes = await node_task
-        nodes_by_ip, errors = node_results
+async def node_information(
+    node_addresses: AsyncIterable[str],
+    *,
+    max_connections: int = 50,
+    timeout: aiohttp.ClientTimeout = None,
+) -> NetworkNodes:
+    """Asynchronously gets information for all the nodes on the network.
 
-        _add_extra_link_info(links, nodes_by_ip)
+    Getting a list of the nodes is done via connecting to the OLSR
 
-        return NetworkInfo(list(nodes_by_ip.values()), links, errors)
+    Returns:
+        Named tuple with a list of all the nodes successfully queried and
+        a dictionary of errors keyed by the IP address.
 
-    async def node_information(
-        self, node_addresses: AsyncIterable[str]
-    ) -> NetworkNodes:
-        """Asynchronously gets information for all the nodes on the network.
+    """
+    start_time = time.monotonic()
 
-        Getting a list of the nodes is done via connecting to the OLSR
+    tasks: List[Awaitable] = []
+    connector = aiohttp.TCPConnector(limit=max_connections)
+    async with aiohttp.ClientSession(timeout=timeout, connector=connector) as session:
+        async for node_address in node_addresses:
+            logger.debug("Creating task to poll {}", node_address)
+            task = asyncio.create_task(_poll_node(session, node_address))
+            tasks.append(task)
 
-        Returns:
-            Named tuple with a list of all the nodes successfully queried and
-            a dictionary of errors keyed by the IP address.
+    # collect all the results in a single list
+    node_results: List[Tuple[str, NodeResult]] = await asyncio.gather(
+        *tasks, return_exceptions=True
+    )
 
-        """
-        start_time = time.monotonic()
+    crawler_finished = time.monotonic()
+    logger.info("Querying nodes took {:.2f} seconds", crawler_finished - start_time)
 
-        tasks: List[Awaitable] = []
-        connector = aiohttp.TCPConnector(limit=self.max_connections)
-        timeout = aiohttp.ClientTimeout(
-            sock_connect=self.connect_timeout,
-            sock_read=self.read_timeout,
-        )
-        async with aiohttp.ClientSession(
-            timeout=timeout, connector=connector
-        ) as session:
-            async for node_address in node_addresses:
-                logger.debug("Creating task to poll {}", node_address)
-                task = asyncio.create_task(_poll_node(session, node_address))
-                tasks.append(task)
+    nodes = {}
+    errors = {}
+    count: DefaultDict[str, int] = defaultdict(int)
+    for result in node_results:
+        count["total"] += 1
+        if isinstance(result, Exception):
+            # this shouldn't happen but just in case
+            count["exceptions"] += 1
+            logger.error("Unhandled exception polling a node: {!r}", result)
+            continue
+        ip_address, response = result
+        if isinstance(response, NodeError):
+            # this error would have already been logged
+            count["errors (total)"] += 1
+            count[f"errors ({response.error!s})"] += 1
+            errors[ip_address] = response
+            continue
+        count["successes"] += 1
+        nodes[ip_address] = response
 
-            # collect all the results in a single list
-            node_results: List[Tuple[str, NodeResult]] = await asyncio.gather(
-                *tasks, return_exceptions=True
-            )
-
-        crawler_finished = time.monotonic()
-        logger.info("Querying nodes took {:.2f} seconds", crawler_finished - start_time)
-
-        nodes = {}
-        errors = {}
-        count: DefaultDict[str, int] = defaultdict(int)
-        for result in node_results:
-            count["total"] += 1
-            if isinstance(result, Exception):
-                # this shouldn't happen but just in case
-                count["exceptions"] += 1
-                logger.error("Unhandled exception polling a node: {!r}", result)
-                continue
-            ip_address, response = result
-            if isinstance(response, NodeError):
-                # this error would have already been logged
-                count["errors (total)"] += 1
-                count[f"errors ({response.error!s})"] += 1
-                errors[ip_address] = response
-                continue
-            count["successes"] += 1
-            nodes[ip_address] = response
-
-        logger.info("Network nodes summary: {}", dict(count))
-        return NetworkNodes(nodes, errors)
+    logger.info("Network nodes summary: {}", dict(count))
+    return NetworkNodes(nodes, errors)
 
 
 class NetworkInfo(NamedTuple):
