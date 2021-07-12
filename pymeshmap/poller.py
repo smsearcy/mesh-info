@@ -266,10 +266,10 @@ async def node_information(
             task = asyncio.create_task(_poll_node(session, node_address))
             tasks.append(task)
 
-    # collect all the results in a single list
-    node_results: List[Tuple[str, NodeResult]] = await asyncio.gather(
-        *tasks, return_exceptions=True
-    )
+        # collect all the results in a single list
+        node_results: List[Tuple[str, NodeResult]] = await asyncio.gather(
+            *tasks, return_exceptions=True
+        )
 
     crawler_finished = time.monotonic()
     logger.info("Querying nodes took {:.2f} seconds", crawler_finished - start_time)
