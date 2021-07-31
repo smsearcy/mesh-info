@@ -380,12 +380,12 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
         data["firmware_version"] = details["firmware_version"]
         data["firmware_manufacturer"] = details["firmware_mfg"]
         data["model"] = details["model"]
-        data["board_id"] = details["model"]
+        data["board_id"] = details["board_id"]
     else:
         data["firmware_version"] = json_data["firmware_version"]
         data["firmware_manufacturer"] = json_data["firmware_mfg"]
         data["model"] = json_data["model"]
-        data["board_id"] = json_data["model"]
+        data["board_id"] = json_data["board_id"]
 
     if "tunnels" in json_data:
         tunnels = json_data["tunnels"]
