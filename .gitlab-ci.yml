@@ -17,6 +17,8 @@ build:
   # Confirm Poetry can build - and warm up the cache
   stage: prep
   script:
+    - apt-get update
+    - apt-get install -y librrd-dev
     - pip install poetry
     - poetry install
   cache:
@@ -45,6 +47,8 @@ safety:
 # Template to prepare Poetry (for use with `extends`)
 .poetry:
   before_script:
+    - apt-get update
+    - apt-get install -y librrd-dev
     - pip install poetry
     - poetry install
 

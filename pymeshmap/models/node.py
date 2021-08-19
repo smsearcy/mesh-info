@@ -14,6 +14,8 @@ class Node(Base):
     name = Column(String(70), nullable=False)
     status = Column(Enum(NodeStatus), nullable=False)
 
+    # FIXME: need to handle multiple IP addresses (RF(s), DTD, tunnel)
+    # (can use IP address type to determine link type on older API)
     wlan_ip = Column(String(15), nullable=False)
     description = Column(Unicode(1024), nullable=False)
 
@@ -23,6 +25,7 @@ class Node(Base):
     last_seen = Column(PDateTime(), nullable=False)
 
     up_time = Column(String(25), nullable=False)
+    up_time_seconds = Column(Integer)
     load_averages = Column(ARRAY(Float, dimensions=1))
     model = Column(String(50), nullable=False)
     board_id = Column(String(50), nullable=False)
@@ -43,6 +46,11 @@ class Node(Base):
 
     tunnel_installed = Column(Boolean(), nullable=False)
     active_tunnel_count = Column(Integer(), nullable=False)
+
+    link_count = Column(Integer())
+    radio_link_count = Column(Integer())
+    dtd_link_count = Column(Integer())
+    tunnel_link_count = Column(Integer())
 
     system_info = Column(JSON(), nullable=False)
 

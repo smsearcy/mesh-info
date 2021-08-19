@@ -17,7 +17,7 @@ import json
 import re
 import time
 from asyncio import Lock, StreamReader, StreamWriter
-from collections import defaultdict, deque
+from collections import Counter, defaultdict, deque
 from typing import (
     AsyncIterable,
     AsyncIterator,
@@ -80,7 +80,7 @@ class OlsrData:
         self.links: AsyncIterator[LinkInfo] = self.LineGenerator(self, olsr_lock)
         self.stats: DefaultDict[str, int] = defaultdict(int)
         self._nodes_seen: Set[str] = set()
-        self._links_seen: Set[Tuple[str, str, str]] = set()
+        self._links_seen: Set[Tuple[str, str]] = set()
 
     @classmethod
     async def connect(
@@ -196,13 +196,13 @@ class OlsrData:
         destination_node = match.group(2)
         label = match.group(3)
 
-        link = (source_node, destination_node, label)
-        if link in self._links_seen:
+        link_id = (source_node, destination_node)
+        if link_id in self._links_seen:
             self.stats["duplicate link"] += 1
             return None
-        self._links_seen.add(link)
+        self._links_seen.add(link_id)
         self.stats["links returned"] += 1
-        return LinkInfo.from_strings(*link)
+        return LinkInfo.from_strings(*link_id, label)
 
 
 async def network_info(
@@ -236,6 +236,13 @@ async def network_info(
     node_results: NetworkNodes = await node_task
     nodes_by_ip, errors = node_results
 
+    # Fill in the `link_count` attribute for the nodes by counting them
+    link_counts_by_ip = Counter(link.source for link in links)
+    for node_ip, node in nodes_by_ip.items():
+        if node.link_count is None:
+            node.link_count = link_counts_by_ip[node_ip]
+
+    # Add the extra link information from sysinfo.json to the dataclass
     _add_extra_link_info(links, nodes_by_ip)
 
     return NetworkInfo(list(nodes_by_ip.values()), links, errors)

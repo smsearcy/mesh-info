@@ -1,11 +1,12 @@
 pyMeshMap
 =========
 
-Application for mapping and displaying displaying information about an
+Application for mapping and displaying information about an
 [AREDN](https://arednmesh.org/) Mesh Network, based on KG6WXC's
 [MeshMap](https://gitlab.kg6wxc.net/mesh/meshmap).
 
 Uses Python's `asyncio` library to concurrently query nodes for faster polling times.
+Information about nodes and links is stored in RRDtool for graphing historical trends.
 
 
 Getting Started
@@ -14,6 +15,10 @@ Getting Started
 **pyMeshMap** requires Python 3.7 or greater and
 uses [Poetry](https://python-poetry.org/) to manage dependencies
 so you will need that [installed](https://python-poetry.org/docs/#installation).
+
+[RRDtool](https://oss.oetiker.ch/rrdtool/index.en.html) bindings require the RRDtool
+development headers to be installed
+(`librrd-dev` on Debian/Ubuntu or `rrdtool-devel` for Fedora/Red Hat).
 
 *Some of required packages might need a C compiler as well,
 that's why one future goal is a container for easy deployment.*
@@ -27,6 +32,8 @@ $ poetry run pymeshmap [command]
 
 The `--no-dev` option assumes you just want to use **pyMeshMap**.
 If you want to contribute then leave that off to get extra dependencies for development and testing.
+
+*Currently a PostgreSQL database is required, until I switch the default to SQLite.*
 
 Commands
 --------
@@ -62,6 +69,14 @@ pausing between runs based on the `MESHMAP_COLLECTOR_PERIOD` setting
 
 Use the `--run-once` option to run once and exit.
 
+
+### Web Service
+```shell script
+$ poetry run pymeshmap web
+```
+
+Serves the web interface on http://localhost:6543 (by default).
+
 Goals
 -----
 
@@ -74,8 +89,6 @@ While I was thinking of keeping the same database design
 I've decided to initially focus on storing historical time-series data and
 thus will be architecting the database for that
 (while including enough information to be able to render current-state maps).
-
-Checkout the [road map](ROADMAP.md) for more details.
 
 
 Acknowledgements
@@ -112,3 +125,4 @@ and update your IDE to use the Virtualenv path specified.
 Copy `.env.example` to `.env` so that local development will connect to that database.
 5. To run the `pymeshmap` command execute `poetry run pymeshmap [sub-command]`.
 6. A `Makefile` is included to simplify various tasks such as running `pre-commit`, tests, and linters.
+7. A `pyramid.ini` file is provided for use with the Pyramid development tools like `pserve` and `pshell`.

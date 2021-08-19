@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from . import models
 from .aredn import SystemInfo
 from .config import AppConfig
+from .historical import HistoricalStats
 from .models import CollectorStat, Link, LinkStatus, Node, NodeStatus
 from .poller import LinkInfo, OlsrData
 
@@ -25,6 +26,7 @@ MODEL_TO_SYSINFO_ATTRS = {
     "description": "description",
     "wlan_mac_address": "wlan_mac_address",
     "up_time": "up_time",
+    "up_time_seconds": "up_time_seconds",
     "load_averages": "load_averages",
     "model": "model",
     "board_id": "board_id",
@@ -42,6 +44,10 @@ MODEL_TO_SYSINFO_ATTRS = {
     "tunnel_installed": "tunnel_installed",
     "active_tunnel_count": "active_tunnel_count",
     "system_info": "source_json",
+    "link_count": "link_count",
+    "radio_link_count": "radio_link_count",
+    "dtd_link_count": "dtd_link_count",
+    "tunnel_link_count": "tunnel_link_count",
 }
 
 
@@ -49,6 +55,7 @@ def main(
     local_node: str,
     dbsession_factory,
     poller: Callable,
+    historical_stats: HistoricalStats,
     *,
     config: AppConfig.Collector,
     run_once: bool = False,
@@ -60,6 +67,7 @@ def main(
         local_node,
         poller,
         dbsession_factory,
+        historical_stats,
         nodes_expire=config.node_inactive,
         links_expire=config.link_inactive,
     )
@@ -127,6 +135,7 @@ async def collector(
     local_node: str,
     poller: Callable,
     session_factory,
+    historical_stats: HistoricalStats,
     *,
     nodes_expire: int,
     links_expire: int,
@@ -164,8 +173,8 @@ async def collector(
 
     summary: DefaultDict[str, int] = defaultdict(int)
     with models.session_scope(session_factory) as dbsession:
-        save_nodes(nodes, dbsession, count=summary)
-        save_links(links, dbsession, count=summary)
+        node_models = save_nodes(nodes, dbsession, count=summary)
+        link_models = save_links(links, dbsession, count=summary)
         # expire data after the data has been refreshed
         # (otherwise the first run after a long gap will mark current stuff expired)
         expire_data(
@@ -185,6 +194,21 @@ async def collector(
             updates_elapsed / 60,
         )
 
+        await save_historical_data(node_models, link_models, historical_stats)
+
+        history_finished = time.monotonic()
+        history_elapsed = history_finished - updates_finished
+
+        logger.info(
+            "Saving historical data took {:.2f}s ({:.2f}m)",
+            history_elapsed,
+            history_elapsed / 60,
+        )
+
+        total_duration = time.monotonic() - start_time
+
+        # TODO: fill in "other_stats" with error types and node/link details
+
         dbsession.add(
             CollectorStat(
                 started_at=started_at,
@@ -192,13 +216,20 @@ async def collector(
                 link_count=len(links),
                 error_count=len(errors),
                 polling_duration=poller_elapsed,
-                total_duration=time.monotonic() - start_time,
+                total_duration=total_duration,
                 other_stats=dict(summary),
             )
         )
 
     total_elapsed = time.monotonic() - start_time
     logger.info("Total time: {:.2f}s ({:.2f}m)", total_elapsed, total_elapsed / 60)
+    historical_stats.update_network_stats(
+        node_count=len(nodes),
+        link_count=len(links),
+        error_count=len(errors),
+        poller_time=poller_elapsed,
+        total_time=total_duration,
+    )
 
     return
 
@@ -258,7 +289,7 @@ def expire_data(
 
 def save_nodes(
     nodes: List[SystemInfo], dbsession: Session, *, count: DefaultDict[str, int] = None
-):
+) -> List[Node]:
     """Saves node information to the database.
 
     Looks for existing nodes by WLAN MAC address and name.
@@ -266,6 +297,7 @@ def save_nodes(
     """
     if count is None:
         count = defaultdict(int)
+    node_models = []
     for node in nodes:
         count["nodes: total"] += 1
         # check to see if node exists in database by name and WLAN MAC address
@@ -282,6 +314,7 @@ def save_nodes(
             # update database model
             logger.debug("Updating {} in database with {}", model, node)
             count["nodes: updated"] += 1
+        node_models.append(model)
 
         model.last_seen = pendulum.now()
         model.status = NodeStatus.ACTIVE
@@ -290,7 +323,7 @@ def save_nodes(
             setattr(model, model_attr, getattr(node, node_attr))
 
     logger.success("Nodes written to database: {}", dict(count))
-    return
+    return node_models
 
 
 def get_db_model(dbsession: Session, node: SystemInfo) -> Optional[Node]:
@@ -340,7 +373,7 @@ def _get_most_recent(results: List[Node]) -> Optional[Node]:
 
 def save_links(
     links: List[LinkInfo], dbsession: Session, *, count: DefaultDict[str, int] = None
-):
+) -> List[Link]:
     """Saves link data to the database.
 
     This implements the bearing/distance functionality in Python
@@ -356,6 +389,7 @@ def save_links(
         {Link.status: LinkStatus.RECENT}
     )
 
+    link_models = []
     for link in links:
         count["links: total"] += 1
         source: Node = (
@@ -391,6 +425,7 @@ def save_links(
             dbsession.add(model)
         else:
             count["links: updated"] += 1
+        link_models.append(model)
 
         model.olsr_cost = link.cost
         model.status = LinkStatus.CURRENT
@@ -433,7 +468,7 @@ def save_links(
             )
 
     logger.success("Links written to database: {}", dict(count))
-    return
+    return link_models
 
 
 def distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -475,3 +510,22 @@ def bearing(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     )
 
     return round(math.degrees(b), 1)
+
+
+async def save_historical_data(
+    nodes: List[Node], links: List[Link], stats: HistoricalStats
+):
+    """Save current node and link data to our time series storage.
+
+    Need to use the database models because we are keying off the database primary keys.
+    (And after the session has been flushed.)
+
+    """
+
+    # TODO: Use thread pool to run these asynchronously
+
+    for node in nodes:
+        stats.update_node_stats(node)
+
+    for link in links:
+        stats.update_link_stats(link)
