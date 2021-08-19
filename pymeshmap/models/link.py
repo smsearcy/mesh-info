@@ -10,8 +10,10 @@ class Link(Base):
 
     __tablename__ = "link"
 
+    # FIXME: need to include link type in key
     source_id = Column(Integer, ForeignKey("node.node_id"), primary_key=True)
     destination_id = Column(Integer, ForeignKey("node.node_id"), primary_key=True)
+    # TODO: add native_enum=False for simplicity/consistency between SQLite & Postges
     status = Column(Enum(LinkStatus), nullable=False)
     last_seen = Column(PDateTime(), nullable=False, default=utcnow())
 

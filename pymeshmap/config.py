@@ -49,7 +49,7 @@ class AppConfig:
 
     @environ.config
     class Web:
-        host: str = environ.var(default="127.0.0.1")
+        host: str = environ.var(default="0.0.0.0")
         port: int = environ.var(default=6543, converter=int)
         # debug_hosts
 

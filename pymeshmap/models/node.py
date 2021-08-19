@@ -14,6 +14,8 @@ class Node(Base):
     name = Column(String(70), nullable=False)
     status = Column(Enum(NodeStatus), nullable=False)
 
+    # FIXME: need to handle multiple IP addresses (RF(s), DTD, tunnel)
+    # (can use IP address type to determine link type on older API)
     wlan_ip = Column(String(15), nullable=False)
     description = Column(Unicode(1024), nullable=False)
 
