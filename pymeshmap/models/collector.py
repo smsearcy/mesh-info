@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, Numeric
-from sqlalchemy.dialects.postgresql import JSON
+import pendulum
+import sqlalchemy as sa
 
-from .meta import Base, PDateTime, utcnow
+from .meta import Base, PDateTime
 
 
 class CollectorStat(Base):
@@ -9,14 +9,14 @@ class CollectorStat(Base):
 
     __tablename__ = "collector_stat"
 
-    started_at = Column(PDateTime(), primary_key=True)
-    finished_at = Column(PDateTime(), default=utcnow(), nullable=False)
-    node_count = Column(Integer, nullable=False)
-    link_count = Column(Integer, nullable=False)
-    error_count = Column(Integer, nullable=False)
-    polling_duration = Column(Numeric(8, 4), nullable=False)
-    total_duration = Column(Numeric(8, 4), nullable=False)
-    other_stats = Column(JSON(), nullable=False)
+    started_at = sa.Column(PDateTime(), primary_key=True)
+    finished_at = sa.Column(PDateTime(), default=pendulum.now, nullable=False)
+    node_count = sa.Column(sa.Integer, nullable=False)
+    link_count = sa.Column(sa.Integer, nullable=False)
+    error_count = sa.Column(sa.Integer, nullable=False)
+    polling_duration = sa.Column(sa.Float, nullable=False)
+    total_duration = sa.Column(sa.Float, nullable=False)
+    other_stats = sa.Column(sa.JSON, nullable=False)
 
     def __repr__(self):
         return f"<models.CollectorStat(started_at={self.started_at})>"

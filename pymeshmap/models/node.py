@@ -1,8 +1,18 @@
-from sqlalchemy import Boolean, Column, Enum, Float, Index, Integer, String, Unicode
-from sqlalchemy.dialects.postgresql import ARRAY, JSON
+import pendulum
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    Enum,
+    Float,
+    Index,
+    Integer,
+    String,
+    Unicode,
+)
 from sqlalchemy.orm import relationship
 
-from .meta import Base, NodeStatus, PDateTime, utcnow
+from .meta import Base, NodeStatus, PDateTime
 
 
 class Node(Base):
@@ -12,7 +22,7 @@ class Node(Base):
 
     id = Column("node_id", Integer, primary_key=True)
     name = Column(String(70), nullable=False)
-    status = Column(Enum(NodeStatus), nullable=False)
+    status = Column(Enum(NodeStatus, native_enum=False), nullable=False)
 
     # FIXME: need to handle multiple IP addresses (RF(s), DTD, tunnel)
     # (can use IP address type to determine link type on older API)
@@ -26,7 +36,7 @@ class Node(Base):
 
     up_time = Column(String(25), nullable=False)
     up_time_seconds = Column(Integer)
-    load_averages = Column(ARRAY(Float, dimensions=1))
+    load_averages = Column(JSON())
     model = Column(String(50), nullable=False)
     board_id = Column(String(50), nullable=False)
     firmware_version = Column(String(50), nullable=False)
@@ -54,29 +64,19 @@ class Node(Base):
 
     system_info = Column(JSON(), nullable=False)
 
-    created_at = Column(PDateTime(), default=utcnow(), nullable=False)
+    created_at = Column(PDateTime(), default=pendulum.now, nullable=False)
     last_updated_at = Column(
         PDateTime(),
-        default=utcnow(),
-        onupdate=utcnow(),
+        default=pendulum.now,
+        onupdate=pendulum.now,
         nullable=False,
     )
 
     links = relationship("Link", foreign_keys="Link.source_id", back_populates="source")
     # TODO: add active_links relationship
 
-    Index(
-        "active_name", name, unique=True, postgresql_where=status == NodeStatus.ACTIVE
-    )
-    Index(
-        "active_mac",
-        wlan_mac_address,
-        unique=True,
-        postgresql_where=status == NodeStatus.ACTIVE,
-    )
-    Index(
-        "active_ip", wlan_ip, unique=True, postgresql_where=status == NodeStatus.ACTIVE
-    )
+    # Is this premature optimization?
+    Index("idx_mac_name", wlan_mac_address, name)
 
     @property
     def location(self) -> str:

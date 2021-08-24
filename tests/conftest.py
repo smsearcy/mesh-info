@@ -10,14 +10,13 @@ from pyramid.scripting import prepare
 from pyramid.testing import DummyRequest, testConfig
 from pytest_postgresql import factories
 from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
 
 from pymeshmap import models
 from pymeshmap.config import AppConfig, configure
 from pymeshmap.models.meta import Base
 
 if os.environ.get("CI"):
-    postgresql = factories.postgresql_noproc(
+    postgresql_ci = factories.postgresql_noproc(
         # needs to match service in .gitlab-ci.yml
         host=os.environ.get("POSTGRES_HOST", "postgres"),
         user=os.environ.get("POSTGRES_USER", "postgres"),
@@ -25,7 +24,7 @@ if os.environ.get("CI"):
         dbname=os.environ.get("POSTGRES_DB", "postgres"),
     )
 else:
-    postgresql = factories.postgresql("postgresql_proc")
+    postgresql_local = factories.postgresql("postgresql_proc")
 
 
 @pytest.fixture(scope="module")
@@ -42,34 +41,32 @@ def app_config():
     return AppConfig.from_environ(env)
 
 
-@pytest.fixture
-def dbengine(postgresql):
+@pytest.fixture(params=("sqlite", "postgres"))
+def dbengine(request, tmp_path):
 
-    try:
-        # psycopg2 connection has connection information in attribute
-        dbinfo = postgresql.info
-    except AttributeError:
-        # noop has parameters directly on the object
-        dbinfo = postgresql
-
-    user = dbinfo.user
-    password = dbinfo.password
-    host = dbinfo.host
-    port = dbinfo.port
-    dbname = dbinfo.dbname
-    db_url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
+    if request.param == "sqlite":
+        sqlite_file = tmp_path / "testing.sqlite"
+        db_url = f"sqlite:///{sqlite_file!s}"
+    elif request.param == "postgres":
+        if os.environ.get("CI"):
+            dbinfo = request.getfixturevalue("postgresql_ci")
+        else:
+            postgresql = request.getfixturevalue("postgresql_local")
+            dbinfo = postgresql.info
+        user = dbinfo.user
+        password = dbinfo.password
+        host = dbinfo.host
+        port = dbinfo.port
+        dbname = dbinfo.dbname
+        db_url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
+    else:
+        raise ValueError(f"Unknown param: {request.param!r}")
 
     alembic_cfg = alembic.config.Config("alembic.ini")
-
-    engine = create_engine(db_url, poolclass=NullPool)
-
+    engine = create_engine(db_url)
     alembic_cfg.attributes["connection"] = engine
 
     Base.metadata.drop_all(bind=engine)
-
-    # run migrations to initialize the database
-    # depending on how we want to initialize the database from scratch
-    # we could alternatively call:
     Base.metadata.create_all(bind=engine)
     alembic.command.stamp(alembic_cfg, "head")
 

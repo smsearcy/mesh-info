@@ -36,41 +36,52 @@ def main(argv: list = None):
         settings = env["registry"].settings
         request = env["request"]
 
+        poller = request.find_service(name="poller")
+        version_checker: VersionChecker = request.find_service(VersionChecker)
+
+        # Check the report command first since it doesn't require database or storage
+        if args.command == "report":
+            if not args.path.is_dir():
+                parser.error("output path must be an existing directory")
+
+            sys.exit(
+                report.main(
+                    args.hostname,
+                    poller,
+                    version_checker,
+                    verbose=args.verbose,
+                    save_errors=args.save_errors,
+                    output_path=args.path,
+                )
+            )
+
+        data_dir = settings["data_dir"]
+        if not data_dir.exists():
+            try:
+                data_dir.mkdir(parents=True, exist_ok=True)
+            except PermissionError:
+                sys.exit(f"Failed to create data directory: {data_dir!s}")
+
         try:
             session_factory = models.get_session_factory(models.get_engine(settings))
         except Exception as exc:
             logger.error(f"Failed to configure database connection: {exc!r}")
             sys.exit("Database configuration failed, review logs for details")
 
-        poller = request.find_service(name="poller")
-        version_checker: VersionChecker = request.find_service(VersionChecker)
-
         if args.command == "collector":
             historical_stats: HistoricalStats = request.find_service(HistoricalStats)
-            result = collector.main(
-                settings["local_node"],
-                session_factory,
-                poller,
-                historical_stats,
-                config=settings["collector"],
-                run_once=args.run_once,
+            sys.exit(
+                collector.main(
+                    settings["local_node"],
+                    session_factory,
+                    poller,
+                    historical_stats,
+                    config=settings["collector"],
+                    run_once=args.run_once,
+                )
             )
-        elif args.command == "report":
-            if not args.path.is_dir():
-                parser.error("output path must be an existing directory")
 
-            result = report.main(
-                args.hostname,
-                poller,
-                version_checker,
-                verbose=args.verbose,
-                save_errors=args.save_errors,
-                output_path=args.path,
-            )
-        else:
-            result = "no command specified"
-
-    sys.exit(result)
+    sys.exit(f"command not recognized: {args.command}")
 
 
 def build_parser() -> argparse.ArgumentParser:

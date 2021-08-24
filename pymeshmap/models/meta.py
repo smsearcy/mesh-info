@@ -1,11 +1,9 @@
 import enum
 
 import pendulum
-from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import MetaData
-from sqlalchemy.sql import expression
-from sqlalchemy.types import TIMESTAMP, DateTime, TypeDecorator
+from sqlalchemy.types import TIMESTAMP, TypeDecorator
 
 # Recommended naming convention used by Alembic, as various different database
 # providers will autogenerate vastly different names making migrations more
@@ -62,12 +60,3 @@ class PDateTime(TypeDecorator):
             value = pendulum.instance(value)
 
         return value
-
-
-class utcnow(expression.FunctionElement):
-    type = DateTime()
-
-
-@compiles(utcnow, "postgresql")
-def pg_utcnow(element, compiler, **kw):
-    return "TIMEZONE('utc', CURRENT_TIMESTAMP)"

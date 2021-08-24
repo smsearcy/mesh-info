@@ -1,8 +1,9 @@
-from sqlalchemy import Column, Enum, Float, ForeignKey, Index, Integer
+import pendulum
+import sqlalchemy as sa
 from sqlalchemy.orm import relationship
 
 from ..aredn import LinkType
-from .meta import Base, LinkStatus, PDateTime, utcnow
+from .meta import Base, LinkStatus, PDateTime
 
 
 class Link(Base):
@@ -10,42 +11,35 @@ class Link(Base):
 
     __tablename__ = "link"
 
-    # FIXME: need to include link type in key
-    source_id = Column(Integer, ForeignKey("node.node_id"), primary_key=True)
-    destination_id = Column(Integer, ForeignKey("node.node_id"), primary_key=True)
-    # TODO: add native_enum=False for simplicity/consistency between SQLite & Postges
-    status = Column(Enum(LinkStatus), nullable=False)
-    last_seen = Column(PDateTime(), nullable=False, default=utcnow())
+    source_id = sa.Column(sa.Integer, sa.ForeignKey("node.node_id"), primary_key=True)
+    destination_id = sa.Column(
+        sa.Integer, sa.ForeignKey("node.node_id"), primary_key=True
+    )
+    type = sa.Column(sa.Enum(LinkType), primary_key=True)
+    status = sa.Column(sa.Enum(LinkStatus, native_enum=False), nullable=False)
+    last_seen = sa.Column(PDateTime(), nullable=False, default=pendulum.now)
 
-    olsr_cost = Column(Float)
-    distance = Column(Float)
-    bearing = Column(Float)
+    olsr_cost = sa.Column(sa.Float)
+    distance = sa.Column(sa.Float)
+    bearing = sa.Column(sa.Float)
 
-    type = Column(Enum(LinkType))
-    signal = Column(Float)
-    noise = Column(Float)
-    tx_rate = Column(Float)
-    rx_rate = Column(Float)
-    quality = Column(Float)
-    neighbor_quality = Column(Float)
+    signal = sa.Column(sa.Float)
+    noise = sa.Column(sa.Float)
+    tx_rate = sa.Column(sa.Float)
+    rx_rate = sa.Column(sa.Float)
+    quality = sa.Column(sa.Float)
+    neighbor_quality = sa.Column(sa.Float)
 
-    created_at = Column(PDateTime(), default=utcnow(), nullable=False)
-    last_updated_at = Column(
+    created_at = sa.Column(PDateTime(), default=pendulum.now, nullable=False)
+    last_updated_at = sa.Column(
         PDateTime(),
-        default=utcnow(),
-        onupdate=utcnow(),
+        default=pendulum.now,
+        onupdate=pendulum.now,
         nullable=False,
     )
 
     source = relationship("Node", foreign_keys="Link.source_id", back_populates="links")
     destination = relationship("Node", foreign_keys="Link.destination_id")
-
-    # is this a case of premature optimization?  (assuming it even does what I hope)
-    Index(
-        "recent_links",
-        status,
-        postgresql_where=status.in_((LinkStatus.CURRENT, LinkStatus.RECENT)),
-    )
 
     @property
     def signal_noise_ratio(self):
