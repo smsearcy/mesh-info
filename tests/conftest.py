@@ -18,7 +18,8 @@ from pymeshmap.models.meta import Base
 
 if os.environ.get("CI"):
     postgresql = factories.postgresql_noproc(
-        host="postgres",  # needs to match service in .gitlab-ci.yml
+        # needs to match service in .gitlab-ci.yml
+        host=os.environ.get("POSTGRES_HOST", "postgres"),
         user=os.environ.get("POSTGRES_USER", "postgres"),
         password=os.environ.get("POSTGRES_PASSWORD", ""),
         dbname=os.environ.get("POSTGRES_DB", "postgres"),
@@ -35,11 +36,10 @@ def data_folder() -> Path:
 
 @pytest.fixture(scope="session")
 def app_config():
-    return AppConfig.from_environ(
-        {
-            "MESHMAP_POLLER_NODE": "127.0.0.1",
-        }
-    )
+    # need to get environment variables from CI
+    env = os.environ.copy()
+    env["MESHMAP_POLLER_NODE"] = "127.0.0.1"
+    return AppConfig.from_environ(env)
 
 
 @pytest.fixture
