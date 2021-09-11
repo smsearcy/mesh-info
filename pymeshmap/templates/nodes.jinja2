@@ -29,7 +29,7 @@
     {% for node in nodes %}
       <tr>
         <td>
-          <a href="{{ req.route_url("node", id=node.id) }}">{{ node.name }}</a>
+          <a href="{{ req.route_url("node-details", id=node.id) }}">{{ node.name }}</a>
         </td>
         <td>{{ node.status }}</td>
         <td>{{ node.band }}</td>

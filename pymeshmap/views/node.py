@@ -11,7 +11,9 @@ from ..models import Link, LinkStatus, Node
 from . import schema
 
 
-@view_config(route_name="node", renderer="pymeshmap:templates/node.jinja2")
+@view_config(
+    route_name="node-details", renderer="pymeshmap:templates/node-details.jinja2"
+)
 def node_detail(request: Request):
     """Detailed view of a single node."""
 
@@ -46,9 +48,28 @@ def node_detail(request: Request):
     }
 
 
+@view_config(
+    route_name="node-graphs", renderer="pymeshmap:templates/node-graphs.jinja2"
+)
+def node_graphs(request: Request):
+    """Display graphs of particular data for a node over different timeframes."""
+
+    node_id = int(request.matchdict["id"])
+    graph = request.matchdict["name"]
+    dbsession: Session = request.dbsession
+
+    node = dbsession.query(Node).options(load_only("name", "id")).get(node_id)
+
+    return {
+        "node": node,
+        "graph": graph,
+        "graph_name": graph.title(),  # use a dictionary for more control of the name?
+    }
+
+
 @view_defaults(route_name="node-graph", http_cache=120)
 class NodeGraphs:
-    """Graph node data."""
+    """Generate graph image of node data."""
 
     def __init__(self, request: Request):
         node_id = int(request.matchdict["id"])
