@@ -4,7 +4,8 @@ from pyramid.request import Request
 from pyramid.view import view_config
 from sqlalchemy.orm import Session
 
-from ..models import Node, NodeStatus
+from ..models import Node
+from ..types import NodeStatus
 
 
 @view_config(route_name="nodes", renderer="pymeshmap:templates/nodes.jinja2")

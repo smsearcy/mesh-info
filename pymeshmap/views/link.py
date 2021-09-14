@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, joinedload, load_only
 
 from ..historical import HistoricalStats
 from ..models import Link, Node
+from ..types import LinkType
 from . import schema
 
 
@@ -17,15 +18,16 @@ class LinkGraphs:
     def __init__(self, request: Request):
         source_id = int(request.matchdict["source"])
         destination_id = int(request.matchdict["destination"])
+        type_ = getattr(LinkType, request.matchdict["type"].upper())
         dbsession: Session = request.dbsession
 
         self.link = (
             dbsession.query(Link)
             .options(
-                load_only(Link.source_id, Link.destination_id),
+                load_only(Link.source_id, Link.destination_id, Link.type),
                 joinedload(Link.destination).load_only(Node.name),
             )
-            .get((source_id, destination_id))
+            .get((source_id, destination_id, type_))
         )
         if self.link is None:
             raise HTTPNotFound("Sorry, the specified link could not be found")

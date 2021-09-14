@@ -2,8 +2,8 @@ import pendulum
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship
 
-from ..aredn import LinkType
-from .meta import Base, LinkStatus, PDateTime
+from ..types import LinkId, LinkStatus, LinkType
+from .meta import Base, PDateTime
 
 
 class Link(Base):
@@ -48,9 +48,9 @@ class Link(Base):
         return self.signal - self.noise
 
     @property
-    def type_name(self) -> str:
-        """Link type as string (helper for templates)."""
-        return self.type.name if self.type else "UNKNOWN"
+    def id(self) -> LinkId:
+        """Simple link identifier (useful for consistent serialization)."""
+        return LinkId(self.source_id, self.destination_id, self.type)
 
     def __repr__(self):
         return (

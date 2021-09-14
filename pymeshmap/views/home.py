@@ -3,7 +3,8 @@ from pyramid.request import Request
 from pyramid.view import view_config
 from sqlalchemy.orm import Session
 
-from ..models import CollectorStat, Link, LinkStatus, Node, NodeStatus
+from ..models import CollectorStat, Link, Node
+from ..types import LinkStatus, NodeStatus
 
 
 @view_config(route_name="home", renderer="pymeshmap:templates/home.jinja2")

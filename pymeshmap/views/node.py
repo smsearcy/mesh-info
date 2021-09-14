@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session, joinedload, load_only
 
 from ..aredn import VersionChecker
 from ..historical import HistoricalStats
-from ..models import Link, LinkStatus, Node
+from ..models import Link, Node
+from ..types import LinkStatus
 from . import schema
 
 

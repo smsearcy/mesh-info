@@ -1,15 +1,17 @@
 """Initial database creation.
 
-Revision ID: 353be481ea57
+Revision ID: a775347b6ee8
 Revises:
-Create Date: 2021-09-08 15:51:24.718718
+Create Date: 2021-09-18 13:29:22.639972
 
 """
 import sqlalchemy as sa
 from alembic import op
 
+import pymeshmap
+
 # revision identifiers, used by Alembic.
-revision = "353be481ea57"
+revision = "a775347b6ee8"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -90,7 +92,7 @@ def upgrade():
         sa.Column("destination_id", sa.Integer(), nullable=False),
         sa.Column(
             "type",
-            sa.Enum("RADIO", "TUNNEL", "DIRECT", "UNKNOWN", name="linktype"),
+            sa.Enum("DTD", "TUN", "RF", "UNKNOWN", name="linktype"),
             nullable=False,
         ),
         sa.Column(

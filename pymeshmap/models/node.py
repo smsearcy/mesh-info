@@ -12,7 +12,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from .meta import Base, NodeStatus, PDateTime
+from ..types import NodeStatus
+from .meta import Base, PDateTime
 
 
 class Node(Base):

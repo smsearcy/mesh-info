@@ -37,7 +37,8 @@ import aiohttp
 import attr
 from loguru import logger
 
-from .aredn import LinkType, SystemInfo, load_system_info
+from .aredn import LinkInfo, SystemInfo, load_system_info
+from .types import LinkType
 
 
 class OlsrData:
@@ -53,7 +54,7 @@ class OlsrData:
         def __init__(self, olsr: OlsrData, lock: Lock):
             self._olsr = olsr
             self._lock = lock
-            self.queue: Deque[Union[str, LinkInfo]] = deque()
+            self.queue: Deque[Union[str, OlsrLink]] = deque()
 
         def __aiter__(self):
             return self
@@ -77,7 +78,7 @@ class OlsrData:
         self.finished = False
         olsr_lock = Lock()
         self.nodes: AsyncIterator[str] = self.LineGenerator(self, olsr_lock)
-        self.links: AsyncIterator[LinkInfo] = self.LineGenerator(self, olsr_lock)
+        self.links: AsyncIterator[OlsrLink] = self.LineGenerator(self, olsr_lock)
         self.stats: DefaultDict[str, int] = defaultdict(int)
         self._nodes_seen: Set[str] = set()
         self._links_seen: Set[Tuple[str, str]] = set()
@@ -173,7 +174,7 @@ class OlsrData:
         self.stats["nodes returned"] += 1
         return node_address
 
-    def _get_link(self, line: str) -> Optional[LinkInfo]:
+    def _get_link(self, line: str) -> Optional[OlsrLink]:
         """Return the IP addresses and cost of a link from an OLSR data line.
 
         Based on `wxc_netcat()` in MeshMap the only lines we are interested in
@@ -202,7 +203,7 @@ class OlsrData:
             return None
         self._links_seen.add(link_id)
         self.stats["links returned"] += 1
-        return LinkInfo.from_strings(*link_id, label)
+        return OlsrLink.from_strings(*link_id, label)
 
 
 async def network_info(
@@ -230,22 +231,46 @@ async def network_info(
             olsr_data.nodes, max_connections=max_connections, timeout=timeout
         )
     )
-    links = [link async for link in olsr_data.links]
-    logger.info("Network link count: {}", len(links))
+    olsr_links = [link async for link in olsr_data.links]
+    logger.info("OLSR link count: {}", len(olsr_links))
 
-    node_results: NetworkNodes = await node_task
-    nodes_by_ip, errors = node_results
+    node_info: NetworkNodes = await node_task
 
-    # Fill in the `link_count` attribute for the nodes by counting them
-    link_counts_by_ip = Counter(link.source for link in links)
-    for node_ip, node in nodes_by_ip.items():
-        if node.link_count is None:
-            node.link_count = link_counts_by_ip[node_ip]
+    # Build link lists by source IP for OLSR links
+    olsr_links_by_ip: Dict[str, List[OlsrLink]] = {}
+    for link in olsr_links:
+        olsr_links_by_ip.setdefault(link.source, []).append(link)
 
-    # Add the extra link information from sysinfo.json to the dataclass
-    _add_extra_link_info(links, nodes_by_ip)
+    # Build list of links for all nodes, using AREDN data, falling back to OLSR
+    links: List[LinkInfo] = []
+    for node in node_info.nodes:
+        if len(node.links) > 0:
+            # Use link information from AREDN if we have it (newer firmware)
+            links.extend(node.links)
+            node.link_count = len(node.links)
+            continue
 
-    return NetworkInfo(list(nodes_by_ip.values()), links, errors)
+        # Create `LinkInfo` objects based on the information in OLSR
+        node.link_count = 0
+        node_ip = node_info.name_ip_map[node.node_name.lower()]
+        try:
+            node_olsr_links = olsr_links_by_ip[node_ip]
+        except KeyError:
+            logger.warning("Failed to find OLSR links for {} ({})", node, node_ip)
+            continue
+        for link in node_olsr_links:
+            links.append(
+                LinkInfo(
+                    source=node.node_name,
+                    destination=node_info.ip_name_map[link.destination],
+                    type=LinkType.UNKNOWN,
+                    interface="unknown",
+                    olsr_cost=link.cost,
+                )
+            )
+            node.link_count += 1
+
+    return NetworkInfo(node_info.nodes, links, node_info.errors)
 
 
 async def node_information(
@@ -281,8 +306,10 @@ async def node_information(
     crawler_finished = time.monotonic()
     logger.info("Querying nodes took {:.2f} seconds", crawler_finished - start_time)
 
-    nodes = {}
+    nodes = []
     errors = {}
+    name_ip_map = {}
+    ip_name_map = {}
     count: DefaultDict[str, int] = defaultdict(int)
     for result in node_results:
         count["total"] += 1
@@ -297,12 +324,15 @@ async def node_information(
             count["errors (total)"] += 1
             count[f"errors ({response.error!s})"] += 1
             errors[ip_address] = response
+            # TODO: use a reverse DNS lookup to populate the name/IP map
             continue
         count["successes"] += 1
-        nodes[ip_address] = response
+        nodes.append(response)
+        name_ip_map[response.node_name.lower()] = ip_address
+        ip_name_map[ip_address] = response.node_name
 
     logger.info("Network nodes summary: {}", dict(count))
-    return NetworkNodes(nodes, errors)
+    return NetworkNodes(nodes, errors, name_ip_map=name_ip_map, ip_name_map=ip_name_map)
 
 
 class NetworkInfo(NamedTuple):
@@ -318,11 +348,22 @@ class NetworkInfo(NamedTuple):
     errors: Dict[str, NodeError]
 
 
-class NetworkNodes(NamedTuple):
-    """Results of querying the nodes on the network, indexed by the IP address."""
+@attr.s(auto_attribs=True)
+class NetworkNodes:
+    """Results of querying the nodes on the network.
 
-    nodes: Dict[str, SystemInfo]
+    Attributes:
+        nodes: AREDN node information
+        errors: Error information, keyed by IP address
+        name_ip_map: Dictionary to simulate DNS lookup
+        ip_name_map: Dictionary to simulate reverse-DNS lookup
+
+    """
+
+    nodes: List[SystemInfo]
     errors: Dict[str, NodeError]
+    name_ip_map: Dict[str, str]
+    ip_name_map: Dict[str, str]
 
 
 @attr.s(auto_attribs=True)
@@ -354,24 +395,21 @@ NodeResult = Union[SystemInfo, NodeError]
 
 
 @attr.s(slots=True, auto_attribs=True)
-class LinkInfo:
-    """OLSR link information measuring the cost between nodes."""
+class OlsrLink:
+    """OLSR link information measuring the cost between nodes.
+
+    The `source` and `destination` attributes are the IP address from
+
+    """
 
     source: str
     destination: str
     cost: float
-    type: Optional[LinkType] = None
-    quality: Optional[float] = None
-    neighbor_quality: Optional[float] = None
-    signal: Optional[int] = None
-    noise: Optional[int] = None
-    tx_rate: Optional[float] = None
-    rx_rate: Optional[float] = None
 
     @classmethod
-    def from_strings(cls, source: str, destination: str, label: str) -> LinkInfo:
+    def from_strings(cls, source: str, destination: str, label: str) -> OlsrLink:
         cost = 99.99 if label == "INFINITE" else float(label)
-        return cls(source, destination, cost)
+        return cls(source=source, destination=destination, cost=cost)
 
     def __str__(self):
         return f"{self.source} -> {self.destination} ({self.cost})"
@@ -436,30 +474,3 @@ async def _poll_node(
 
     logger.success("Finished polling {}", node_info)
     return ip_address, node_info
-
-
-def _add_extra_link_info(links: List[LinkInfo], nodes_by_ip: Dict[str, SystemInfo]):
-    """Modifies the links in place, adding extra data."""
-
-    count: DefaultDict[str, int] = defaultdict(int)
-    for link in links:
-        count["total"] += 1
-        # Look up extra link information from the AREDN SystemInfo response
-        if link.source not in nodes_by_ip:
-            count["node not found"] += 1
-            continue
-        if link.destination not in nodes_by_ip[link.source].links:
-            count["link not found"] += 1
-            continue
-        extra_info = nodes_by_ip[link.source].links[link.destination]
-        count["updated"] += 1
-
-        link.type = extra_info.type
-        link.quality = extra_info.quality
-        link.neighbor_quality = extra_info.neighbor_quality
-        link.signal = extra_info.signal
-        link.noise = extra_info.noise
-        link.tx_rate = extra_info.tx_rate
-        link.rx_rate = extra_info.rx_rate
-
-    logger.info("Extra link summary: {}", dict(count))

@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from pymeshmap import aredn
+from pymeshmap.types import LinkType
 
 
 @pytest.mark.parametrize(
@@ -250,17 +251,18 @@ def test_radio_link_info_parsing(data_folder):
 
     assert len(system_info.links) == 3
 
-    sample_link = system_info.links["10.150.4.228"]
-    expected = aredn.Link(
+    sample_link = system_info.links[0]
+    expected = aredn.LinkInfo(
+        source="N0CALL-NSM2-1",
+        destination="N0CALL-RKM2-1-Medford-OR",
         quality=0.94,
         neighbor_quality=0.94,
         signal=-82,
         noise=-91,
-        type=aredn.LinkType.RADIO,
-        hostname="N0CALL-RKM2-1-Medford-OR.local.mesh",
+        type=LinkType.RF,
         tx_rate=19.5,
         rx_rate=26,
-        olsr_interface="wlan0",
+        interface="wlan0",
     )
     assert sample_link == expected
 
@@ -274,13 +276,14 @@ def test_dtd_link_info_parsing(data_folder):
 
     assert len(system_info.links) == 2
 
-    sample_link = system_info.links["10.33.72.151"]
-    expected = aredn.Link(
+    sample_link = system_info.links[0]
+    expected = aredn.LinkInfo(
+        source="N0CALL-VC-RF-5G",
+        destination="N0CALL-VC-SHACK",
         quality=1,
         neighbor_quality=1,
-        type=aredn.LinkType.DIRECT,
-        hostname="N0CALL-VC-SHACK.local.mesh",
-        olsr_interface="eth0.2",
+        type=LinkType.DTD,
+        interface="eth0.2",
     )
     assert sample_link == expected
 
@@ -294,13 +297,14 @@ def test_dtd_link_info_no_type(data_folder):
 
     assert len(system_info.links) == 8
 
-    sample_link = system_info.links["10.65.116.119"]
-    expected = aredn.Link(
+    sample_link = system_info.links[7]
+    expected = aredn.LinkInfo(
+        source="N0CALL-NSM2-2-East-City-OR",
+        destination="N0CALL-NSM2-1-East-City-OR",
         quality=1,
         neighbor_quality=1,
-        type=aredn.LinkType.DIRECT,
-        hostname="N0CALL-NSM2-1-East-City-OR.local.mesh",
-        olsr_interface="br-dtdlink",
+        type=LinkType.DTD,
+        interface="br-dtdlink",
     )
     assert sample_link == expected
 
@@ -314,13 +318,14 @@ def test_invalid_link_json():
         "olsrInterface": "eth.0",
         "linkType": "foobar",
     }
-    link_info = aredn.Link.from_json(link_json)
-    expected = aredn.Link(
+    link_info = aredn.LinkInfo.from_json(link_json, source="N0CALL-NSM1")
+    expected = aredn.LinkInfo(
+        source="N0CALL-NSM1",
+        destination="N0CALL-NSM2",
         quality=1,
         neighbor_quality=1,
-        type=aredn.LinkType.UNKNOWN,
-        hostname="N0CALL-NSM2.local.mesh",
-        olsr_interface="eth.0",
+        type=LinkType.UNKNOWN,
+        interface="eth.0",
     )
     assert link_info == expected
 

@@ -179,6 +179,7 @@ def configure(
     config.register_service(version_checker, VersionChecker)
 
     # Register the `HistoricalStats` singleton
+    logger.info("RRDtool data directory: {}", app_config.data_dir)
     config.register_service(
         HistoricalStats(data_path=app_config.data_dir), HistoricalStats
     )

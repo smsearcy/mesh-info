@@ -45,7 +45,7 @@ async def test_olsr_links(data_folder, mocker):
     links = [link async for link in olsr_data.links]
 
     assert len(links) == 96
-    assert links[0] == poller.LinkInfo("10.22.15.88", "10.98.33.29", 2.986)
+    assert links[0] == poller.OlsrLink("10.22.15.88", "10.98.33.29", 2.986)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")

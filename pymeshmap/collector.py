@@ -14,11 +14,12 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from . import models
-from .aredn import SystemInfo
+from .aredn import LinkInfo, SystemInfo
 from .config import AppConfig
 from .historical import HistoricalStats
-from .models import CollectorStat, Link, LinkStatus, Node, NodeStatus
-from .poller import LinkInfo, OlsrData
+from .models import CollectorStat, Link, Node
+from .poller import OlsrData
+from .types import LinkStatus, NodeStatus
 
 MODEL_TO_SYSINFO_ATTRS = {
     "name": "node_name",
@@ -394,12 +395,12 @@ def save_links(
         count["links: total"] += 1
         source: Node = (
             dbsession.query(Node)
-            .filter(Node.wlan_ip == link.source, Node.status == NodeStatus.ACTIVE)
+            .filter(Node.name == link.source, Node.status == NodeStatus.ACTIVE)
             .one_or_none()
         )
         destination: Node = (
             dbsession.query(Node)
-            .filter(Node.wlan_ip == link.destination, Node.status == NodeStatus.ACTIVE)
+            .filter(Node.name == link.destination, Node.status == NodeStatus.ACTIVE)
             .one_or_none()
         )
         if source is None or destination is None:
@@ -415,19 +416,19 @@ def save_links(
             .filter(
                 Link.source == source,
                 Link.destination == destination,
+                Link.type == link.type,
             )
             .one_or_none()
         )
 
         if model is None:
             count["links: new"] += 1
-            model = Link(source=source, destination=destination)
+            model = Link(source=source, destination=destination, type=link.type)
             dbsession.add(model)
         else:
             count["links: updated"] += 1
         link_models.append(model)
 
-        model.olsr_cost = link.cost
         model.status = LinkStatus.CURRENT
         model.last_seen = pendulum.now()
 
@@ -439,6 +440,7 @@ def save_links(
             "rx_rate",
             "quality",
             "neighbor_quality",
+            "olsr_cost",
         ]:
             setattr(model, attribute, getattr(link, attribute))
 
@@ -522,7 +524,8 @@ async def save_historical_data(
 
     """
 
-    # TODO: Use thread pool to run these asynchronously
+    # TODO: Use thread pool to run these asynchronously?
+    # (assuming there is need/benefit)
 
     for node in nodes:
         stats.update_node_stats(node)
