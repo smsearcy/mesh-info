@@ -5,7 +5,7 @@ from pyramid.settings import asbool
 from pyramid.view import view_config, view_defaults
 from sqlalchemy.orm import Session, joinedload, load_only
 
-from ..aredn import VersionChecker
+from ..aredn import LinkType, VersionChecker
 from ..historical import HistoricalStats
 from ..models import Link, LinkStatus, Node
 from . import schema
@@ -39,12 +39,20 @@ def node_detail(request: Request):
     )
 
     links = query.all()
+    graphs_by_link_type = {
+        LinkType.RADIO: ("quality", "snr", "cost"),
+        LinkType.DIRECT: ("quality", "cost"),
+        # do tunnels have quality metrics?
+        LinkType.TUNNEL: ("quality", "cost"),
+        LinkType.UNKNOWN: ("cost",),
+    }
 
     return {
         "node": node,
         "links": links,
         "firmware_status": firmware_status,
         "api_status": api_status,
+        "link_graphs": graphs_by_link_type,
     }
 
 
