@@ -53,22 +53,24 @@
 {% endif %}
 
   <div class="columns">
-  {% for period in ("day", "month") %}
+  {% for period in ("day", "week") %}
     <div class="column is-narrow">
+      <a href="{{ req.route_path('network-graphs', name='info') }}">
       <img src="{{ req.route_path('network-graph', name="info", _query={"period": period}) }}"
            alt="network info graph ({{ period }})"
-           loading="lazy"
-      >
+           loading="lazy">
+      </a>
     </div>
   {% endfor %}
   </div>
   <div class="columns">
-  {% for period in ("day", "month") %}
+  {% for period in ("day", "week") %}
     <div class="column is-narrow">
+      <a href="{{ req.route_path('network-graphs', name='poller') }}">
       <img src="{{ req.route_path('network-graph', name="poller", _query={"period": period}) }}"
            alt="poller stats graph ({{ period }})"
-           loading="lazy"
-      >
+           loading="lazy">
+      </a>
     </div>
   {% endfor %}
   </div>

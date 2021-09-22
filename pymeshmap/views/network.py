@@ -6,6 +6,18 @@ from ..historical import HistoricalStats
 from . import schema
 
 
+@view_config(
+    route_name="network-graphs", renderer="pymeshmap:templates/network-graphs.jinja2"
+)
+def network_graphs(request: Request):
+    """Page displaying graphs of particular data over different timeframes."""
+    graph = request.matchdict["name"]
+    return {
+        "graph": graph,
+        "graph_name": graph.title(),  # use a dictionary for more control of the name?
+    }
+
+
 @view_defaults(route_name="network-graph", http_cache=120)
 class NetworkGraphs:
     def __init__(self, request: Request):

@@ -106,13 +106,14 @@
 
 {% for graph in ("links", "load", "uptime") %}
   <div class="columns">
-  {% for period in ("day", "month") %}
+  {% for period in ("day", "week") %}
     <div class="column is-narrow">
+    <a href="{{ req.route_path('node-graphs', id=node.id, name=graph) }}">
     <img src="{{ req.route_path('node-graph', id=node.id, name=graph, _query={"period": period}) }}"
          alt="node {{ graph }} graph ({{ period }})"
          width="497"
          loading="lazy"
-    >
+    ></a>
     </div>
   {% endfor %}
   </div>
@@ -123,7 +124,7 @@
   {# Links is  #}
   {% for link_name, link_types in links|groupby("destination.name") %}
     <h3 class="subtitle">
-      <a href="{{ req.route_url("node", id=link_types[0].destination_id) }}">{{ link_name }}</a>
+      <a href="{{ req.route_url("node-details", id=link_types[0].destination_id) }}">{{ link_name }}</a>
     </h3>
     <div class="columns">
       <div class="column is-narrow-desktop">
@@ -174,22 +175,26 @@
         {% endif %}
       </div>
       <div class="columns">
-        {% for period in ("day", "month") %}
+        {% for period in ("day", "week") %}
           <div class="column is-narrow">
+            <a href="{{ req.route_path('link-graphs', source=link.source_id, destination=link.destination_id, name="cost")}}">
             <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, name="cost", _query={"period": period}) }}"
                  alt="link cost graph ({{ period }})"
                  loading="lazy">
+            </a>
           </div>
         {% endfor %}
       </div>
       {% if link.type_name|lower == "radio" %}
         {% for graph in ("snr", "quality") %}
           <div class="columns">
-            {% for period in ("day", "month") %}
+            {% for period in ("day", "week") %}
               <div class="column is-narrow">
-                <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, name=graph, _query={"period": period}) }}"
-                     alt="link {{ graph }} graph ({{ period }})"
-                     loading="lazy">
+                <a href="{{ req.route_path('link-graphs', source=link.source_id, destination=link.destination_id, name=graph)}}">
+                  <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, name=graph, _query={"period": period}) }}"
+                       alt="link {{ graph }} graph ({{ period }})"
+                       loading="lazy">
+                </a>
               </div>
             {% endfor %}
           </div>
