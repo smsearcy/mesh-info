@@ -152,54 +152,43 @@
             <div class="heading">Last Seen</div>
             <div>{{ link.last_seen|local_tz }}</div>
           </div>
+        </div>
+        <div class="column is-narrow">
+          <div class="mb-2">
+            <div class="heading">Link Quality</div>
+            <div>{{ link.quality or "Unknown" }}</div>
+          </div>
+          <div class="mb-2">
+            <div class="heading">Neighbor Link Quality</div>
+            <div>{{ link.neighbor_quality or "Unknown" }}</div>
+          </div>
+        </div>
+        <div class="column is-narrow">
+          {% if link.type_name|lower == "radio" %}
+            <div class="mb-2">
+              <div class="heading">Signal/Noise Ratio</div>
+              <div>{{ link.signal_noise_ratio }}</div>
+            </div>
+          {% endif %}
           <div class="mb-2">
             <div class="heading">Route Cost</div>
             <div>{{ link.olsr_cost }}</div>
           </div>
         </div>
-        {% if link.type_name|lower == "radio" %}
-          <div class="column is-narrow">
-            <div class="mb-2">
-              <div class="heading">Signal/Noise Ratio</div>
-              <div>{{ link.signal_noise_ratio }}</div>
-            </div>
-            <div class="mb-2">
-              <div class="heading">Link Quality</div>
-              <div>{{ link.quality }}</div>
-            </div>
-            <div class="mb-2">
-              <div class="heading">Neighbor Link Quality</div>
-              <div>{{ link.neighbor_quality }}</div>
-            </div>
-          </div>
-        {% endif %}
       </div>
-      <div class="columns">
-        {% for period in ("day", "week") %}
-          <div class="column is-narrow">
-            <a href="{{ req.route_path('link-graphs', source=link.source_id, destination=link.destination_id, name="cost")}}">
-            <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, name="cost", _query={"period": period}) }}"
-                 alt="link cost graph ({{ period }})"
-                 loading="lazy">
-            </a>
-          </div>
-        {% endfor %}
-      </div>
-      {% if link.type_name|lower == "radio" %}
-        {% for graph in ("snr", "quality") %}
-          <div class="columns">
-            {% for period in ("day", "week") %}
-              <div class="column is-narrow">
-                <a href="{{ req.route_path('link-graphs', source=link.source_id, destination=link.destination_id, name=graph)}}">
-                  <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, name=graph, _query={"period": period}) }}"
-                       alt="link {{ graph }} graph ({{ period }})"
-                       loading="lazy">
-                </a>
-              </div>
-            {% endfor %}
-          </div>
-        {% endfor %}
-      {% endif %}
+      {% for graph in link_graphs[link.type] %}
+        <div class="columns">
+          {% for period in ("day", "week") %}
+            <div class="column is-narrow">
+              <a href="{{ req.route_path('link-graphs', source=link.source_id, destination=link.destination_id, name=graph)}}">
+                <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, name=graph, _query={"period": period}) }}"
+                   alt="link {{ graph }} graph ({{ period }})"
+                   loading="lazy">
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
 
     {% endfor %}
 
