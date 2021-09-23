@@ -43,7 +43,7 @@ class HistoricalStats:
 
     data_path: Path
 
-    def update_node_stats(self, node: Node):
+    def update_node_stats(self, node: Node) -> bool:
         # switch to async after testing!
         rrd_file = self._node_filename(node)
 
@@ -65,14 +65,19 @@ class HistoricalStats:
                 node.tunnel_link_count,
             ]
         )
-
-        rrdtool.update(
-            str(rrd_file),
-            "--template",
-            "link_count:service_count:uptime:load:radio_links:dtd_links:tunnel_links",
-            f"{timestamp}:{values}",
-        )
-        return
+        logger.trace("Updating node stats: {} -> {}", rrd_file.name, values)
+        try:
+            rrdtool.update(
+                str(rrd_file),
+                "--template",
+                "link_count:service_count:uptime:load:radio_links:dtd_links:tunnel_links",  # noqa
+                f"{timestamp}:{values}",
+            )
+        except rrdtool.OperationalError as exc:
+            # TODO: detect errors due to new data points and rebuild data file?
+            logger.error("RRDtool error: {}", exc)
+            return False
+        return True
 
     def graph_network_stats(
         self, *, start: pendulum.DateTime, end: pendulum.DateTime, title: str = ""
@@ -312,7 +317,7 @@ class HistoricalStats:
         )
         return graph.render()
 
-    def update_link_stats(self, link: Link):
+    def update_link_stats(self, link: Link) -> bool:
         # switch to async after testing!
         rrd_file = self._link_filename(link)
 
@@ -334,15 +339,19 @@ class HistoricalStats:
                 link.neighbor_quality,
             ]
         )
-
-        logger.debug("Updating link stats: {} -> {}", rrd_file.name, values)
-
-        rrdtool.update(
-            str(rrd_file),
-            "--template",
-            "olsr_cost:signal:noise:tx_rate:rx_rate:quality:neighbor_quality",
-            f"{timestamp}:{values}",
-        )
+        logger.trace("Updating link stats: {} -> {}", rrd_file.name, values)
+        try:
+            rrdtool.update(
+                str(rrd_file),
+                "--template",
+                "olsr_cost:signal:noise:tx_rate:rx_rate:quality:neighbor_quality",
+                f"{timestamp}:{values}",
+            )
+        except rrdtool.OperationalError as exc:
+            # TODO: detect errors due to new data points and rebuild data file?
+            logger.error("RRDtool error: {}", exc)
+            return False
+        return True
 
     def update_network_stats(
         self,
@@ -352,7 +361,7 @@ class HistoricalStats:
         error_count: int,
         poller_time: float,
         total_time: float,
-    ):
+    ) -> bool:
         rrd_file = self._network_filename()
 
         timestamp = pendulum.now().int_timestamp
@@ -372,12 +381,18 @@ class HistoricalStats:
             ]
         )
 
-        rrdtool.update(
-            str(rrd_file),
-            "--template",
-            "node_count:link_count:error_count:poller_time:total_time",
-            f"{timestamp}:{values}",
-        )
+        try:
+            rrdtool.update(
+                str(rrd_file),
+                "--template",
+                "node_count:link_count:error_count:poller_time:total_time",
+                f"{timestamp}:{values}",
+            )
+        except rrdtool.OperationalError as exc:
+            # TODO: detect errors due to new data points and rebuild data file?
+            logger.error("RRDtool error: {}", exc)
+            return False
+        return True
 
     def _network_filename(self) -> Path:
         return self.data_path / "network.rrd"
@@ -389,7 +404,7 @@ class HistoricalStats:
         return self.data_path / f"link-{link.id.dump()}.rrd"
 
 
-def _create_node_rrd_file(filename: Path, *, start: int = None):
+def _create_node_rrd_file(filename: Path, *, start: int = None) -> bool:
     """Create RRD file to track node statistics."""
 
     args = [
@@ -407,10 +422,15 @@ def _create_node_rrd_file(filename: Path, *, start: int = None):
         "DS:tunnel_links:GAUGE:600:0:U",
     ]
     args.extend(ARCHIVES)
-    rrdtool.create(*args)
+    try:
+        rrdtool.create(*args)
+    except rrdtool.OperationalError as exc:
+        logger.error("RRDtool error: {}", exc)
+        return False
+    return True
 
 
-def _create_link_rrd_file(filename: Path, *, start: int = None):
+def _create_link_rrd_file(filename: Path, *, start: int = None) -> bool:
     """Create RRD file to track link statistics."""
 
     args = [str(filename)]
@@ -429,12 +449,17 @@ def _create_link_rrd_file(filename: Path, *, start: int = None):
             "DS:neighbor_quality:GAUGE:600:0:1",
         ]
     )
-    logger.debug("Creating link RRD file: {}", args)
+    logger.trace("Creating link RRD file: {}", args)
     args.extend(ARCHIVES)
-    rrdtool.create(*args)
+    try:
+        rrdtool.create(*args)
+    except rrdtool.OperationalError as exc:
+        logger.error("RRDtool error: {}", exc)
+        return False
+    return True
 
 
-def _create_network_rrd_file(filename: Path, *, start: int = None):
+def _create_network_rrd_file(filename: Path, *, start: int = None) -> bool:
     """Create RRD file to track network and poller statistics."""
 
     # There is only one network file, so keeping data longer
@@ -467,7 +492,12 @@ def _create_network_rrd_file(filename: Path, *, start: int = None):
         "RRA:MIN:0.5:288:1095",
         "RRA:MAX:0.5:288:1095",
     ]
-    rrdtool.create(*args)
+    try:
+        rrdtool.create(*args)
+    except rrdtool.OperationalError as exc:
+        logger.error("RRDtool error: {}", exc)
+        return False
+    return True
 
 
 def _dump(value: Any) -> str:

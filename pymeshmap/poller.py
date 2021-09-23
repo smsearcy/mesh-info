@@ -17,7 +17,7 @@ import json
 import re
 import time
 from asyncio import Lock, StreamReader, StreamWriter
-from collections import Counter, defaultdict, deque
+from collections import defaultdict, deque
 from typing import (
     AsyncIterable,
     AsyncIterator,
@@ -259,6 +259,13 @@ async def network_info(
             logger.warning("Failed to find OLSR links for {} ({})", node, node_ip)
             continue
         for link in node_olsr_links:
+            node.link_count += 1
+            if link.destination not in node_info.ip_name_map:
+                # TODO: try reverse DNS for IP address lookup
+                logger.warning(
+                    "OLSR IP not found in node information: {}", link.destination
+                )
+                continue
             links.append(
                 LinkInfo(
                     source=node.node_name,
@@ -268,7 +275,6 @@ async def network_info(
                     olsr_cost=link.cost,
                 )
             )
-            node.link_count += 1
 
     return NetworkInfo(node_info.nodes, links, node_info.errors)
 
