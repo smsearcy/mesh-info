@@ -4,7 +4,7 @@ def test_overview_success(testapp, dbsession):
 
 
 def test_nodes_success(testapp, dbsession):
-    res = testapp.get("/nodes", status=200)
+    res = testapp.get("/nodes/table", status=200)
     assert res.body
 
 

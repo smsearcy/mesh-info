@@ -2,51 +2,77 @@
 
 {% set active_page = "nodes" %}
 
+{% block head %}
+  {# Stylesheet for Grid.js #}
+  <link rel="stylesheet" href="{{ req.static_url('pymeshmap:static/css/mermaid.min.css') }}">
+{% endblock %}
+
 {% block title %}Nodes{% endblock %}
 
 {% block content %}
 <div class="container is-fluid">
   <h1 class="title">Nodes</h1>
-  <table class="table is-striped is-narrow">
-    <thead>
-    <tr>
-      <th>Name</th>
-      <th>Status</th>
-      <th>Band</th>
-      <th>Services</th>
-      <th>Links</th>
-      <th>Tunnel Installed</th>
-      <th>Tunnel Count</th>
-      <th>Up Time</th>
-      <th>Last Seen</th>
-      <th>WLAN IP</th>
-      <th>Firmware Version</th>
-      <th>API Version</th>
-      <th>Location</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for node in nodes %}
-      <tr>
-        <td>
-          <a href="{{ req.route_url("node", id=node.id) }}">{{ node.name }}</a>
-        </td>
-        <td>{{ node.status }}</td>
-        <td>{{ node.band }}</td>
-        <td>{{ node.services|length }}</td>
-        <td>{{ node.link_count }}</td>
-        <td>{{ 'Yes' if node.tunnel_installed else 'No' }}</td>
-        <td>{{ node.active_tunnel_count }}</td>
-        <td>{{ node.up_time }}</td>
-        <td>{{ node.last_seen|local_tz }}</td>
-        <td>{{ node.wlan_ip }}</td>
-        <td>{{ node.firmware_version }}</td>
-        <td>{{ node.api_version }}</td>
-        <td>{{ node.location }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+  <div class="has-text-right">
+    <a href="{{ req.route_url("nodes", view="csv") }}">Export Data to CSV</a>
+  </div>
+  <div id="node-table"></div>
 </div>
+{% endblock %}
 
+{% block javascript %}
+  <script src="{{ req.static_url('pymeshmap:static/js/gridjs.umd.js') }}"></script>
+  <script>
+    new gridjs.Grid({
+      columns: [
+        {
+          name: 'URL',
+          hidden: true
+        },
+        {
+          name: 'Name',
+          formatter: (cell, row) => gridjs.html(`<a href='${row.cells[0].data}'>${cell}</a>`)
+        },
+        'WLAN IP',
+        'Status',
+        'Band',
+        'Links',
+        'Tunnels',
+        'Firmware Version',
+        {
+          name: 'Up Time',
+          sort: false
+        },
+        'Last Seen'
+      ],
+      style: {
+        table: {
+          'white-space': 'nowrap'
+        }
+      },
+      pagination: {
+        limit: 25
+      },
+      search: true,
+      sort: true,
+      data: [
+        {% for node in nodes %}
+          [
+            '{{ req.route_url("node-details", id=node.id) }}',
+            '{{ node.name }}',
+            '{{ node.wlan_ip }}',
+            '{{ node.status }}',
+            '{{ node.band }}',
+            '{{ node.link_count }}',
+            '{{ node.active_tunnel_count if node.tunnel_installed else 'No' }}',
+            '{{ node.firmware_version }}',
+            '{{ node.up_time }}',
+            '{{ node.last_seen|local_tz }}'
+          ]{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ],
+      className: {
+        table: 'table is-striped is-narrow'
+      }
+    }).render(document.querySelector("#node-table"));
+  </script>
 {% endblock %}

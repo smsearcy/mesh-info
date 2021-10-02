@@ -53,25 +53,71 @@
 {% endif %}
 
   <div class="columns">
-  {% for period in ("day", "month") %}
+  {% for period in ("day", "week") %}
     <div class="column is-narrow">
+      <a href="{{ req.route_path('network-graphs', name='info') }}">
       <img src="{{ req.route_path('network-graph', name="info", _query={"period": period}) }}"
            alt="network info graph ({{ period }})"
-           loading="lazy"
-      >
+           loading="lazy">
+      </a>
     </div>
   {% endfor %}
   </div>
   <div class="columns">
-  {% for period in ("day", "month") %}
+  {% for period in ("day", "week") %}
     <div class="column is-narrow">
+      <a href="{{ req.route_path('network-graphs', name='poller') }}">
       <img src="{{ req.route_path('network-graph', name="poller", _query={"period": period}) }}"
            alt="poller stats graph ({{ period }})"
-           loading="lazy"
-      >
+           loading="lazy">
+      </a>
     </div>
   {% endfor %}
   </div>
 
+  <h2 class="subtitle">Network Statistics</h2>
+  <div class="columns">
+    <div class="column is-narrow">
+      <div class="card">
+        <header class="card-header">
+          <p class="card-header-title">Firmware Versions</p>
+        </header>
+        <div class="card-content">
+          <div class="content">
+            <table class="table">
+              <tbody>
+              {% for version, count in firmware_stats|dictsort(by='value', reverse=True) %}
+                <tr>
+                  <th>{{ version }}:</th>
+                  <td>{{ "{:,d}".format(count) }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="column is-narrow">
+      <div class="card">
+        <header class="card-header">
+          <p class="card-header-title">Bands</p>
+        </header>
+        <div class="card-content">
+          <div class="content">
+            <table class="table">
+              <tbody>
+              {% for band, count in band_stats|dictsort(by='value', reverse=True) %}
+                <tr>
+                  <th>{{ band }}:</th>
+                  <td>{{ "{:,d}".format(count) }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 </div>
 {% endblock %}

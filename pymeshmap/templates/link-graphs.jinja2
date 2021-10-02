@@ -1,0 +1,30 @@
+{% extends "layout.jinja2" %}
+
+{% block title %}{{ graph_name }} : {{ link.source.name }} -> {{ link.destination.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="title">{{ link.source.name }} - {{ link.destination.name }} : {{ graph_name }}</h1>
+  {# TODO: add bread crumbs back to node #}
+  <div class="columns">
+  {% for period in ("day", "week") %}
+    <div class="column is-narrow">
+      <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, type=link.type.name.lower(), name=graph, _query={"period": period}) }}"
+           alt="{{ graph }} graph ({{ period }})"
+           loading="lazy">
+    </div>
+  {% endfor %}
+  </div>
+
+  <div class="columns">
+    {% for period in ("month", "year") %}
+      <div class="column is-narrow">
+        <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, type=link.type.name.lower(), name=graph, _query={"period": period}) }}"
+             alt="{{ graph }} graph ({{ period }})"
+             loading="lazy">
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

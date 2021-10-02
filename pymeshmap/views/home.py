@@ -19,6 +19,19 @@ def overview(request: Request):
         dbsession.query(Link).filter(Link.status != LinkStatus.INACTIVE).count()
     )
 
+    query = (
+        dbsession.query(Node.firmware_version, sa.func.count(Node.id))
+        .filter(Node.status == NodeStatus.ACTIVE)
+        .group_by(Node.firmware_version)
+    )
+    firmware_stats = {version: count for version, count in query.all()}
+    query = (
+        dbsession.query(Node.band, sa.func.count(Node.id))
+        .filter(Node.status == NodeStatus.ACTIVE)
+        .group_by(Node.band)
+    )
+    band_stats = {band: count for band, count in query.all()}
+
     last_run = (
         dbsession.query(CollectorStat)
         .order_by(sa.desc(CollectorStat.started_at))
@@ -29,4 +42,6 @@ def overview(request: Request):
         "node_count": node_count,
         "link_count": link_count,
         "last_run": last_run,
+        "firmware_stats": firmware_stats,
+        "band_stats": band_stats,
     }

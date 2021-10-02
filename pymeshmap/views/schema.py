@@ -26,6 +26,9 @@ def graph_params(params: dict) -> GraphParams:
     elif period == "month":
         start_time = end_time.subtract(months=1)
         title = "past month"
+    elif period == "year":
+        start_time = end_time.subtract(years=1)
+        title = "past year"
     elif period == "half-day":
         start_time = end_time.subtract(hours=12)
         title = "past 12 hours"

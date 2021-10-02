@@ -11,9 +11,39 @@ from ..types import LinkType
 from . import schema
 
 
+@view_config(
+    route_name="link-graphs", renderer="pymeshmap:templates/link-graphs.jinja2"
+)
+def link_graphs(request: Request):
+    """Page displaying graphs of particular data over different timeframes."""
+
+    source_id = int(request.matchdict["source"])
+    destination_id = int(request.matchdict["destination"])
+    type_ = getattr(LinkType, request.matchdict["type"].upper())
+    dbsession: Session = request.dbsession
+    graph = request.matchdict["name"]
+
+    link = (
+        dbsession.query(Link)
+        .options(
+            load_only(Link.source_id, Link.destination_id),
+            joinedload(Link.destination).load_only(Node.name),
+        )
+        .get((source_id, destination_id, type_))
+    )
+    if link is None:
+        raise HTTPNotFound("Sorry, the specified link could not be found")
+
+    return {
+        "link": link,
+        "graph": graph,
+        "graph_name": graph.title(),  # use a dictionary for more control of the name?
+    }
+
+
 @view_defaults(route_name="link-graph", http_cache=120)
 class LinkGraphs:
-    """Graph link data."""
+    """Generate graph image of link data."""
 
     def __init__(self, request: Request):
         source_id = int(request.matchdict["source"])

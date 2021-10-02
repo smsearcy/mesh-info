@@ -5,14 +5,16 @@ from pyramid.settings import asbool
 from pyramid.view import view_config, view_defaults
 from sqlalchemy.orm import Session, joinedload, load_only
 
-from ..aredn import VersionChecker
+from ..aredn import LinkType, VersionChecker
 from ..historical import HistoricalStats
 from ..models import Link, Node
 from ..types import LinkStatus
 from . import schema
 
 
-@view_config(route_name="node", renderer="pymeshmap:templates/node.jinja2")
+@view_config(
+    route_name="node-details", renderer="pymeshmap:templates/node-details.jinja2"
+)
 def node_detail(request: Request):
     """Detailed view of a single node."""
 
@@ -38,18 +40,45 @@ def node_detail(request: Request):
     )
 
     links = query.all()
+    graphs_by_link_type = {
+        LinkType.RF: ("quality", "snr"),
+        LinkType.DTD: ("quality",),
+        # do tunnels have quality metrics?
+        LinkType.TUN: ("quality",),
+        LinkType.UNKNOWN: ("cost",),
+    }
 
     return {
         "node": node,
         "links": links,
         "firmware_status": firmware_status,
         "api_status": api_status,
+        "link_graphs": graphs_by_link_type,
+    }
+
+
+@view_config(
+    route_name="node-graphs", renderer="pymeshmap:templates/node-graphs.jinja2"
+)
+def node_graphs(request: Request):
+    """Display graphs of particular data for a node over different timeframes."""
+
+    node_id = int(request.matchdict["id"])
+    graph = request.matchdict["name"]
+    dbsession: Session = request.dbsession
+
+    node = dbsession.query(Node).options(load_only("name", "id")).get(node_id)
+
+    return {
+        "node": node,
+        "graph": graph,
+        "graph_name": graph.title(),  # use a dictionary for more control of the name?
     }
 
 
 @view_defaults(route_name="node-graph", http_cache=120)
 class NodeGraphs:
-    """Graph node data."""
+    """Generate graph image of node data."""
 
     def __init__(self, request: Request):
         node_id = int(request.matchdict["id"])

@@ -2,7 +2,7 @@ import pendulum
 
 from pymeshmap import models
 from pymeshmap.views.home import overview
-from pymeshmap.views.nodes import node_list
+from pymeshmap.views.nodes import NodeListViews
 from pymeshmap.views.notfound import notfound_view
 
 # TODO: Create a unified set of demo/test data
@@ -30,7 +30,7 @@ def test_overview_view_success(app_request, dbsession):
 
 
 def test_nodes_view_success(app_request, dbsession):
-    info = node_list(app_request)
+    info = NodeListViews(app_request).table()
     assert app_request.response.status_int == 200
     assert len(info["nodes"]) == 0
 

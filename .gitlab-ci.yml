@@ -29,7 +29,7 @@ build:
 pre-commit:
   stage: test
   script:
-    - pip install pre-commit
+    - pip install pre-commit poetry
     - pre-commit run --all-files
   cache:
     key: pre-commit
