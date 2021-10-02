@@ -1,22 +1,71 @@
+import csv
+import io
 from operator import attrgetter
+from typing import List
 
-from pyramid.request import Request
-from pyramid.view import view_config
+from pyramid.request import Request, Response
+from pyramid.view import view_config, view_defaults
 from sqlalchemy.orm import Session
 
 from ..models import Node, NodeStatus
 
 
-@view_config(route_name="nodes", renderer="pymeshmap:templates/nodes.jinja2")
-def node_list(request: Request):
-    """View a list of nodes as a web page."""
+@view_defaults(route_name="nodes")
+class NodeListViews:
+    def __init__(self, request: Request):
+        dbsession: Session = request.dbsession
 
-    dbsession: Session = request.dbsession
+        # TODO: parameters to determine which nodes to return
+        query = dbsession.query(Node).filter(Node.status != NodeStatus.INACTIVE)
+        self.nodes: List[Node] = sorted(query.all(), key=attrgetter("name"))
+        self.request = request
 
-    # TODO: parameters to determine which nodes to return
-    query = dbsession.query(Node).filter(Node.status != NodeStatus.INACTIVE)
-    nodes = query.all()
+    @view_config(match_param="view=table", renderer="pymeshmap:templates/nodes.jinja2")
+    def table(self):
+        return {"nodes": self.nodes}
 
-    return {
-        "nodes": sorted(nodes, key=attrgetter("name")),
-    }
+    @view_config(match_param="view=csv")
+    def csv(self):
+        output = io.StringIO(newline="")
+        csv_out = csv.writer(output)
+        csv_out.writerow(
+            (
+                "Name",
+                "WLAN IP",
+                "Status",
+                "Band",
+                "Channel",
+                "Channel Bandwidth",
+                "Link Count",
+                "Tunnel Enabled?",
+                "Active Tunnel Count",
+                "Firmware",
+                "API Version",
+                "Last Seen",
+            )
+        )
+        for node in self.nodes:
+            csv_out.writerow(
+                (
+                    node.name,
+                    node.wlan_ip,
+                    node.status,
+                    node.band,
+                    node.channel,
+                    node.channel_bandwidth,
+                    node.link_count,
+                    "Yes" if node.tunnel_installed else "No",
+                    node.active_tunnel_count,
+                    node.firmware_version,
+                    node.api_version,
+                    node.last_seen,
+                )
+            )
+
+        output.seek(0)
+        response: Response = self.request.response
+        response.text = output.read()
+        response.content_type = "text/csv"
+        response.content_disposition = "attachment; filename=node-export.csv"
+
+        return response

@@ -12,6 +12,9 @@
 {% block content %}
 <div class="container is-fluid">
   <h1 class="title">Nodes</h1>
+  <div class="has-text-right">
+    <a href="{{ req.route_url("nodes", view="csv") }}">Export Data to CSV</a>
+  </div>
   <div id="node-table"></div>
 </div>
 {% endblock %}
@@ -54,13 +57,13 @@
       data: [
         {% for node in nodes %}
           [
-            '{{ req.route_url("node", id=node.id) }}',
+            '{{ req.route_url("node-details", id=node.id) }}',
             '{{ node.name }}',
             '{{ node.wlan_ip }}',
             '{{ node.status }}',
             '{{ node.band }}',
             '{{ node.link_count }}',
-            '{{ node.tunnel_count if node.tunnel_installed else 'No' }}',
+            '{{ node.active_tunnel_count if node.tunnel_installed else 'No' }}',
             '{{ node.firmware_version }}',
             '{{ node.up_time }}',
             '{{ node.last_seen|local_tz }}'

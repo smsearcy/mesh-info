@@ -23,22 +23,19 @@
     <a class="navbar-item" href="{{ req.route_path('home') }}">
       <img src="{{ req.static_url('pymeshmap:static/mesh-network-32x32.png') }}" width="32" height="32">
     </a>
-    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMeshMap"
-       @click="toggleMenu" :class="{'is-active': menuExpanded}">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMeshMap">
       <span aria-hidden="true"></span>
       <span aria-hidden="true"></span>
       <span aria-hidden="true"></span>
     </a>
   </div>
-  <div id="navbarMeshMap" class="navbar-menu" :class="{'is-active': menuExpanded}">
+  <div id="navbarMeshMap" class="navbar-menu">
     <div class="navbar-start">
       {% set active_page = active_page|default("home") -%}
-      {% for label, route in [("Overview", "home"), ("Nodes", "nodes")] %}
-        <a class="navbar-item {% if route == active_page %}is-active{% endif %}"
-           href="{{ req.route_path(route) }}">
-          {{ label }}
-        </a>
-      {% endfor %}
+      <a class="navbar-item {% if active_page == 'home' %}is-active{% endif %}"
+         href="{{ req.route_path('home') }}">Overview</a>
+      <a class="navbar-item {% if 'node' in active_page %}is-active{% endif %}"
+         href="{{ req.route_path('nodes', view='table') }}">Nodes</a>
       <a class="navbar-item is-disabled">
         Map
       </a>
