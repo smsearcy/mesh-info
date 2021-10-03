@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hupper
 import waitress
+from loguru import logger
 from pyramid.config import Configurator
 
 from .config import configure
@@ -21,6 +22,7 @@ def main(
     settings = config.get_settings()
     host = host or settings["web"].host
     port = port or settings["web"].port
+    logger.info("Web server listening on {}:{}", host, port)
 
     waitress.serve(config.make_wsgi_app(), host=host, port=port)
 

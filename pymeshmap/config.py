@@ -29,7 +29,6 @@ class Environment(enum.Enum):
 class AppConfig:
     @environ.config
     class Poller:
-        node: str = environ.var(default="localnode.local.mesh")
         max_connections: int = environ.var(default=50, converter=int)
         connect_timeout: int = environ.var(default=10, converter=int)
         read_timeout: int = environ.var(default=15, converter=int)
@@ -53,6 +52,7 @@ class AppConfig:
         # debug_hosts
 
     env: Environment = environ.var(default="production", converter=Environment)
+    local_node: str = environ.var(default="localnode.local.mesh")
     log_level: str = environ.var(default="SUCCESS")
     site_name: str = environ.var(default="pyMeshMap")
     db_url: str = environ.var(default="")
@@ -102,7 +102,7 @@ def configure(
     settings["db.url"] = app_config.db_url
     settings["db.pool_pre_ping"] = True
     settings["data_dir"] = app_config.data_dir
-    settings["local_node"] = app_config.poller.node
+    settings["local_node"] = app_config.local_node
     settings["poller"] = app_config.poller
     settings["aredn"] = app_config.aredn
     settings["collector"] = app_config.collector

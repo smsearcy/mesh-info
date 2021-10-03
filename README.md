@@ -12,28 +12,35 @@ Information about nodes and links is stored in RRDtool for graphing historical t
 Getting Started
 ---------------
 
-**pyMeshMap** requires Python 3.7 or greater and
-uses [Poetry](https://python-poetry.org/) to manage dependencies
-so you will need that [installed](https://python-poetry.org/docs/#installation).
+**pyMeshMap** requires the following (the instructions below should walk you through the process):
+* Python 3.7 or later
+* Poetry for managing the packaging
+* [RRDtool](https://oss.oetiker.ch/rrdtool/index.en.html) development headers to be installed
+(`librrd-dev` on Debian/Ubuntu or `rrdtool-devel` for Fedora/Red Hat)
+* PostgreSQL libraries
 
-[RRDtool](https://oss.oetiker.ch/rrdtool/index.en.html) bindings require the RRDtool
-development headers to be installed
-(`librrd-dev` on Debian/Ubuntu or `rrdtool-devel` for Fedora/Red Hat).
-
-*Some of required packages might need a C compiler as well,
-that's why one future goal is a container for easy deployment.*
+By default it will use SQLite for the database (but PostgreSQL is also supported),
+and "localnode.local.mesh" to get information about the network via OLSR.
+The default data directory (for SQLite and RRD files) is `/usr/local/share/pymeshmap`.
+Reference `.env.example` for how to customize settings via an `.env` file.
 
 ```shell script
+$ sudo apt install python3 python3-virtualenv python3-dev python3-pip
+$ sudo apt install libpq-dev librrd-dev
+# After installing Poetry I had to log out and back in for my PATH to be setup correctly
+$ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3 -
 $ git clone https://gitlab.com/smsearcy/pymeshmap.git
 $ cd pymeshmap
 $ poetry install --no-dev
-$ poetry run pymeshmap [command]
+# Run a basic poll of the network to confirm that is working
+$ poetry run pymeshmap report
+$ sudo mkdir -p /usr/local/share/pymeshmap
+# Make sure the user that we're running as has write access to that folder
+$ sudo chown [user] /user/local/share/pymeshmap
+$ poetry run alembic upgrade head
+$ poetry run pymeshmap collector &
+$ poetry run pymeshmap web &
 ```
-
-The `--no-dev` option assumes you just want to use **pyMeshMap**.
-If you want to contribute then leave that off to get extra dependencies for development and testing.
-
-*Currently a PostgreSQL database is required, until I switch the default to SQLite.*
 
 Commands
 --------
@@ -109,8 +116,9 @@ Project icon is from [here](https://commons.wikimedia.org/wiki/File:FullMeshNetw
 Developing
 ----------
 
-`pymeshmap` uses [Poetry](https://python-poetry.org/)
-so you will need that installed and available in your path.
+**pyMeshMap** uses [Poetry](https://python-poetry.org/) to manage dependencies
+so you will need that [installed](https://python-poetry.org/docs/#installation).
+
 Once you have that:
 
 1. Fork/clone the Git repository via your preferred tool
@@ -121,8 +129,7 @@ and `cd` to that directory in a terminal.
 3. To configure your IDE to use the correct virtual environment
 run `poetry env info`
 and update your IDE to use the Virtualenv path specified.
-4. A PostgreSQL database can be started via `docker-compose start`.
 Copy `.env.example` to `.env` so that local development will connect to that database.
-5. To run the `pymeshmap` command execute `poetry run pymeshmap [sub-command]`.
-6. A `Makefile` is included to simplify various tasks such as running `pre-commit`, tests, and linters.
-7. A `pyramid.ini` file is provided for use with the Pyramid development tools like `pserve` and `pshell`.
+4. To run the `pymeshmap` command execute `poetry run pymeshmap [sub-command]`.
+5. A `Makefile` is included to simplify various tasks such as running `pre-commit`, tests, and linters.
+6. A `pyramid.ini` file is provided for use with the Pyramid development tools like `pserve` and `pshell`.
