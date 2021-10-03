@@ -265,6 +265,7 @@ class HistoricalStats:
         graph = Graph(
             title=title or "signal to noise ratio",
             vertical_label="db",
+            lower_bound=0,
             start=start,
             end=end,
         )
