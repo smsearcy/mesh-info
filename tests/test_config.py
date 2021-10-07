@@ -9,7 +9,7 @@ def test_default_config():
 
     assert app_config.env == Environment.PROD
     assert app_config.log_level == "SUCCESS"
-    assert app_config.poller.node == "localnode.local.mesh"
+    assert app_config.local_node == "localnode.local.mesh"
 
 
 def test_config():

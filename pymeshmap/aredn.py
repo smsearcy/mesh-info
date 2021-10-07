@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import enum
 import html
 import re
 import typing
@@ -11,6 +10,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import attr
 from loguru import logger
+
+from .types import LinkType
 
 if typing.TYPE_CHECKING:
     from .config import AppConfig
@@ -177,47 +178,51 @@ class Service:
         )
 
 
-class LinkType(enum.Enum):
-    RADIO = "RF"
-    TUNNEL = "TUN"
-    DIRECT = "DTD"
-    UNKNOWN = ""
-
-
 @attr.s(auto_attribs=True, slots=True)
-class Link:
-    """Data class to represent the link information available from AREDN."""
+class LinkInfo:
+    """Data class to represent the link information available from AREDN.
 
+    Source and destination nodes are identified by name.
+
+    """
+
+    source: str
+    destination: str
     type: LinkType
-    olsr_interface: str
-    quality: float
-    neighbor_quality: float
-    hostname: str
+    interface: str
+    quality: Optional[float] = None
+    neighbor_quality: Optional[float] = None
     signal: Optional[int] = None
     noise: Optional[int] = None
     tx_rate: Optional[float] = None
     rx_rate: Optional[float] = None
+    olsr_cost: Optional[float] = None
 
     @classmethod
-    def from_json(cls, raw_data: Dict[str, Any]) -> Link:
-        """Construct the `Link` dataclass from the AREDN JSON information."""
+    def from_json(cls, raw_data: Dict[str, Any], *, source: str) -> LinkInfo:
+        """Construct the `Link` dataclass from the AREDN JSON information.
+
+        Needs the name of the source node passed in as well.
+
+        """
         # fix example of a DTD link that wasn't properly identified as such
         missing_dtd = (
             raw_data["linkType"] == "" and raw_data["olsrInterface"] == "br-dtdlink"
         )
         type_ = "DTD" if missing_dtd else raw_data["linkType"]
         try:
-            link_type = LinkType(type_)
-        except ValueError as exc:
+            link_type = getattr(LinkType, type_)
+        except AttributeError as exc:
             logger.warning(str(exc))
             link_type = LinkType.UNKNOWN
 
-        return cls(
+        return LinkInfo(
+            source=source,
+            destination=raw_data["hostname"].replace(".local.mesh", ""),
             type=link_type,
-            olsr_interface=raw_data["olsrInterface"],
+            interface=raw_data["olsrInterface"],
             quality=raw_data["linkQuality"],
             neighbor_quality=raw_data["neighborLinkQuality"],
-            hostname=raw_data["hostname"],
             signal=raw_data.get("signal"),
             noise=raw_data.get("noise"),
             tx_rate=raw_data.get("tx_rate"),
@@ -268,12 +273,12 @@ class SystemInfo:
     frequency: str = ""
     up_time: str = ""
     load_averages: Optional[List[float]] = None
-    links: Dict[str, Link] = attr.Factory(dict)
+    links: List[LinkInfo] = attr.Factory(list)
     link_count: Optional[int] = None
 
     @property
     def lan_ip_address(self) -> str:
-        iface_names = ["br-lan", "eth0", "eth0.0"]
+        iface_names = ("br-lan", "eth0", "eth0.0")
         for iface in iface_names:
             if iface not in self.interfaces or not self.interfaces[iface].ip_address:
                 continue
@@ -284,7 +289,7 @@ class SystemInfo:
     def wlan_interface(self) -> Optional[Interface]:
         """Get the active wireless interface."""
         # is it worth using cached_property?
-        iface_names = ["wlan0", "wlan1", "eth0.3975", "eth1.3975"]
+        iface_names = ("wlan0", "wlan1", "eth0.3975", "eth1.3975")
         for iface in iface_names:
             if iface not in self.interfaces or not self.interfaces[iface].ip_address:
                 continue
@@ -338,21 +343,21 @@ class SystemInfo:
         if not self.links:
             # the absence of the data presumably means an older API and thus unknown
             return None
-        return sum(1 for link in self.links.values() if link.type == LinkType.RADIO)
+        return sum(1 for link in self.links if link.type == LinkType.RF)
 
     @property
     def dtd_link_count(self) -> Optional[int]:
         if not self.links:
             # the absence of the data presumably means an older API and thus unknown
             return None
-        return sum(1 for link in self.links.values() if link.type == LinkType.DIRECT)
+        return sum(1 for link in self.links if link.type == LinkType.DTD)
 
     @property
     def tunnel_link_count(self) -> int:
         if not self.links:
             # in the absence of the link info dictionary use the tunnel count
             return self.active_tunnel_count
-        return sum(1 for link in self.links.values() if link.type == LinkType.TUNNEL)
+        return sum(1 for link in self.links if link.type == LinkType.TUN)
 
     def __str__(self):
         return f"{self.node_name} ({self.wlan_ip_address})"
@@ -435,10 +440,10 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
         data["active_tunnel_count"] = int(json_data["active_tunnel_count"])
         data["tunnel_installed"] = str(json_data["tunnel_installed"]).lower() == "true"
 
-    data["links"] = {
-        ip_address: Link.from_json(link_info)
-        for ip_address, link_info in json_data.get("link_info", {}).items()
-    }
+    data["links"] = [
+        LinkInfo.from_json(link_info, source=data["node_name"])
+        for link_info in json_data.get("link_info", {}).values()
+    ]
 
     return SystemInfo(**data)
 

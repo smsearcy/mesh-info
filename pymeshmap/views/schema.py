@@ -12,7 +12,8 @@ class GraphParams:
     title: str = ""
 
 
-def graph_params(params):
+def graph_params(params: dict) -> GraphParams:
+    """Load graph parameters from request data dictionary."""
     end_time = pendulum.now()
     period = params.get("period", "day")
 

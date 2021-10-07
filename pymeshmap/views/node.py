@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session, joinedload, load_only
 
 from ..aredn import LinkType, VersionChecker
 from ..historical import HistoricalStats
-from ..models import Link, LinkStatus, Node
+from ..models import Link, Node
+from ..types import LinkStatus
 from . import schema
 
 
@@ -40,10 +41,10 @@ def node_detail(request: Request):
 
     links = query.all()
     graphs_by_link_type = {
-        LinkType.RADIO: ("quality", "snr", "cost"),
-        LinkType.DIRECT: ("quality", "cost"),
+        LinkType.RF: ("quality", "snr"),
+        LinkType.DTD: ("quality",),
         # do tunnels have quality metrics?
-        LinkType.TUNNEL: ("quality", "cost"),
+        LinkType.TUN: ("quality",),
         LinkType.UNKNOWN: ("cost",),
     }
 

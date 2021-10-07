@@ -5,6 +5,7 @@ import contextlib
 from typing import Iterator
 
 import zope.sqlalchemy
+from loguru import logger
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm import Session, configure_mappers, sessionmaker
 
@@ -12,7 +13,7 @@ from sqlalchemy.orm import Session, configure_mappers, sessionmaker
 # Base.metadata prior to any initialization routines
 from .collector import CollectorStat  # noqa
 from .link import Link  # noqa
-from .meta import Base, LinkStatus, NodeStatus  # noqa
+from .meta import Base  # noqa
 from .node import Node  # noqa
 
 # run configure_mappers after defining all of the models to ensure
@@ -108,6 +109,8 @@ def includeme(config):
     dbengine = settings.get("dbengine")
     if not dbengine:
         dbengine = get_engine(settings)
+
+    logger.info("Database: {!s}", dbengine)
 
     session_factory = get_session_factory(dbengine)
     config.registry["dbsession_factory"] = session_factory

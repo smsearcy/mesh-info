@@ -7,7 +7,8 @@ from pyramid.request import Request, Response
 from pyramid.view import view_config, view_defaults
 from sqlalchemy.orm import Session
 
-from ..models import Node, NodeStatus
+from ..models import Node
+from ..types import NodeStatus
 
 
 @view_defaults(route_name="nodes")

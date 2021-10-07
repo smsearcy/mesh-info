@@ -9,12 +9,12 @@ def includeme(config: Configurator):
     config.add_route("nodes", "/nodes/{view}")
     config.add_route("network-graphs", "/network/graphs/{name}")
     config.add_route(
-        "link-graphs", r"/links/{source:\d+}-{destination:\d+}/graphs/{name}"
+        "link-graphs", r"/links/{source:\d+}-{destination:\d+}-{type}/graphs/{name}"
     )
 
     # Routes to generate individual graphs
     config.add_route("network-graph", r"/graphs/network/{name}")
     config.add_route("node-graph", r"/graphs/nodes/{id:\d+}/{name}")
     config.add_route(
-        "link-graph", r"/graphs/links/{source:\d+}-{destination:\d+}/{name}"
+        "link-graph", r"/graphs/links/{source:\d+}-{destination:\d+}-{type}/{name}"
     )

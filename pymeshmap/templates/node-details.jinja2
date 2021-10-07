@@ -41,7 +41,7 @@
         <div>{{ node.last_seen|local_tz }}</div>
       </div>
       <div class="mb-2">
-        <a href="http://{{ node.wlan_ip }}:8080">AREDN Details</a>
+        <a href="http://{{ node.wlan_ip }}:8080" target="_blank" rel="noopener noreferrer">AREDN Details</a>
       </div>
     </div>
     <div class="column">
@@ -141,7 +141,7 @@
       </div>
     </div>
     {% for link in link_types %}
-      <h4 class="is-5 block">Type: {{ link.type_name|upper }}</h4>
+      <h4 class="is-5 block">Type: {{ link.type }}</h4>
       <div class="columns">
         <div class="column is-narrow">
           <div class="mb-2">
@@ -180,8 +180,8 @@
         <div class="columns">
           {% for period in ("day", "week") %}
             <div class="column is-narrow">
-              <a href="{{ req.route_path('link-graphs', source=link.source_id, destination=link.destination_id, name=graph)}}">
-                <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, name=graph, _query={"period": period}) }}"
+              <a href="{{ req.route_path('link-graphs', source=link.source_id, destination=link.destination_id, type=link.type.name.lower(), name=graph)}}">
+                <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, type=link.type.name.lower(), name=graph, _query={"period": period}) }}"
                    alt="link {{ graph }} graph ({{ period }})"
                    loading="lazy">
               </a>

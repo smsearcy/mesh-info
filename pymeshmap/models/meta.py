@@ -1,11 +1,9 @@
-import enum
+from __future__ import annotations
 
 import pendulum
-from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import MetaData
-from sqlalchemy.sql import expression
-from sqlalchemy.types import TIMESTAMP, DateTime, TypeDecorator
+from sqlalchemy.types import TIMESTAMP, TypeDecorator
 
 # Recommended naming convention used by Alembic, as various different database
 # providers will autogenerate vastly different names making migrations more
@@ -20,27 +18,6 @@ NAMING_CONVENTION = {
 
 metadata = MetaData(naming_convention=NAMING_CONVENTION)
 Base = declarative_base(metadata=metadata)
-
-
-class NodeStatus(enum.Enum):
-    """Enumerate possible polling statuses for nodes."""
-
-    ACTIVE = enum.auto()
-    INACTIVE = enum.auto()
-
-    def __str__(self):
-        return self.name.title()
-
-
-class LinkStatus(enum.Enum):
-    """Enumerate possible statuses for links."""
-
-    CURRENT = enum.auto()
-    RECENT = enum.auto()
-    INACTIVE = enum.auto()
-
-    def __str__(self):
-        return self.name.title()
 
 
 class PDateTime(TypeDecorator):
@@ -62,12 +39,3 @@ class PDateTime(TypeDecorator):
             value = pendulum.instance(value)
 
         return value
-
-
-class utcnow(expression.FunctionElement):
-    type = DateTime()
-
-
-@compiles(utcnow, "postgresql")
-def pg_utcnow(element, compiler, **kw):
-    return "TIMEZONE('utc', CURRENT_TIMESTAMP)"

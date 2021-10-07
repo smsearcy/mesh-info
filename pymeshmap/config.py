@@ -29,7 +29,6 @@ class Environment(enum.Enum):
 class AppConfig:
     @environ.config
     class Poller:
-        node: str = environ.var(default="localnode.local.mesh")
         max_connections: int = environ.var(default=50, converter=int)
         connect_timeout: int = environ.var(default=10, converter=int)
         read_timeout: int = environ.var(default=15, converter=int)
@@ -45,7 +44,6 @@ class AppConfig:
         link_inactive: int = environ.var(default=1, converter=int)
         period: int = environ.var(default=5, converter=int)
         max_retries: int = environ.var(default=5, converter=int)
-        data_dir: str = environ.var(default="")
 
     @environ.config
     class Web:
@@ -54,16 +52,29 @@ class AppConfig:
         # debug_hosts
 
     env: Environment = environ.var(default="production", converter=Environment)
+    local_node: str = environ.var(default="localnode.local.mesh")
     log_level: str = environ.var(default="SUCCESS")
-    db_url: str = environ.var(
-        default="postgresql+psycopg2://postgres:@localhost:5432/postgres"
-    )
     site_name: str = environ.var(default="pyMeshMap")
+    db_url: str = environ.var(default="")
+    data_dir: Path = environ.var(default="")
 
     poller: Poller = environ.group(Poller)
     aredn: Aredn = environ.group(Aredn)
     collector: Collector = environ.group(Collector)
     web: Web = environ.group(Web)
+
+    def __attrs_post_init__(self):
+        if self.data_dir == "":
+            # default data directory depends on environment
+            if self.env == Environment.PROD:
+                self.data_dir = appdirs.site_data_dir("pymeshmap")
+            elif self.env == Environment.DEV:
+                self.data_dir = appdirs.user_data_dir("pymeshmap")
+        self.data_dir = Path(self.data_dir)
+
+        if self.db_url == "":
+            # location of default SQLite database depends on the data_dir
+            self.db_url = f"sqlite:///{self.data_dir!s}/pymeshmap.db"
 
 
 def from_env() -> AppConfig:
@@ -90,7 +101,8 @@ def configure(
     settings["log_level"] = app_config.log_level
     settings["db.url"] = app_config.db_url
     settings["db.pool_pre_ping"] = True
-    settings["local_node"] = app_config.poller.node
+    settings["data_dir"] = app_config.data_dir
+    settings["local_node"] = app_config.local_node
     settings["poller"] = app_config.poller
     settings["aredn"] = app_config.aredn
     settings["collector"] = app_config.collector
@@ -167,18 +179,10 @@ def configure(
     config.register_service(version_checker, VersionChecker)
 
     # Register the `HistoricalStats` singleton
-    collector_config: AppConfig.Collector = settings["collector"]
-    if collector_config.data_dir:
-        data_dir = Path(collector_config.data_dir)
-    elif settings["environment"] == Environment.DEV:
-        # should the name really be hard-coded?
-        data_dir = Path(appdirs.user_data_dir("pymeshmap"))
-    else:
-        data_dir = Path(appdirs.site_data_dir("pymeshmap"))
-    logger.info("Collector data path: {}", data_dir)
-    if not data_dir.exists():
-        data_dir.mkdir(parents=True, exist_ok=True)
-    config.register_service(HistoricalStats(data_path=data_dir), HistoricalStats)
+    logger.info("RRDtool data directory: {}", app_config.data_dir)
+    config.register_service(
+        HistoricalStats(data_path=app_config.data_dir), HistoricalStats
+    )
 
     config.scan(".views")
 

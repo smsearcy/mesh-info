@@ -10,6 +10,7 @@ from typing import Any, Iterable, List, Optional
 import attr
 import pendulum
 import rrdtool
+from loguru import logger
 
 from .models import Link, Node
 
@@ -42,9 +43,9 @@ class HistoricalStats:
 
     data_path: Path
 
-    def update_node_stats(self, node: Node):
+    def update_node_stats(self, node: Node) -> bool:
         # switch to async after testing!
-        rrd_file = self.data_path / f"node-{node.id}.rrd"
+        rrd_file = self._node_filename(node)
 
         timestamp = node.last_seen.int_timestamp
 
@@ -64,20 +65,25 @@ class HistoricalStats:
                 node.tunnel_link_count,
             ]
         )
-
-        rrdtool.update(
-            str(rrd_file),
-            "--template",
-            "link_count:service_count:uptime:load:radio_links:dtd_links:tunnel_links",
-            f"{timestamp}:{values}",
-        )
-        return
+        logger.trace("Updating node stats: {} -> {}", rrd_file.name, values)
+        try:
+            rrdtool.update(
+                str(rrd_file),
+                "--template",
+                "link_count:service_count:uptime:load:radio_links:dtd_links:tunnel_links",  # noqa
+                f"{timestamp}:{values}",
+            )
+        except rrdtool.OperationalError as exc:
+            # TODO: detect errors due to new data points and rebuild data file?
+            logger.error("RRDtool error: {}", exc)
+            return False
+        return True
 
     def graph_network_stats(
         self, *, start: pendulum.DateTime, end: pendulum.DateTime, title: str = ""
     ) -> bytes:
         """Graph network info."""
-        rrd_file = self.data_path / "network.rrd"
+        rrd_file = self._network_filename()
         colors = cycle(COLORS)
         graph = Graph(
             title=title or "network stats",
@@ -101,7 +107,7 @@ class HistoricalStats:
         self, *, start: pendulum.DateTime, end: pendulum.DateTime, title: str = ""
     ) -> bytes:
         """Graph network info."""
-        rrd_file = self.data_path / "network.rrd"
+        rrd_file = self._network_filename()
         colors = cycle(COLORS)
 
         graph = Graph(
@@ -130,7 +136,7 @@ class HistoricalStats:
         title: str = "",
     ) -> bytes:
         """Graph node uptime."""
-        rrd_file = self.data_path / f"node-{node.id}.rrd"
+        rrd_file = self._node_filename(node)
         graph = Graph(
             title=title or "node uptime",
             vertical_label="uptime in days",
@@ -157,7 +163,7 @@ class HistoricalStats:
         title: str = "",
     ) -> bytes:
         """Graph node uptime."""
-        rrd_file = self.data_path / f"node-{node.id}.rrd"
+        rrd_file = self._node_filename(node)
         graph = Graph(
             title=title or "load average",
             vertical_label="load",
@@ -184,7 +190,7 @@ class HistoricalStats:
         title: str = "",
     ) -> bytes:
         """Graph node links."""
-        rrd_file = self.data_path / f"node-{node.id}.rrd"
+        rrd_file = self._node_filename(node)
         colors = cycle(COLORS)
         graph = Graph(
             title=title or f"{node.name.lower()} links",
@@ -229,7 +235,7 @@ class HistoricalStats:
     ) -> bytes:
         """Graph link routing cost."""
 
-        rrd_file = self.data_path / f"link-{link.source_id}-{link.destination_id}.rrd"
+        rrd_file = self._link_filename(link)
         graph = Graph(
             title=title or "link cost",
             start=start,
@@ -255,10 +261,11 @@ class HistoricalStats:
         title: str = "",
     ) -> bytes:
         """Graph node uptime."""
-        rrd_file = self.data_path / f"link-{link.source_id}-{link.destination_id}.rrd"
+        rrd_file = self._link_filename(link)
         graph = Graph(
             title=title or "signal to noise ratio",
             vertical_label="db",
+            lower_bound=0,
             start=start,
             end=end,
         )
@@ -285,7 +292,7 @@ class HistoricalStats:
     ) -> bytes:
         """Graph link quality and neighbor quality."""
 
-        rrd_file = self.data_path / f"link-{link.source_id}-{link.destination_id}.rrd"
+        rrd_file = self._link_filename(link)
         graph = Graph(
             title=title or "link quality",
             start=start,
@@ -311,9 +318,9 @@ class HistoricalStats:
         )
         return graph.render()
 
-    def update_link_stats(self, link: Link):
+    def update_link_stats(self, link: Link) -> bool:
         # switch to async after testing!
-        rrd_file = self.data_path / f"link-{link.source_id}-{link.destination_id}.rrd"
+        rrd_file = self._link_filename(link)
 
         timestamp = link.last_seen.int_timestamp
 
@@ -333,13 +340,19 @@ class HistoricalStats:
                 link.neighbor_quality,
             ]
         )
-
-        rrdtool.update(
-            str(rrd_file),
-            "--template",
-            "olsr_cost:signal:noise:tx_rate:rx_rate:quality:neighbor_quality",
-            f"{timestamp}:{values}",
-        )
+        logger.trace("Updating link stats: {} -> {}", rrd_file.name, values)
+        try:
+            rrdtool.update(
+                str(rrd_file),
+                "--template",
+                "olsr_cost:signal:noise:tx_rate:rx_rate:quality:neighbor_quality",
+                f"{timestamp}:{values}",
+            )
+        except rrdtool.OperationalError as exc:
+            # TODO: detect errors due to new data points and rebuild data file?
+            logger.error("RRDtool error: {}", exc)
+            return False
+        return True
 
     def update_network_stats(
         self,
@@ -349,9 +362,8 @@ class HistoricalStats:
         error_count: int,
         poller_time: float,
         total_time: float,
-    ):
-        # switch to async after testing!
-        rrd_file = self.data_path / "network.rrd"
+    ) -> bool:
+        rrd_file = self._network_filename()
 
         timestamp = pendulum.now().int_timestamp
 
@@ -370,15 +382,30 @@ class HistoricalStats:
             ]
         )
 
-        rrdtool.update(
-            str(rrd_file),
-            "--template",
-            "node_count:link_count:error_count:poller_time:total_time",
-            f"{timestamp}:{values}",
-        )
+        try:
+            rrdtool.update(
+                str(rrd_file),
+                "--template",
+                "node_count:link_count:error_count:poller_time:total_time",
+                f"{timestamp}:{values}",
+            )
+        except rrdtool.OperationalError as exc:
+            # TODO: detect errors due to new data points and rebuild data file?
+            logger.error("RRDtool error: {}", exc)
+            return False
+        return True
+
+    def _network_filename(self) -> Path:
+        return self.data_path / "network.rrd"
+
+    def _node_filename(self, node: Node) -> Path:
+        return self.data_path / f"node-{node.id}.rrd"
+
+    def _link_filename(self, link: Link) -> Path:
+        return self.data_path / f"link-{link.id.dump()}.rrd"
 
 
-def _create_node_rrd_file(filename: Path, *, start: int = None):
+def _create_node_rrd_file(filename: Path, *, start: int = None) -> bool:
     """Create RRD file to track node statistics."""
 
     args = [
@@ -396,31 +423,44 @@ def _create_node_rrd_file(filename: Path, *, start: int = None):
         "DS:tunnel_links:GAUGE:600:0:U",
     ]
     args.extend(ARCHIVES)
-    rrdtool.create(*args)
+    try:
+        rrdtool.create(*args)
+    except rrdtool.OperationalError as exc:
+        logger.error("RRDtool error: {}", exc)
+        return False
+    return True
 
 
-def _create_link_rrd_file(filename: Path, *, start: int = None):
+def _create_link_rrd_file(filename: Path, *, start: int = None) -> bool:
     """Create RRD file to track link statistics."""
 
-    args = [
-        str(filename),
-        "--start",
-        str(start - 10) if start else "now",
-        "--step",
-        "300",
-        "DS:olsr_cost:GAUGE:600:0:U",
-        "DS:signal:GAUGE:600:U:0",
-        "DS:noise:GAUGE:600:U:0",
-        "DS:tx_rate:GAUGE:600:0:U",
-        "DS:rx_rate:GAUGE:600:0:U",
-        "DS:quality:GAUGE:600:0:1",
-        "DS:neighbor_quality:GAUGE:600:0:1",
-    ]
+    args = [str(filename)]
+    if start:
+        args.extend(("--start", str(start - 10)))
+    args.extend(
+        [
+            "--step",
+            "300",
+            "DS:olsr_cost:GAUGE:600:0:U",
+            "DS:signal:GAUGE:600:U:0",
+            "DS:noise:GAUGE:600:U:0",
+            "DS:tx_rate:GAUGE:600:0:U",
+            "DS:rx_rate:GAUGE:600:0:U",
+            "DS:quality:GAUGE:600:0:1",
+            "DS:neighbor_quality:GAUGE:600:0:1",
+        ]
+    )
+    logger.trace("Creating link RRD file: {}", args)
     args.extend(ARCHIVES)
-    rrdtool.create(*args)
+    try:
+        rrdtool.create(*args)
+    except rrdtool.OperationalError as exc:
+        logger.error("RRDtool error: {}", exc)
+        return False
+    return True
 
 
-def _create_network_rrd_file(filename: Path, *, start: int = None):
+def _create_network_rrd_file(filename: Path, *, start: int = None) -> bool:
     """Create RRD file to track network and poller statistics."""
 
     # There is only one network file, so keeping data longer
@@ -453,7 +493,12 @@ def _create_network_rrd_file(filename: Path, *, start: int = None):
         "RRA:MIN:0.5:288:1095",
         "RRA:MAX:0.5:288:1095",
     ]
-    rrdtool.create(*args)
+    try:
+        rrdtool.create(*args)
+    except rrdtool.OperationalError as exc:
+        logger.error("RRDtool error: {}", exc)
+        return False
+    return True
 
 
 def _dump(value: Any) -> str:
@@ -547,6 +592,7 @@ class Graph:
             *self.variable_definitions,
             *self.elements,
         )
+        logger.trace("Rendering graph: {}", graphv_args)
 
         # this is using the default of `fork`,
         # which supposedly has issues with multi-threading,
