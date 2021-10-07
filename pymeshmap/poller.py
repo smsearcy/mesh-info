@@ -263,7 +263,7 @@ async def network_info(
             if link.destination not in node_info.ip_name_map:
                 # TODO: try reverse DNS for IP address lookup
                 logger.warning(
-                    "OLSR IP not found in node information: {}", link.destination
+                    "OLSR IP not found in node information, skipping: {}", link
                 )
                 continue
             links.append(
