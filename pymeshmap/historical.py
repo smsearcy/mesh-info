@@ -288,6 +288,7 @@ class HistoricalStats:
         params: GraphParams,
     ) -> bytes:
         """Graph node uptime."""
+        # TODO: add a black line at 0 so it stands out
         rrd_file = self._link_filename(link)
         graph = Graph(
             vertical_label="db",

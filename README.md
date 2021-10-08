@@ -29,7 +29,7 @@ $ sudo apt install python3 python3-virtualenv python3-dev python3-pip
 $ sudo apt install libpq-dev librrd-dev
 # After installing Poetry I had to log out and back in for my PATH to be setup correctly
 $ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3 -
-$ git clone https://gitlab.com/smsearcy/pymeshmap.git
+$ git clone https://github.com/smsearcy/pymeshmap.git
 $ cd pymeshmap
 $ poetry install --no-dev
 # Run a basic poll of the network to confirm that is working
@@ -70,9 +70,8 @@ $ poetry run pymeshmap collector [--run-once]
 
 Collects information from the network and stores to the database.
 All configuration is via environment variables.
-By default, it will run repeatedly,
-pausing between runs based on the `MESHMAP_COLLECTOR_PERIOD` setting
-(which specifies the number of minutes between each run).
+By default, it will run repeatedly, polling the network every 5 minutes
+(while this period is configurable, the RRD files are built assuming that data is being fetched every 5 minutes).
 
 Use the `--run-once` option to run once and exit.
 
@@ -129,7 +128,9 @@ and `cd` to that directory in a terminal.
 3. To configure your IDE to use the correct virtual environment
 run `poetry env info`
 and update your IDE to use the Virtualenv path specified.
-Copy `.env.example` to `.env` so that local development will connect to that database.
-4. To run the `pymeshmap` command execute `poetry run pymeshmap [sub-command]`.
-5. A `Makefile` is included to simplify various tasks such as running `pre-commit`, tests, and linters.
-6. A `pyramid.ini` file is provided for use with the Pyramid development tools like `pserve` and `pshell`.
+4. Create `.env` and set `PYMESHMAP_ENV = "development"`
+(this enables the Pyramid debug toolbar
+and changes the default data paths to be in the current user's home directory).
+6. To run the `pymeshmap` command execute `poetry run pymeshmap [sub-command]`.
+7. A `Makefile` is included to simplify various tasks such as running `pre-commit`, tests, and linters.
+8. A `pyramid.ini` file is provided for use with the Pyramid development tools like `pserve` and `pshell`.
