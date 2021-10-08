@@ -75,14 +75,9 @@ class LinkGraphs:
             "route cost",
             self.graph_params.title,
         )
-        title = " - ".join(part for part in title_parts if part)
+        self.graph_params.title = " - ".join(part for part in title_parts if part)
         return Response(
-            self.stats.graph_link_cost(
-                self.link,
-                start=self.graph_params.start,
-                end=self.graph_params.end,
-                title=title,
-            ),
+            self.stats.graph_link_cost(self.link, params=self.graph_params),
             status="200 OK",
             content_type="image/png",
         )
@@ -94,14 +89,9 @@ class LinkGraphs:
             "snr",
             self.graph_params.title,
         )
-        title = " - ".join(part for part in title_parts if part)
+        self.graph_params.title = " - ".join(part for part in title_parts if part)
         return Response(
-            self.stats.graph_link_snr(
-                self.link,
-                start=self.graph_params.start,
-                end=self.graph_params.end,
-                title=title,
-            ),
+            self.stats.graph_link_snr(self.link, params=self.graph_params),
             status="200 OK",
             content_type="image/png",
         )
@@ -113,14 +103,9 @@ class LinkGraphs:
             "link quality",
             self.graph_params.title,
         )
-        title = " - ".join(part for part in title_parts if part)
+        self.graph_params.title = " - ".join(part for part in title_parts if part)
         return Response(
-            self.stats.graph_link_quality(
-                self.link,
-                start=self.graph_params.start,
-                end=self.graph_params.end,
-                title=title,
-            ),
+            self.stats.graph_link_quality(self.link, params=self.graph_params),
             status="200 OK",
             content_type="image/png",
         )

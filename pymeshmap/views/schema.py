@@ -1,42 +1,24 @@
 """Input validation schemas/parsing for pyMeshMap views."""
 
-import attr
-import pendulum
 from pyramid.httpexceptions import HTTPBadRequest
 
-
-@attr.s(auto_attribs=True, slots=True)
-class GraphParams:
-    start: pendulum.DateTime
-    end: pendulum.DateTime
-    title: str = ""
+from ..historical import GraphParams, Period
 
 
 def graph_params(params: dict) -> GraphParams:
     """Load graph parameters from request data dictionary."""
-    end_time = pendulum.now()
-    period = params.get("period", "day")
 
-    if period == "day":
-        start_time = end_time.subtract(days=1)
-        title = "past day"
-    elif period == "week":
-        start_time = end_time.subtract(days=7)
-        title = "past week"
-    elif period == "month":
-        start_time = end_time.subtract(months=1)
-        title = "past month"
-    elif period == "year":
-        start_time = end_time.subtract(years=1)
-        title = "past year"
-    elif period == "half-day":
-        start_time = end_time.subtract(hours=12)
-        title = "past 12 hours"
-    else:
+    if "period" not in params:
+        # TODO: handle arbitrary dates...
+        raise HTTPBadRequest("Must specify period for graph")
+
+    try:
+        period = getattr(Period, params["period"].upper())
+    except KeyError:
         raise HTTPBadRequest("Invalid period for graph")
+    title = f"past {params['period'].lower()}"
 
     return GraphParams(
-        start=start_time,
-        end=end_time,
+        period=period,
         title=title,
     )
