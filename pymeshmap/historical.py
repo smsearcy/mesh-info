@@ -73,7 +73,7 @@ class GraphParams:
 
 PERIOD_START_MAP = {
     # Use 400 x RRA step, so that there is 1px per RRA sample
-    # (taken from Munin's `Graph.pm`)
+    # (based on Munin's `Graph.pm`)
     Period.DAY: "end-2000m",
     Period.WEEK: "end-12000m",
     Period.MONTH: "end-48000m",
@@ -301,9 +301,21 @@ class HistoricalStats:
             ),
             calculation="CDEF:snr=signal,noise,-",
             v_name="snr",
-            color="#33cc33",
+            color=COLORS[0],
             style="LINE1",
             legend="snr",
+        )
+        graph.add_summarized_ds(
+            v_name="signal",
+            color=COLORS[1],
+            style="LINE1",
+            legend="signal",
+        )
+        graph.add_summarized_ds(
+            v_name="noise",
+            color=COLORS[2],
+            style="LINE1",
+            legend="noise",
         )
         return graph.render()
 
