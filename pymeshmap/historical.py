@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import enum
 import multiprocessing as mp
 from itertools import cycle
 from pathlib import Path
@@ -29,7 +30,55 @@ ARCHIVES = [
     "RRA:MIN:0.5:288:450",
     "RRA:MAX:0.5:288:450",
 ]
-COLORS = ("#0000FF", "#FF00FF", "#00FFFF", "#00FF00")
+# Colors taken from Munin's default colors
+COLORS = (
+    "#00CC00",  # Green
+    "#0066B3",  # Blue
+    "#FF8000",  # Orange
+    "#FFCC00",  # Dark Yellow
+    "#330099",  # Dark Blue
+    "#990099",  # Purple
+    "#CCFF00",  # Lime
+    "#FF0000",  # Red
+    "#808080",  # Gray
+)
+
+
+class Period(enum.Enum):
+    DAY = enum.auto()
+    WEEK = enum.auto()
+    MONTH = enum.auto()
+    YEAR = enum.auto
+
+
+@attr.s(auto_attribs=True, slots=True)
+class GraphParams:
+    period: Optional[Period] = None
+    start: Optional[pendulum.DateTime] = None
+    end: Optional[pendulum.DateTime] = None
+    title: str = ""
+
+    def as_dict(self):
+        """Convert parameters to dictionary for `Graph()`."""
+        params = {
+            "title": self.title,
+        }
+        if self.period:
+            params["start"] = PERIOD_START_MAP[self.period]
+        else:
+            params["start"] = str(self.start.int_timestamp)
+            params["end"] = str(self.end.int_timestamp)
+        return params
+
+
+PERIOD_START_MAP = {
+    # Use 400 x RRA step, so that there is 1px per RRA sample
+    # (taken from Munin's `Graph.pm`)
+    Period.DAY: "end-2000m",
+    Period.WEEK: "end-12000m",
+    Period.MONTH: "end-48000m",
+    Period.YEAR: "end-400d",
+}
 
 
 @attr.s(auto_attribs=True)
@@ -80,16 +129,16 @@ class HistoricalStats:
         return True
 
     def graph_network_stats(
-        self, *, start: pendulum.DateTime, end: pendulum.DateTime, title: str = ""
+        self,
+        *,
+        params: GraphParams,
     ) -> bytes:
-        """Graph network info."""
+        """Graph network poller statistics."""
         rrd_file = self._network_filename()
         colors = cycle(COLORS)
         graph = Graph(
-            title=title or "network stats",
             vertical_label="count",
-            start=start,
-            end=end,
+            **params.as_dict(),
         )
 
         for ds in ("node_count", "link_count", "error_count"):
@@ -103,18 +152,14 @@ class HistoricalStats:
 
         return graph.render()
 
-    def graph_poller_stats(
-        self, *, start: pendulum.DateTime, end: pendulum.DateTime, title: str = ""
-    ) -> bytes:
+    def graph_poller_stats(self, *, params: GraphParams) -> bytes:
         """Graph network info."""
         rrd_file = self._network_filename()
         colors = cycle(COLORS)
 
         graph = Graph(
-            title=title or "poller stats",
             vertical_label="time (seconds)",
-            start=start,
-            end=end,
+            **params.as_dict(),
         )
 
         for ds in ("poller_time", "total_time"):
@@ -131,18 +176,14 @@ class HistoricalStats:
         self,
         node: Node,
         *,
-        start: pendulum.DateTime,
-        end: pendulum.DateTime,
-        title: str = "",
+        params: GraphParams,
     ) -> bytes:
         """Graph node uptime."""
         rrd_file = self._node_filename(node)
         graph = Graph(
-            title=title or "node uptime",
             vertical_label="uptime in days",
             lower_bound=0,
-            start=start,
-            end=end,
+            **params.as_dict(),
         )
         graph.add_summarized_ds(
             definition=f"DEF:uptime={rrd_file!s}:uptime:AVERAGE",
@@ -158,18 +199,14 @@ class HistoricalStats:
         self,
         node: Node,
         *,
-        start: pendulum.DateTime,
-        end: pendulum.DateTime,
-        title: str = "",
+        params: GraphParams,
     ) -> bytes:
         """Graph node uptime."""
         rrd_file = self._node_filename(node)
         graph = Graph(
-            title=title or "load average",
             vertical_label="load",
             lower_bound=0,
-            start=start,
-            end=end,
+            **params.as_dict(),
         )
         graph.options.extend(("-X", "0"))
         graph.add_summarized_ds(
@@ -185,18 +222,14 @@ class HistoricalStats:
         self,
         node: Node,
         *,
-        start: pendulum.DateTime,
-        end: pendulum.DateTime,
-        title: str = "",
+        params: GraphParams,
     ) -> bytes:
         """Graph node links."""
         rrd_file = self._node_filename(node)
         colors = cycle(COLORS)
         graph = Graph(
-            title=title or f"{node.name.lower()} links",
             vertical_label="count",
-            start=start,
-            end=end,
+            **params.as_dict(),
         )
         graph.add_summarized_ds(
             definition=f"DEF:total={rrd_file!s}:link_count:AVERAGE",
@@ -229,19 +262,15 @@ class HistoricalStats:
         self,
         link: Link,
         *,
-        start: pendulum.DateTime,
-        end: pendulum.DateTime,
-        title: str = "",
+        params: GraphParams,
     ) -> bytes:
         """Graph link routing cost."""
 
         rrd_file = self._link_filename(link)
         graph = Graph(
-            title=title or "link cost",
-            start=start,
-            end=end,
             vertical_label="cost",
             lower_bound=0,
+            **params.as_dict(),
         )
         graph.add_summarized_ds(
             definition=f"DEF:cost={rrd_file!s}:olsr_cost:AVERAGE",
@@ -256,18 +285,14 @@ class HistoricalStats:
         self,
         link: Link,
         *,
-        start: pendulum.DateTime,
-        end: pendulum.DateTime,
-        title: str = "",
+        params: GraphParams,
     ) -> bytes:
         """Graph node uptime."""
         rrd_file = self._link_filename(link)
         graph = Graph(
-            title=title or "signal to noise ratio",
             vertical_label="db",
             lower_bound=0,
-            start=start,
-            end=end,
+            **params.as_dict(),
         )
         graph.add_summarized_ds(
             definitions=(
@@ -286,19 +311,15 @@ class HistoricalStats:
         self,
         link: Link,
         *,
-        start: pendulum.DateTime,
-        end: pendulum.DateTime,
-        title: str = "",
+        params: GraphParams,
     ) -> bytes:
         """Graph link quality and neighbor quality."""
 
         rrd_file = self._link_filename(link)
         graph = Graph(
-            title=title or "link quality",
-            start=start,
-            end=end,
             vertical_label="percent",
             lower_bound=0,
+            **params.as_dict(),
         )
         graph.add_summarized_ds(
             definition=f"DEF:quality={rrd_file!s}:quality:AVERAGE",
@@ -516,8 +537,8 @@ def _dump(value: Any) -> str:
 class Graph:
     """Helper class to simplify some common stuff when creating a graph."""
 
-    start: pendulum.DateTime
-    end: Optional[pendulum.DateTime] = None
+    start: str
+    end: str = ""
     title: str = ""
     vertical_label: str = ""
     lower_bound: Optional[float] = None
@@ -575,9 +596,9 @@ class Graph:
     def render(self) -> bytes:
         """Draw the graph via RRDtool."""
 
-        self.options.extend(("--start", str(self.start.int_timestamp)))
+        self.options.extend(("--start", self.start))
         if self.end:
-            self.options.extend(("--end", str(self.end.int_timestamp)))
+            self.options.extend(("--end", self.end))
         if self.vertical_label:
             self.options.extend(("--vertical-label", self.vertical_label))
         if self.title:

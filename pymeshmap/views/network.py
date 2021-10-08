@@ -30,14 +30,10 @@ class NetworkGraphs:
             "network info",
             self.graph_params.title,
         )
-        title = " - ".join(part for part in title_parts if part)
+        self.graph_params.title = " - ".join(part for part in title_parts if part)
 
         return Response(
-            self.stats.graph_network_stats(
-                start=self.graph_params.start,
-                end=self.graph_params.end,
-                title=title,
-            ),
+            self.stats.graph_network_stats(params=self.graph_params),
             status="200 OK",
             content_type="image/png",
         )
@@ -48,14 +44,10 @@ class NetworkGraphs:
             "poller stats",
             self.graph_params.title,
         )
-        title = " - ".join(part for part in title_parts if part)
+        self.graph_params.title = " - ".join(part for part in title_parts if part)
 
         return Response(
-            self.stats.graph_poller_stats(
-                start=self.graph_params.start,
-                end=self.graph_params.end,
-                title=title,
-            ),
+            self.stats.graph_poller_stats(params=self.graph_params),
             status="200 OK",
             content_type="image/png",
         )

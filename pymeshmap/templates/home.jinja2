@@ -17,7 +17,7 @@
   <h2 class="subtitle">Collector Statistics</h2>
 {% if last_run is not none %}
   <div class="columns">
-    <div class="column">
+    <div class="column is-narrow">
       <div class="mb-2">
         <div class="heading">Last Ran</div>
         <div>{{ last_run.started_at|local_tz }}</div>
@@ -31,7 +31,7 @@
         <div>{{ last_run.total_duration|duration }}</div>
       </div>
     </div>
-    <div class="column">
+    <div class="column is-narrow">
       <div class="mb-2">
         <div class="heading">Node Count</div>
         <div>{{ last_run.node_count }}</div>
