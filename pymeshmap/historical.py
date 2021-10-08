@@ -15,11 +15,11 @@ from loguru import logger
 
 from .models import Link, Node
 
-# Archives based on defaults in Munin
+# Archives based on defaults in Munin's `UpdateWorker.pm`
 ARCHIVES = [
-    "RRA:AVERAGE:0.5:1:144",  # 1 day, resolution 5 minutes
-    "RRA:MIN:0.5:1:144",
-    "RRA:MAX:0.5:1:144",
+    "RRA:AVERAGE:0.5:1:576",  # resolution 5 minutes
+    "RRA:MIN:0.5:1:576",
+    "RRA:MAX:0.5:1:576",
     "RRA:AVERAGE:0.5:6:432",  # 9 days, resolution 30 minutes
     "RRA:MIN:0.5:6:432",
     "RRA:MAX:0.5:6:432",
@@ -30,6 +30,7 @@ ARCHIVES = [
     "RRA:MIN:0.5:288:450",
     "RRA:MAX:0.5:288:450",
 ]
+
 # Colors taken from Munin's default colors
 COLORS = (
     "#00CC00",  # Green
@@ -269,7 +270,6 @@ class HistoricalStats:
         rrd_file = self._link_filename(link)
         graph = Graph(
             vertical_label="cost",
-            lower_bound=0,
             **params.as_dict(),
         )
         graph.add_summarized_ds(
@@ -291,7 +291,6 @@ class HistoricalStats:
         rrd_file = self._link_filename(link)
         graph = Graph(
             vertical_label="db",
-            lower_bound=0,
             **params.as_dict(),
         )
         graph.add_summarized_ds(
@@ -330,7 +329,6 @@ class HistoricalStats:
         rrd_file = self._link_filename(link)
         graph = Graph(
             vertical_label="percent",
-            lower_bound=0,
             **params.as_dict(),
         )
         graph.add_summarized_ds(
@@ -441,20 +439,22 @@ class HistoricalStats:
 def _create_node_rrd_file(filename: Path, *, start: int = None) -> bool:
     """Create RRD file to track node statistics."""
 
-    args = [
-        str(filename),
-        "--start",
-        str(start - 10) if start else "now",
-        "--step",
-        "300",
-        "DS:link_count:GAUGE:600:0:U",
-        "DS:service_count:GAUGE:600:0:U",
-        "DS:uptime:GAUGE:600:0:U",
-        "DS:load:GAUGE:600:0:U",
-        "DS:radio_links:GAUGE:600:0:U",
-        "DS:dtd_links:GAUGE:600:0:U",
-        "DS:tunnel_links:GAUGE:600:0:U",
-    ]
+    args = [str(filename)]
+    if start:
+        args.extend(("--start", str(start - 10)))
+    args.extend(
+        [
+            "--step",
+            "300",
+            "DS:link_count:GAUGE:600:0:U",
+            "DS:service_count:GAUGE:600:0:U",
+            "DS:uptime:GAUGE:600:0:U",
+            "DS:load:GAUGE:600:0:U",
+            "DS:radio_links:GAUGE:600:0:U",
+            "DS:dtd_links:GAUGE:600:0:U",
+            "DS:tunnel_links:GAUGE:600:0:U",
+        ]
+    )
     args.extend(ARCHIVES)
     try:
         rrdtool.create(*args)
@@ -496,36 +496,21 @@ def _create_link_rrd_file(filename: Path, *, start: int = None) -> bool:
 def _create_network_rrd_file(filename: Path, *, start: int = None) -> bool:
     """Create RRD file to track network and poller statistics."""
 
-    # There is only one network file, so keeping data longer
-    # (since the space won't be multiplied).
-
-    args = [
-        str(filename),
-        "--start",
-        str(start - 10) if start else "now",
-        "--step",
-        "300",
-        "DS:node_count:GAUGE:600:0:U",
-        "DS:link_count:GAUGE:600:0:U",
-        "DS:error_count:GAUGE:600:0:U",
-        "DS:poller_time:GAUGE:600:0:U",
-        "DS:total_time:GAUGE:600:0:U",
-        "RRA:AVERAGE:0.5:1:144",  # 1 day, resolution 5 minutes
-        "RRA:MIN:0.5:1:144",
-        "RRA:MAX:0.5:1:144",
-        "RRA:AVERAGE:0.5:3:672",  # 7 days, resolution 15 minutes
-        "RRA:MIN:0.5:3:672",
-        "RRA:MAX:0.5:3:672",
-        "RRA:AVERAGE:0.5:6:1440",  # 30 days, resolution 30 minutes
-        "RRA:MIN:0.5:6:1440",
-        "RRA:MAX:0.5:6:1440",
-        "RRA:AVERAGE:0.5:24:1080",  # 90 days, resolution 2 hours
-        "RRA:MIN:0.5:24:1080",
-        "RRA:MAX:0.5:24:1080",
-        "RRA:AVERAGE:0.5:288:1095",  # 1095 days, resolution 1 day
-        "RRA:MIN:0.5:288:1095",
-        "RRA:MAX:0.5:288:1095",
-    ]
+    args = [str(filename)]
+    if start:
+        args.extend(("--start", str(start - 10)))
+    args.extend(
+        [
+            "--step",
+            "300",
+            "DS:node_count:GAUGE:600:0:U",
+            "DS:link_count:GAUGE:600:0:U",
+            "DS:error_count:GAUGE:600:0:U",
+            "DS:poller_time:GAUGE:600:0:U",
+            "DS:total_time:GAUGE:600:0:U",
+        ]
+    )
+    args.extend(ARCHIVES)
     try:
         rrdtool.create(*args)
     except rrdtool.OperationalError as exc:
@@ -619,6 +604,10 @@ class Graph:
             self.options.extend(("--lower-limit", str(self.lower_bound)))
         graphv_args = (
             "-",
+            "--width",
+            "400",
+            "--height",
+            "175",
             *self.options,
             *self.data_definitions,
             *self.data_calculations,
