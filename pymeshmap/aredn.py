@@ -218,7 +218,7 @@ class LinkInfo:
 
         return LinkInfo(
             source=source,
-            destination=raw_data["hostname"].replace(".local.mesh", ""),
+            destination=raw_data["hostname"].lower().replace(".local.mesh", ""),
             type=link_type,
             interface=raw_data["olsrInterface"],
             quality=raw_data["linkQuality"],
@@ -251,6 +251,7 @@ class SystemInfo:
     """
 
     node_name: str
+    display_name: str
     api_version: str
     grid_square: str
     latitude: Optional[float]
@@ -384,7 +385,8 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
     # create a dictionary with all the parameters due to the number
     # and variance between API versions
     data = {
-        "node_name": json_data["node"],
+        "node_name": json_data["node"].lower(),
+        "display_name": json_data["node"],
         "api_version": json_data["api_version"],
         "grid_square": json_data["grid_square"],
         "latitude": float(json_data["lat"]) if json_data["lat"] else None,
@@ -441,7 +443,7 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
         data["tunnel_installed"] = str(json_data["tunnel_installed"]).lower() == "true"
 
     data["links"] = [
-        LinkInfo.from_json(link_info, source=data["node_name"])
+        LinkInfo.from_json(link_info, source=data["node_name"].lower())
         for link_info in json_data.get("link_info", {}).values()
     ]
 

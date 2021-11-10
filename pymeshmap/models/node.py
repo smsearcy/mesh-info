@@ -24,9 +24,9 @@ class Node(Base):
     id = Column("node_id", Integer, primary_key=True)
     name = Column(String(70), nullable=False)
     status = Column(Enum(NodeStatus, native_enum=False), nullable=False)
+    display_name = Column(String(70), nullable=False)
 
-    # FIXME: need to handle multiple IP addresses (RF(s), DTD, tunnel)
-    # (can use IP address type to determine link type on older API)
+    # TODO: handle multiple IP addresses? (RF(s), DTD, tunnel)
     wlan_ip = Column(String(15), nullable=False)
     description = Column(Unicode(1024), nullable=False)
 
@@ -74,7 +74,6 @@ class Node(Base):
     )
 
     links = relationship("Link", foreign_keys="Link.source_id", back_populates="source")
-    # TODO: add active_links relationship
 
     # Is this premature optimization?
     Index("idx_mac_name", wlan_mac_address, name)
