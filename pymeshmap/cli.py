@@ -9,13 +9,13 @@ from pathlib import Path
 from loguru import logger
 from pyramid.paster import bootstrap
 
-from pymeshmap import __version__, collector, models, report, web
+from pymeshmap import __version__, backup, collector, models, report, web
 from pymeshmap.aredn import VersionChecker
 from pymeshmap.config import configure
 from pymeshmap.historical import HistoricalStats
 
 
-def main(argv: list = None):
+def main(argv: list = None):  # noqa: C901
     """Main CLI entry point for 'pymeshmap'."""
 
     parser = build_parser()
@@ -61,6 +61,12 @@ def main(argv: list = None):
                 data_dir.mkdir(parents=True, exist_ok=True)
             except PermissionError:
                 sys.exit(f"Failed to create data directory: {data_dir!s}")
+
+        if args.command == "export":
+            sys.exit(backup.export_data(data_dir, args.filename))
+
+        if args.command == "import":
+            sys.exit(backup.import_data(args.filename, data_dir))
 
         try:
             session_factory = models.get_session_factory(models.get_engine(settings))
@@ -148,4 +154,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="automatically reload when source changes",
     )
 
+    # Export/backup
+    export_parser = sub_parsers.add_parser(
+        "export",
+        help="export data files to tarball",
+        description="Exports RRD files and data files to specified TGZ file.",
+    )
+    export_parser.add_argument(
+        "filename",
+        help="Name of tarball to create",
+    )
+
+    # Import/restore
+    import_parser = sub_parsers.add_parser(
+        "import",
+        help="import data files from tarball",
+        description="Imports RRD files and data files from specified TGZ file.",
+    )
+    import_parser.add_argument(
+        "filename",
+        help="Name of tarball to load",
+    )
     return parser
