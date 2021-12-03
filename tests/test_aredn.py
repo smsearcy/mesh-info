@@ -33,7 +33,8 @@ def test_api_version_1_0(data_folder):
     system_info = aredn.load_system_info(json_data)
 
     # I could just construct a second object but I'm not checking everything
-    assert system_info.node_name == "N0CALL-Oceanside-West"
+    assert system_info.node_name == "n0call-oceanside-west"
+    assert system_info.display_name == "N0CALL-Oceanside-West"
     assert len(system_info.interfaces) == 5
     assert system_info.model == "Ubiquiti Rocket M"
     assert system_info.grid_square == ""
@@ -54,7 +55,8 @@ def test_api_version_1_5(data_folder):
     system_info = aredn.load_system_info(json_data)
 
     # I could just construct a second object but I'm not checking everything
-    assert system_info.node_name == "N0CALL-bm2-1"
+    assert system_info.node_name == "n0call-bm2-1"
+    assert system_info.display_name == "N0CALL-bm2-1"
     assert len(system_info.interfaces) == 4
     assert system_info.interfaces["eth0"].ip_address == "10.206.233.110"
     assert system_info.model == "Bullet M2 HP "
@@ -80,7 +82,8 @@ def test_api_version_1_6(data_folder):
     system_info = aredn.load_system_info(json_data)
 
     # I could just construct a second object but I'm not checking everything
-    assert system_info.node_name == "N0CALL-NSM2-3-East-Hills"
+    assert system_info.node_name == "n0call-nsm2-3-east-hills"
+    assert system_info.display_name == "N0CALL-NSM2-3-East-Hills"
     assert system_info.description == "Elevation 1850' Pointing WSW"
     assert len(system_info.interfaces) == 11
     assert system_info.interfaces["eth0"].ip_address is None
@@ -110,7 +113,8 @@ def test_api_version_1_7(data_folder):
     system_info = aredn.load_system_info(json_data)
 
     # I could just construct a second object but I'm not checking everything
-    assert system_info.node_name == "N0CALL-VC-RF-5G"
+    assert system_info.node_name == "n0call-vc-rf-5g"
+    assert system_info.display_name == "N0CALL-VC-RF-5G"
     assert len(system_info.interfaces) == 6
     assert system_info.interfaces["eth0"].ip_address is None
     assert system_info.model == "MikroTik RouterBOARD LHG 5HPnD-XL"
@@ -138,7 +142,8 @@ def test_tunnel_only_1_6(data_folder):
     system_info = aredn.load_system_info(json_data)
 
     # I could just construct a second object but I'm not checking everything
-    assert system_info.node_name == "N0CALL-6-HILO-HAP"
+    assert system_info.node_name == "n0call-6-hilo-hap"
+    assert system_info.display_name == "N0CALL-6-HILO-HAP"
     assert len(system_info.interfaces) == 20
     assert system_info.interfaces["eth0"].ip_address == "192.168.0.50"
     assert system_info.status == "off"
@@ -159,7 +164,8 @@ def test_with_tunnel_1_7(data_folder):
     system_info = aredn.load_system_info(json_data)
 
     # I could just construct a second object but I'm not checking everything
-    assert system_info.node_name == "CALL1-HAPACL-300-P1"
+    assert system_info.node_name == "call1-hapacl-300-p1"
+    assert system_info.display_name == "CALL1-HAPACL-300-P1"
     assert len(system_info.interfaces) == 8
     assert system_info.interfaces["eth0"].ip_address is None
     assert system_info.status == "on"
@@ -182,7 +188,8 @@ def test_with_tunnel_1_7_with_truish_tunnel_value(data_folder):
     system_info = aredn.load_system_info(json_data)
 
     # I could just construct a second object but I'm not checking everything
-    assert system_info.node_name == "CALL1-HAPACL-300-P1"
+    assert system_info.node_name == "call1-hapacl-300-p1"
+    assert system_info.display_name == "CALL1-HAPACL-300-P1"
     assert len(system_info.interfaces) == 8
     assert system_info.interfaces["eth0"].ip_address is None
     assert system_info.status == "on"
@@ -205,7 +212,8 @@ def test_with_tunnel_1_7_with_false_tunnel_value(data_folder):
     system_info = aredn.load_system_info(json_data)
 
     # I could just construct a second object but I'm not checking everything
-    assert system_info.node_name == "CALL1-HAPACL-300-P1"
+    assert system_info.node_name == "call1-hapacl-300-p1"
+    assert system_info.display_name == "CALL1-HAPACL-300-P1"
     assert len(system_info.interfaces) == 8
     assert system_info.interfaces["eth0"].ip_address is None
     assert system_info.status == "on"
@@ -253,8 +261,8 @@ def test_radio_link_info_parsing(data_folder):
 
     sample_link = system_info.links[0]
     expected = aredn.LinkInfo(
-        source="N0CALL-NSM2-1",
-        destination="N0CALL-RKM2-1-Medford-OR",
+        source="n0call-nsm2-1",
+        destination="n0call-rkm2-1-medford-or",
         quality=0.94,
         neighbor_quality=0.94,
         signal=-82,
@@ -278,8 +286,8 @@ def test_dtd_link_info_parsing(data_folder):
 
     sample_link = system_info.links[0]
     expected = aredn.LinkInfo(
-        source="N0CALL-VC-RF-5G",
-        destination="N0CALL-VC-SHACK",
+        source="n0call-vc-rf-5g",
+        destination="n0call-vc-shack",
         quality=1,
         neighbor_quality=1,
         type=LinkType.DTD,
@@ -299,8 +307,8 @@ def test_dtd_link_info_no_type(data_folder):
 
     sample_link = system_info.links[7]
     expected = aredn.LinkInfo(
-        source="N0CALL-NSM2-2-East-City-OR",
-        destination="N0CALL-NSM2-1-East-City-OR",
+        source="n0call-nsm2-2-east-city-or",
+        destination="n0call-nsm2-1-east-city-or",
         quality=1,
         neighbor_quality=1,
         type=LinkType.DTD,
@@ -318,10 +326,10 @@ def test_invalid_link_json():
         "olsrInterface": "eth.0",
         "linkType": "foobar",
     }
-    link_info = aredn.LinkInfo.from_json(link_json, source="N0CALL-NSM1")
+    link_info = aredn.LinkInfo.from_json(link_json, source="n0call-nsm1")
     expected = aredn.LinkInfo(
-        source="N0CALL-NSM1",
-        destination="N0CALL-NSM2",
+        source="n0call-nsm1",
+        destination="n0call-nsm2",
         quality=1,
         neighbor_quality=1,
         type=LinkType.UNKNOWN,

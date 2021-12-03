@@ -12,6 +12,7 @@ fake = Faker()
 SAMPLE_NODES = [
     SystemInfo(
         node_name="node1",
+        display_name="node1",
         api_version="1.7",
         grid_square="",
         latitude=fake.latitude(),
@@ -39,6 +40,7 @@ SAMPLE_NODES = [
     ),
     SystemInfo(
         node_name="node2",
+        display_name="node2",
         api_version="1.7",
         grid_square="",
         latitude=fake.latitude(),
@@ -66,6 +68,7 @@ SAMPLE_NODES = [
     ),
     SystemInfo(
         node_name="node3",
+        display_name="node3",
         api_version="1.5",
         grid_square="",
         latitude=fake.latitude(),
@@ -93,6 +96,7 @@ SAMPLE_NODES = [
     ),
     SystemInfo(
         node_name="node4",
+        display_name="node4",
         api_version="1.1",
         grid_square="",
         latitude=fake.latitude(),
