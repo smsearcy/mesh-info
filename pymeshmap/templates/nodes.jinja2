@@ -58,7 +58,7 @@
         {% for node in nodes %}
           [
             '{{ req.route_url("node-details", id=node.id) }}',
-            '{{ node.name }}',
+            '{{ node.display_name }}',
             '{{ node.wlan_ip }}',
             '{{ node.status }}',
             '{{ node.band }}',

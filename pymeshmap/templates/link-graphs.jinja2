@@ -1,10 +1,10 @@
 {% extends "layout.jinja2" %}
 
-{% block title %}{{ graph_name }} : {{ link.source.name }} -> {{ link.destination.name }}{% endblock %}
+{% block title %}{{ graph_name }} : {{ link.source.display_name }} -> {{ link.destination.display_name }}{% endblock %}
 
 {% block content %}
 <div class="container">
-  <h1 class="title">{{ link.source.name }} - {{ link.destination.name }} : {{ graph_name }}</h1>
+  <h1 class="title">{{ link.source.display_name }} - {{ link.destination.display_name }} : {{ graph_name }}</h1>
   {# TODO: add bread crumbs back to node #}
   <div class="columns">
   {% for period in ("day", "week") %}

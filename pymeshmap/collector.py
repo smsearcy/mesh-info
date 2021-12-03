@@ -21,8 +21,10 @@ from .models import CollectorStat, Link, Node
 from .poller import OlsrData
 from .types import LinkStatus, NodeStatus
 
+# TODO: align names so that this can just be a list
 MODEL_TO_SYSINFO_ATTRS = {
     "name": "node_name",
+    "display_name": "display_name",
     "wlan_ip": "wlan_ip_address",
     "description": "description",
     "wlan_mac_address": "wlan_mac_address",

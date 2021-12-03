@@ -252,7 +252,7 @@ async def network_info(
 
         # Create `LinkInfo` objects based on the information in OLSR
         node.link_count = 0
-        node_ip = node_info.name_ip_map[node.node_name.lower()]
+        node_ip = node_info.name_ip_map[node.node_name]
         try:
             node_olsr_links = olsr_links_by_ip[node_ip]
         except KeyError:
