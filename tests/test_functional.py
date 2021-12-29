@@ -11,3 +11,8 @@ def test_nodes_success(testapp, dbsession):
 def test_notfound(testapp):
     res = testapp.get("/badurl", status=404)
     assert res.status_code == 404
+
+
+def test_cache_url(testapp):
+    res = testapp.get("/cache/sample.txt", status=200)
+    assert res.body == b"Sample cached content.\n"

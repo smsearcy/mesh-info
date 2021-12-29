@@ -2,7 +2,14 @@ from pyramid.config import Configurator
 
 
 def includeme(config: Configurator):
+    settings = config.get_settings()
+    app_config = settings["app_config"]
+
     config.add_static_view("static", "static", cache_max_age=3600)
+    config.add_static_view(
+        "cache", str(app_config.cache_dir.resolve()), cache_max_age=3600
+    )
+
     config.add_route("home", "/")
     config.add_route("node-details", r"/nodes/{id:\d+}")
     config.add_route("node-json", r"/nodes/{id:\d+}/json")

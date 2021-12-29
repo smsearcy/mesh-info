@@ -33,11 +33,12 @@ def data_folder() -> Path:
     return Path(__file__).parent / "data"
 
 
-@pytest.fixture(scope="session")
-def app_config():
+@pytest.fixture
+def app_config(data_folder):
     # need to get environment variables from CI
     env = os.environ.copy()
     env["MESHMAP_POLLER_NODE"] = "127.0.0.1"
+    env["MESHMAP_CACHE_DIR"] = str(data_folder / "cached")
     return AppConfig.from_environ(env)
 
 

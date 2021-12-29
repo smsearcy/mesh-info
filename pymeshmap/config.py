@@ -74,6 +74,7 @@ class AppConfig:
     log_level: str = environ.var(default="SUCCESS")
     site_name: str = environ.var(default="pyMeshMap")
     data_dir: Path = environ.var(default="")
+    cache_dir: Path = environ.var(default="")
 
     aredn: Aredn = environ.group(Aredn)
     collector: Collector = environ.group(Collector)
@@ -90,6 +91,15 @@ class AppConfig:
                 self.data_dir = platformdirs.user_data_path(FOLDER_NAME) / "data"
         else:
             self.data_dir = Path(self.data_dir)
+
+        if self.cache_dir == "":
+            # default cache directory depends on environment
+            if self.env == Environment.PROD:
+                self.cache_dir = Path(f"/var/cache/{FOLDER_NAME}")
+            elif self.env == Environment.DEV:
+                self.cache_dir = platformdirs.user_data_path(FOLDER_NAME) / "cache"
+        else:
+            self.cache_dir = Path(self.cache_dir)
 
         if self.db.url == "":
             # location of default SQLite database depends on the data_dir

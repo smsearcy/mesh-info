@@ -15,7 +15,7 @@ from pymeshmap.config import AppConfig, configure
 from pymeshmap.historical import HistoricalStats
 
 
-def main(argv: list = None):  # noqa: C901
+def main(argv: list = None):
     """Main CLI entry point for 'pymeshmap'."""
 
     parser = build_parser()
@@ -185,7 +185,7 @@ def build_parser() -> argparse.ArgumentParser:
 def ensure_directories(app_config: AppConfig):
     """Ensure necessary directories exists."""
 
-    for path in (app_config.data_dir, app_config.rrd_dir):
+    for path in (app_config.data_dir, app_config.rrd_dir, app_config.cache_dir):
         if path.exists():
             continue
         try:
