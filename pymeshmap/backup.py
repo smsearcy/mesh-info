@@ -37,7 +37,7 @@ def export_data(
         with tarfile.open(filename, "x:gz") as f:
             for child in Path(temp_dir).iterdir():
                 count["archived"] += 1
-                f.add(child)
+                f.add(child, arcname=child.name)
 
     print(
         f"Exported {count['archived']:,d} items: "
