@@ -162,6 +162,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     export_parser.add_argument(
         "filename",
+        type=Path,
         help="Name of tarball to create",
     )
 
@@ -173,6 +174,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     import_parser.add_argument(
         "filename",
+        type=Path,
         help="Name of tarball to load",
     )
     return parser
