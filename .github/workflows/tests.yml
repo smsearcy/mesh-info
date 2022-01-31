@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, 3.10]
 
     services:
       postgres:
@@ -73,18 +73,3 @@ jobs:
           MESHMAP_COLLECTOR_DATA_DIR: "."
           POSTGRES_HOST: localhost
           POSTGRES_PASSWORD: meshmap
-
-  safety:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.x"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry safety
-      - name: Run Safety
-        run: poetry export -f requirements.txt | safety check --stdin

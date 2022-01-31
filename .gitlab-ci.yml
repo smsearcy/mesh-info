@@ -38,12 +38,6 @@ pre-commit:
       - .cache/pre-commit
     policy: pull
 
-safety:
-  stage: test
-  script:
-    - pip install poetry safety
-    - poetry export -f requirements.txt | safety check --stdin
-
 # Template to prepare Poetry (for use with `extends`)
 .poetry:
   before_script:
@@ -116,6 +110,15 @@ pytest 3.9:
   image: python:3.9
   cache:
     key: poetry39
+    paths:
+      - .cache/pip
+      - .cache/pypoetry
+
+pytest 3.10:
+  extends: .pytest
+  image: python:3.10
+  cache:
+    key: poetry310
     paths:
       - .cache/pip
       - .cache/pypoetry
