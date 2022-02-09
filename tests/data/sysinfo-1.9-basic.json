@@ -1,0 +1,111 @@
+{
+  "meshrf": {
+    "ssid": "ArednMeshNetwork",
+    "channel": "-1",
+    "status": "on",
+    "freq": "2402",
+    "chanbw": "10"
+  },
+  "sysinfo": {
+    "uptime": "7 days, 14:51:22",
+    "loads": [
+      0.01,
+      0.11,
+      0.08
+    ]
+  },
+  "interfaces": [
+    {
+      "name": "eth0.1",
+      "mac": "32:6E:D4:AE:0D:FF"
+    },
+    {
+      "mac": "32:6E:D4:AE:0D:FF",
+      "name": "br-lan",
+      "ip": "10.83.156.121"
+    },
+    {
+      "mac": "32:6E:D4:AE:0D:FF",
+      "name": "br-dtdlink",
+      "ip": "10.11.115.143"
+    },
+    {
+      "mac": "12:85:C9:82:AC:0F",
+      "name": "wlan0",
+      "ip": "10.10.115.143"
+    },
+    {
+      "name": "br-wan",
+      "mac": "32:6E:D4:AE:0D:FF"
+    },
+    {
+      "name": "eth0.2",
+      "mac": "32:6E:D4:AE:0D:FF"
+    },
+    {
+      "name": "eth1.1",
+      "mac": "32:6E:D4:AE:0D:FF"
+    },
+    {
+      "name": "eth1.2",
+      "mac": "32:6E:D4:AE:0D:FF"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "eth0",
+      "mac": "32:6E:D4:AE:0D:FF"
+    },
+    {
+      "name": "eth1",
+      "mac": "32:6E:D4:AE:0D:FF"
+    }
+  ],
+  "node_details": {
+    "model": "Ubiquiti Nanostation M",
+    "mesh_gateway": "0",
+    "firmware_mfg": "AREDN",
+    "board_id": "0xe012",
+    "firmware_version": "3.22.1.0"
+  },
+  "services_local": [],
+  "link_info": {
+    "10.230.178.82": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 0.65,
+      "vtime": 20000,
+      "linkCost": 2.447266,
+      "linkType": "RF",
+      "hostname": "N0CALL-NSM2-4",
+      "validityTime": 37997,
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "rx_rate": 26,
+      "neighborLinkQuality": 0.627,
+      "noise": -95,
+      "symmetryTime": 18946,
+      "seqnoValid": false,
+      "lossMultiplier": 65536,
+      "pending": false,
+      "lossHelloInterval": 2000,
+      "asymmetryTime": 658256433,
+      "tx_rate": 13,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 1946,
+      "expected_throughput": 6.8,
+      "olsrInterface": "wlan0",
+      "lastHelloTime": 0,
+      "signal": -77
+    }
+  },
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": false
+  },
+  "node": "N0CALL-nsm2-2",
+  "api_version": "1.9"
+}
