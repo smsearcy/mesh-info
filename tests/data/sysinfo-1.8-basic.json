@@ -1,0 +1,109 @@
+{
+  "lon": "-140.138678",
+  "sysinfo": {
+    "uptime": "0 days, 0:02:14",
+    "loads": [
+      0.22,
+      0.19,
+      0.08
+    ]
+  },
+  "interfaces": [
+    {
+      "mac": "73:9B:EC:13:C6:7D",
+      "name": "eth0.2",
+      "ip": "10.123.183.8"
+    },
+    {
+      "mac": "C7:0F:4B:66:8E:A5",
+      "name": "wlan0",
+      "ip": "10.122.183.8"
+    },
+    {
+      "mac": "73:9B:EC:13:C6:7D",
+      "name": "br-lan",
+      "ip": "10.213.184.65"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "eth0",
+      "mac": "73:9B:EC:13:C6:7D"
+    },
+    {
+      "name": "eth0.1",
+      "mac": "73:9B:EC:13:C6:7D"
+    }
+  ],
+  "api_version": "1.8",
+  "lat": "89.539221",
+  "meshrf": {
+    "ssid": "ArednMeshNetwork",
+    "channel": "-2",
+    "status": "on",
+    "freq": "2.397 GHz",
+    "chanbw": "10"
+  },
+  "tunnels": {
+    "active_tunnel_count": "0",
+    "tunnel_installed": false
+  },
+  "link_info": {
+    "10.98.33.29": {
+      "neighborLinkQuality": 1,
+      "noise": -92,
+      "linkQuality": 1,
+      "linkType": "RF",
+      "hostname": "N0CALL-CPE220-1-East-City-OR.local.mesh",
+      "tx_rate": 1,
+      "olsrInterface": "wlan0",
+      "rx_rate": 0,
+      "signal": -58
+    },
+    "10.42.159.139": {
+      "neighborLinkQuality": 0.886,
+      "noise": -92,
+      "linkQuality": 0.944,
+      "linkType": "RF",
+      "hostname": "N0CALL-NSM2-2-East-City-OR.local.mesh",
+      "tx_rate": 1,
+      "olsrInterface": "wlan0",
+      "rx_rate": 0,
+      "signal": -64
+    },
+    "10.132.62.239": {
+      "neighborLinkQuality": 0.388,
+      "noise": -92,
+      "linkQuality": 0.497,
+      "linkType": "RF",
+      "hostname": "N0CALL-bm2-1.local.mesh",
+      "tx_rate": 1,
+      "olsrInterface": "wlan0",
+      "rx_rate": 0,
+      "signal": -82
+    },
+    "10.64.116.119": {
+      "neighborLinkQuality": 0.94,
+      "noise": -92,
+      "linkQuality": 1,
+      "linkType": "RF",
+      "hostname": "N0CALL-NSM2-1-East-City-OR.local.mesh",
+      "tx_rate": 1,
+      "olsrInterface": "wlan0",
+      "rx_rate": 0,
+      "signal": -51
+    }
+  },
+  "grid_square": "MD69lx",
+  "node": "N0CALL-NSM2-1",
+  "node_details": {
+    "description": "Temporarily sitting inside...",
+    "model": "Ubiquiti Nanostation M (XW)",
+    "mesh_gateway": "0",
+    "board_id": "0xe866",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "3.21.4.0"
+  }
+}

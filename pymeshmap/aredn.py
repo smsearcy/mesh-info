@@ -388,9 +388,9 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
         "node_name": json_data["node"].lower(),
         "display_name": json_data["node"],
         "api_version": json_data["api_version"],
-        "grid_square": json_data["grid_square"],
-        "latitude": float(json_data["lat"]) if json_data["lat"] else None,
-        "longitude": float(json_data["lon"]) if json_data["lon"] else None,
+        "grid_square": json_data.get("grid_square", ""),
+        "latitude": float(json_data["lat"]) if json_data.get("lat") else None,
+        "longitude": float(json_data["lon"]) if json_data.get("lon") else None,
         "interfaces": {iface.name: iface for iface in interfaces},
         "services": [
             Service.from_json(service_data)
