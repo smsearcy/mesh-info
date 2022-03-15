@@ -35,8 +35,8 @@ class AppConfig:
 
     @environ.config
     class Aredn:
-        current_firmware: str = environ.var(default="3.21.4.0")
-        current_api: str = environ.var(default="1.8")
+        current_firmware: str = environ.var(default="3.22.1.0")
+        current_api: str = environ.var(default="1.9")
 
     @environ.config
     class Collector:
