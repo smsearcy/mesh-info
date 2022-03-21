@@ -227,6 +227,7 @@ class LinkInfo:
             noise=raw_data.get("noise"),
             tx_rate=raw_data.get("tx_rate"),
             rx_rate=raw_data.get("rx_rate"),
+            olsr_cost=raw_data.get("linkCost"),
         )
 
 

@@ -134,6 +134,52 @@ def test_api_version_1_7(data_folder):
     assert system_info.band == "5GHz"
 
 
+def test_api_version_1_9(data_folder):
+    """Test parsing API version 1.8"""
+
+    with open(data_folder / "sysinfo-1.9-basic.json", "r") as f:
+        json_data = json.load(f)
+    system_info = aredn.load_system_info(json_data)
+
+    # I could just construct a second object, but I'm not checking everything
+    assert system_info.node_name == "n0call-nsm2-2"
+    assert system_info.display_name == "N0CALL-nsm2-2"
+    assert len(system_info.interfaces) == 11
+    assert system_info.interfaces["eth0"].ip_address is None
+    assert system_info.model == "Ubiquiti Nanostation M"
+    assert system_info.grid_square == ""
+    assert system_info.latitude is None
+    assert system_info.longitude is None
+    assert system_info.ssid == "ArednMeshNetwork"
+    assert system_info.channel == "-1"
+    assert system_info.channel_bandwidth == "10"
+    assert system_info.api_version == "1.9"
+    assert len(system_info.load_averages) == 3
+    assert system_info.up_time == "7 days, 14:51:22"
+    assert system_info.up_time_seconds == 658282
+    assert system_info.active_tunnel_count == 0
+    assert not system_info.tunnel_installed
+    assert system_info.wlan_ip_address == "10.10.115.143"
+    assert system_info.band == "2GHz"
+    assert len(system_info.links) == 1
+
+    sample_link = system_info.links[0]
+    expected = aredn.LinkInfo(
+        source="n0call-nsm2-2",
+        destination="n0call-nsm2-4",
+        olsr_cost=2.447266,
+        quality=0.65,
+        neighbor_quality=0.627,
+        signal=-77,
+        noise=-95,
+        type=LinkType.RF,
+        tx_rate=13,
+        rx_rate=26,
+        interface="wlan0",
+    )
+    assert sample_link == expected
+
+
 def test_tunnel_only_1_6(data_folder):
     """Load information from a "tunnel" node, no WiFi and mulitple tunnels."""
 
