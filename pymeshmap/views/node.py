@@ -41,10 +41,10 @@ def node_detail(request: Request):
 
     links = query.all()
     graphs_by_link_type = {
-        LinkType.RF: ("quality", "snr"),
-        LinkType.DTD: ("quality",),
+        LinkType.RF: ("cost", "quality", "snr"),
+        LinkType.DTD: ("cost", "quality"),
         # do tunnels have quality metrics?
-        LinkType.TUN: ("quality",),
+        LinkType.TUN: ("cost", "quality"),
         LinkType.UNKNOWN: ("cost",),
     }
 
