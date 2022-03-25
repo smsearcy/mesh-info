@@ -135,7 +135,7 @@ def test_api_version_1_7(data_folder):
 
 
 def test_api_version_1_9(data_folder):
-    """Test parsing API version 1.8"""
+    """Test parsing API version 1.9"""
 
     with open(data_folder / "sysinfo-1.9-basic.json", "r") as f:
         json_data = json.load(f)
@@ -167,6 +167,7 @@ def test_api_version_1_9(data_folder):
     expected = aredn.LinkInfo(
         source="n0call-nsm2-2",
         destination="n0call-nsm2-4",
+        destination_ip="10.230.178.82",
         olsr_cost=2.447266,
         quality=0.65,
         neighbor_quality=0.627,
@@ -309,6 +310,7 @@ def test_radio_link_info_parsing(data_folder):
     expected = aredn.LinkInfo(
         source="n0call-nsm2-1",
         destination="n0call-rkm2-1-medford-or",
+        destination_ip="10.150.4.228",
         quality=0.94,
         neighbor_quality=0.94,
         signal=-82,
@@ -334,6 +336,7 @@ def test_dtd_link_info_parsing(data_folder):
     expected = aredn.LinkInfo(
         source="n0call-vc-rf-5g",
         destination="n0call-vc-shack",
+        destination_ip="10.33.72.151",
         quality=1,
         neighbor_quality=1,
         type=LinkType.DTD,
@@ -355,6 +358,7 @@ def test_dtd_link_info_no_type(data_folder):
     expected = aredn.LinkInfo(
         source="n0call-nsm2-2-east-city-or",
         destination="n0call-nsm2-1-east-city-or",
+        destination_ip="10.65.116.119",
         quality=1,
         neighbor_quality=1,
         type=LinkType.DTD,
@@ -372,10 +376,13 @@ def test_invalid_link_json():
         "olsrInterface": "eth.0",
         "linkType": "foobar",
     }
-    link_info = aredn.LinkInfo.from_json(link_json, source="n0call-nsm1")
+    link_info = aredn.LinkInfo.from_json(
+        link_json, source="n0call-nsm1", ip_address="10.1.1.1"
+    )
     expected = aredn.LinkInfo(
         source="n0call-nsm1",
         destination="n0call-nsm2",
+        destination_ip="10.1.1.1",
         quality=1,
         neighbor_quality=1,
         type=LinkType.UNKNOWN,
