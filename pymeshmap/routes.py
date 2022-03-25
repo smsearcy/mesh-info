@@ -5,6 +5,7 @@ def includeme(config: Configurator):
     config.add_static_view("static", "static", cache_max_age=3600)
     config.add_route("home", "/")
     config.add_route("node-details", r"/nodes/{id:\d+}")
+    config.add_route("node-json", r"/nodes/{id:\d+}/json")
     config.add_route("node-graphs", r"/nodes/{id:\d+}/graphs/{name}")
     config.add_route("nodes", "/nodes/{view}")
     config.add_route("network-graphs", "/network/graphs/{name}")

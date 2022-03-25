@@ -57,6 +57,21 @@ def node_detail(request: Request):
     }
 
 
+@view_config(route_name="node-json", renderer="json")
+def node_json(request: Request):
+    """Dump most recent sysinfo.json for a node."""
+
+    node_id = int(request.matchdict["id"])
+    dbsession: Session = request.dbsession
+
+    node: Node = dbsession.query(Node).get(node_id)
+
+    if node is None:
+        raise HTTPNotFound("Sorry, the specified node could not be found")
+
+    return node.system_info
+
+
 @view_config(
     route_name="node-graphs", renderer="pymeshmap:templates/node-graphs.jinja2"
 )
