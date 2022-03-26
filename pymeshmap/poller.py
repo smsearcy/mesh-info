@@ -292,7 +292,7 @@ def _populate_cost_from_olsr(links: List[LinkInfo], olsr_links: List[OlsrLink]):
     for link in links:
         if link.destination_ip not in cost_by_destination:
             continue
-        link.olsr_cost = cost_by_destination[link.destination]
+        link.olsr_cost = cost_by_destination[link.destination_ip]
 
 
 async def node_information(
