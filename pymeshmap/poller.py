@@ -244,15 +244,18 @@ async def network_info(
     # Build list of links for all nodes, using AREDN data, falling back to OLSR
     links: List[LinkInfo] = []
     for node in node_info.nodes:
+        node_ip = node_info.name_ip_map[node.node_name]
         if len(node.links) > 0:
             # Use link information from AREDN if we have it (newer firmware)
+            if node.api_version_tuple < (1, 9):
+                # get the link cost from OLSR (pre-v1.9 API)
+                _populate_cost_from_olsr(node.links, olsr_links_by_ip.get(node_ip, []))
             links.extend(node.links)
             node.link_count = len(node.links)
             continue
 
         # Create `LinkInfo` objects based on the information in OLSR
         node.link_count = 0
-        node_ip = node_info.name_ip_map[node.node_name]
         try:
             node_olsr_links = olsr_links_by_ip[node_ip]
         except KeyError:
@@ -270,6 +273,7 @@ async def network_info(
                 LinkInfo(
                     source=node.node_name,
                     destination=node_info.ip_name_map[link.destination],
+                    destination_ip=link.destination,
                     type=LinkType.UNKNOWN,
                     interface="unknown",
                     olsr_cost=link.cost,
@@ -277,6 +281,18 @@ async def network_info(
             )
 
     return NetworkInfo(node_info.nodes, links, node_info.errors)
+
+
+def _populate_cost_from_olsr(links: List[LinkInfo], olsr_links: List[OlsrLink]):
+    """Populate the link cost from the OLSR data."""
+    if len(olsr_links) == 0:
+        logger.warning("No OLSR link data found for {}", links[0].source)
+        return
+    cost_by_destination = {link.destination: link.cost for link in olsr_links}
+    for link in links:
+        if link.destination_ip not in cost_by_destination:
+            continue
+        link.olsr_cost = cost_by_destination[link.destination_ip]
 
 
 async def node_information(

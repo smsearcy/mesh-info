@@ -188,6 +188,7 @@ class LinkInfo:
 
     source: str
     destination: str
+    destination_ip: str
     type: LinkType
     interface: str
     quality: Optional[float] = None
@@ -199,10 +200,16 @@ class LinkInfo:
     olsr_cost: Optional[float] = None
 
     @classmethod
-    def from_json(cls, raw_data: Dict[str, Any], *, source: str) -> LinkInfo:
+    def from_json(
+        cls, raw_data: Dict[str, Any], *, source: str, ip_address: str
+    ) -> LinkInfo:
         """Construct the `Link` dataclass from the AREDN JSON information.
 
         Needs the name of the source node passed in as well.
+
+        Args:
+            source: Hostname of source node (lowercase, no domain)
+            ip_address: IP address of link destination
 
         """
         # fix example of a DTD link that wasn't properly identified as such
@@ -219,6 +226,7 @@ class LinkInfo:
         return LinkInfo(
             source=source,
             destination=raw_data["hostname"].lower().replace(".local.mesh", ""),
+            destination_ip=ip_address,
             type=link_type,
             interface=raw_data["olsrInterface"],
             quality=raw_data["linkQuality"],
@@ -227,6 +235,7 @@ class LinkInfo:
             noise=raw_data.get("noise"),
             tx_rate=raw_data.get("tx_rate"),
             rx_rate=raw_data.get("rx_rate"),
+            olsr_cost=raw_data.get("linkCost"),
         )
 
 
@@ -360,6 +369,14 @@ class SystemInfo:
             return self.active_tunnel_count
         return sum(1 for link in self.links if link.type == LinkType.TUN)
 
+    @property
+    def api_version_tuple(self) -> Tuple[int, ...]:
+        try:
+            return tuple(int(value) for value in self.api_version.split("."))
+        except ValueError:
+            logger.warning("Invalid version string: {}", self.api_version)
+            return 0, 0
+
     def __str__(self):
         return f"{self.node_name} ({self.wlan_ip_address})"
 
@@ -443,8 +460,10 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
         data["tunnel_installed"] = str(json_data["tunnel_installed"]).lower() == "true"
 
     data["links"] = [
-        LinkInfo.from_json(link_info, source=data["node_name"].lower())
-        for link_info in json_data.get("link_info", {}).values()
+        LinkInfo.from_json(
+            link_info, source=data["node_name"].lower(), ip_address=ip_address
+        )
+        for ip_address, link_info in json_data.get("link_info", {}).items()
     ]
 
     return SystemInfo(**data)
