@@ -14,7 +14,6 @@ Getting Started
 
 **pyMeshMap** requires the following (the instructions below should walk you through the process):
 * Python 3.7 or later
-* Poetry for managing the packaging
 * [RRDtool](https://oss.oetiker.ch/rrdtool/index.en.html) development headers to be installed
 (`librrd-dev` on Debian/Ubuntu or `rrdtool-devel` for Fedora/Red Hat)
 * PostgreSQL libraries
@@ -27,27 +26,33 @@ Reference `.env.example` for how to customize settings via an `.env` file.
 ```shell script
 $ sudo apt install python3 python3-virtualenv python3-dev python3-pip
 $ sudo apt install libpq-dev librrd-dev
-# After installing Poetry I had to log out and back in for my PATH to be setup correctly
-$ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3 -
 $ git clone https://github.com/smsearcy/pymeshmap.git
 $ cd pymeshmap
-$ poetry install --no-dev
+# Create a virtual environment to isolate the Python dependencies
+$ python3 -m venv .
+$ ./bin/python -m pip install -U pip
+$ ./bin/pip install -r requirements.txt
+$ ./bin/pip install -e .
 # Run a basic poll of the network to confirm that is working
-$ poetry run pymeshmap report
+$ ./bin/pymeshmap report
 $ sudo mkdir -p /usr/local/share/pymeshmap
 # Make sure the user that we're running as has write access to that folder
 $ sudo chown [user] /user/local/share/pymeshmap
-$ poetry run alembic upgrade head
-$ poetry run pymeshmap collector &
-$ poetry run pymeshmap web &
+$ ./bin/alembic upgrade head
+# These last two commands are the only ones that need to be ran going forward
+$ ./bin/pymeshmap collector &
+$ ./bin/pymeshmap web &
 ```
 
 Commands
 --------
 
+*Commands are given assuming the Python "virtual environment" has been activated via `. ./bin/activate`.
+Run `deactivate` to drop out of the virtualenv.*
+
 ### Network Report
 ```shell script
-$ poetry run pymeshmap report [-v] [--save-errors] [--path=.] [HOSTNAME]
+$ pymeshmap report [-v] [--save-errors] [--path=.] [HOSTNAME]
 ```
 
 Prints node and link details *after* polling all the nodes on the network.
@@ -65,7 +70,7 @@ Change the directory those are saved with `--path`.
 
 ### Collector Service
 ```shell script
-$ poetry run pymeshmap collector [--run-once]
+$ pymeshmap collector [--run-once]
 ```
 
 Collects information from the network and stores to the database.
@@ -78,7 +83,7 @@ Use the `--run-once` option to run once and exit.
 
 ### Web Service
 ```shell script
-$ poetry run pymeshmap web
+$ pymeshmap web
 ```
 
 Serves the web interface on http://localhost:6543 (by default).
@@ -115,22 +120,14 @@ Project icon is from [here](https://commons.wikimedia.org/wiki/File:FullMeshNetw
 Developing
 ----------
 
-**pyMeshMap** uses [Poetry](https://python-poetry.org/) to manage dependencies
-so you will need that [installed](https://python-poetry.org/docs/#installation).
-
-Once you have that:
-
 1. Fork/clone the Git repository via your preferred tool
 and `cd` to that directory in a terminal.
-2. To create a virtualenv and install the package with its dependencies
-(including development dependencies) run `poetry install`.
-*If running in a virtual environment already then it will use that virtual environment.*
-3. To configure your IDE to use the correct virtual environment
-run `poetry env info`
-and update your IDE to use the Virtualenv path specified.
-4. Create `.env` and set `PYMESHMAP_ENV = "development"`
+2. Follow the directions above for installing pyMeshmap.
+3. Activate the virtualenv via `. ./bin/activate` (this is necessary for the `Makefile` to find the commands).
+4. Install the development requirements via `./bin/pip install -r dev-requirements.txt`
+5. Create `.env` and set `PYMESHMAP_ENV = "development"`
 (this enables the Pyramid debug toolbar
 and changes the default data paths to be in the current user's home directory).
-6. To run the `pymeshmap` command execute `poetry run pymeshmap [sub-command]`.
+6. To run the `pymeshmap` command execute `pymeshmap [sub-command]`.
 7. A `Makefile` is included to simplify various tasks such as running `pre-commit`, tests, and linters.
 8. A `pyramid.ini` file is provided for use with the Pyramid development tools like `pserve` and `pshell`.
