@@ -17,8 +17,3 @@ repos:
     rev: 5.10.1
     hooks:
       - id: isort
-
-  - repo: https://github.com/smsearcy/pre-commit-poetry-export
-    rev: v0.2.0
-    hooks:
-      - id: poetry-export
