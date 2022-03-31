@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import enum
 import functools
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -25,14 +26,17 @@ class Environment(enum.Enum):
     PROD = "production"
 
 
+def default_workers():
+    # py38: use walrus operator
+    cpu_count = os.cpu_count()
+    if cpu_count:
+        return cpu_count * 2 + 1
+    else:
+        return 1
+
+
 @environ.config(prefix="MESHMAP")
 class AppConfig:
-    @environ.config
-    class Poller:
-        max_connections: int = environ.var(default=50, converter=int)
-        connect_timeout: int = environ.var(default=10, converter=int)
-        read_timeout: int = environ.var(default=15, converter=int)
-
     @environ.config
     class Aredn:
         current_firmware: str = environ.var(default="3.22.1.0")
@@ -46,9 +50,16 @@ class AppConfig:
         max_retries: int = environ.var(default=5, converter=int)
 
     @environ.config
+    class Poller:
+        max_connections: int = environ.var(default=50, converter=int)
+        connect_timeout: int = environ.var(default=10, converter=int)
+        read_timeout: int = environ.var(default=15, converter=int)
+
+    @environ.config
     class Web:
         host: str = environ.var(default="0.0.0.0")
-        port: int = environ.var(default=6543, converter=int)
+        port: int = environ.var(default=8080, converter=int)
+        workers: int = environ.var(default=default_workers(), converter=int)
         # debug_hosts
 
     env: Environment = environ.var(default="production", converter=Environment)
@@ -58,9 +69,9 @@ class AppConfig:
     db_url: str = environ.var(default="")
     data_dir: Path = environ.var(default="")
 
-    poller: Poller = environ.group(Poller)
     aredn: Aredn = environ.group(Aredn)
     collector: Collector = environ.group(Collector)
+    poller: Poller = environ.group(Poller)
     web: Web = environ.group(Web)
 
     def __attrs_post_init__(self):
@@ -75,6 +86,10 @@ class AppConfig:
         if self.db_url == "":
             # location of default SQLite database depends on the data_dir
             self.db_url = f"sqlite:///{self.data_dir!s}/pymeshmap.db"
+
+        if self.env == Environment.DEV:
+            # Only use 1 worker in development environment for the debug toolbar
+            self.web.workers = 1
 
 
 def from_env() -> AppConfig:
@@ -96,6 +111,9 @@ def configure(
     if app_config is None:
         app_config = from_env()
 
+    # This is kind of ugly since I'm mashing together
+    # (I should update my custom stuff to just use the AppConfig object)
+    settings["app_config"] = app_config
     settings["environment"] = app_config.env
     settings["site_name"] = app_config.site_name
     settings["log_level"] = app_config.log_level

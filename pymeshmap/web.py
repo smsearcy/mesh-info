@@ -2,32 +2,46 @@
 
 from __future__ import annotations
 
-import hupper
-import waitress
-from loguru import logger
+from gunicorn.app.base import BaseApplication  # type: ignore
 from pyramid.config import Configurator
 
-from .config import configure
+from .config import AppConfig
 
 
-def main(
-    config: Configurator, *, host: str = "", port: int = None, reload: bool = False
-):
+class GunicornApplication(BaseApplication):
+    """Run pyMeshMap WSGI application via Gunicorn.
+
+    Based on the "Custom Application" in the Gunicorn docs.
+
+    """
+
+    def __init__(self, app, options=None):
+        self.options = options or {}
+        self.application = app
+        super().__init__()
+
+    def load_config(self):
+        """Set configuration options based on the passed settings."""
+        config = {
+            key: value
+            for key, value in self.options.items()
+            if key in self.cfg.settings and value is not None
+        }
+        for key, value in config.items():
+            self.cfg.set(key.lower(), value)
+
+    def load(self):
+        return self.application
+
+
+def main(config: Configurator, settings: AppConfig.Web, *, reload: bool = False):
     """Create and run the Pyramid WSGI application."""
 
-    if reload:
-        reloader = hupper.start_reloader("pymeshmap.cli.main")
-        reloader.watch_files([".env"])
-
-    settings = config.get_settings()
-    host = host or settings["web"].host
-    port = port or settings["web"].port
-    logger.info("Web server listening on {}:{}", host, port)
-
-    waitress.serve(config.make_wsgi_app(), host=host, port=port)
-
-
-def app_factory(global_config, **settings):
-    config = configure(settings)
-
-    return config.make_wsgi_app()
+    GunicornApplication(
+        config.make_wsgi_app(),
+        {
+            "bind": f"{settings.host}:{settings.port}",
+            "workers": settings.workers,
+            "reload": reload,
+        },
+    ).run()

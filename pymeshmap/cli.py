@@ -7,11 +7,11 @@ import sys
 from pathlib import Path
 
 from loguru import logger
-from pyramid.paster import bootstrap
+from pyramid.scripting import prepare
 
 from pymeshmap import __version__, backup, collector, models, report, web
 from pymeshmap.aredn import VersionChecker
-from pymeshmap.config import configure
+from pymeshmap.config import AppConfig, configure
 from pymeshmap.historical import HistoricalStats
 
 
@@ -25,67 +25,68 @@ def main(argv: list = None):  # noqa: C901
         print(f"pymeshmap version {__version__}")
         return
 
+    config = configure()
+    settings = config.get_settings()
+    app_config: AppConfig = settings["app_config"]
+
     if args.command == "web":
-        # web process doesn't need to be bootstrapped
-        config = configure()
-        web.main(config, host=args.host, port=args.port, reload=args.reload)
+        # web process doesn't need to be "prepared"
+        web.main(config, app_config.web, reload=args.reload)
         return
 
-    pyramid_ini = str(Path(__file__).parents[1] / "pyramid.ini")
-    with bootstrap(pyramid_ini) as env:
-        settings = env["registry"].settings
-        request = env["request"]
+    env = prepare(registry=config.registry)
+    request = env["request"]
 
-        poller = request.find_service(name="poller")
-        version_checker: VersionChecker = request.find_service(VersionChecker)
+    poller = request.find_service(name="poller")
+    version_checker: VersionChecker = request.find_service(VersionChecker)
 
-        # Check the report command first since it doesn't require database or storage
-        if args.command == "report":
-            if not args.path.is_dir():
-                parser.error("output path must be an existing directory")
+    # Check the report command first since it doesn't require database or storage
+    if args.command == "report":
+        if not args.path.is_dir():
+            parser.error("output path must be an existing directory")
 
-            sys.exit(
-                report.main(
-                    args.hostname,
-                    poller,
-                    version_checker,
-                    verbose=args.verbose,
-                    save_errors=args.save_errors,
-                    output_path=args.path,
-                )
+        sys.exit(
+            report.main(
+                args.hostname,
+                poller,
+                version_checker,
+                verbose=args.verbose,
+                save_errors=args.save_errors,
+                output_path=args.path,
             )
+        )
 
-        data_dir = settings["data_dir"]
-        if not data_dir.exists():
-            try:
-                data_dir.mkdir(parents=True, exist_ok=True)
-            except PermissionError:
-                sys.exit(f"Failed to create data directory: {data_dir!s}")
-
-        if args.command == "export":
-            sys.exit(backup.export_data(data_dir, args.filename))
-
-        if args.command == "import":
-            sys.exit(backup.import_data(args.filename, data_dir))
-
+    data_dir = app_config.data_dir
+    if not data_dir.exists():
         try:
-            session_factory = models.get_session_factory(models.get_engine(settings))
-        except Exception as exc:
-            logger.error(f"Failed to configure database connection: {exc!r}")
-            sys.exit("Database configuration failed, review logs for details")
+            data_dir.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            sys.exit(f"Failed to create data directory: {data_dir!s}")
 
-        if args.command == "collector":
-            historical_stats: HistoricalStats = request.find_service(HistoricalStats)
-            sys.exit(
-                collector.main(
-                    settings["local_node"],
-                    session_factory,
-                    poller,
-                    historical_stats,
-                    config=settings["collector"],
-                    run_once=args.run_once,
-                )
+    if args.command == "export":
+        sys.exit(backup.export_data(data_dir, args.filename))
+
+    if args.command == "import":
+        sys.exit(backup.import_data(args.filename, data_dir))
+
+    try:
+        session_factory = models.get_session_factory(models.get_engine(settings))
+    except Exception as exc:
+        logger.error(f"Failed to configure database connection: {exc!r}")
+        sys.exit("Database configuration failed, review logs for details")
+
+    if args.command == "collector":
+        historical_stats: HistoricalStats = request.find_service(HistoricalStats)
+        sys.exit(
+            collector.main(
+                app_config.local_node,
+                session_factory,
+                poller,
+                historical_stats,
+                config=app_config.collector,
+                run_once=args.run_once,
             )
+        )
 
     sys.exit(f"command not recognized: {args.command}")
 
@@ -142,11 +143,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     web_parser.add_argument(
         "--host",
-        help="ip address to listen on (defaults to 127.0.0.1)",
+        help="ip address to listen on",
     )
     web_parser.add_argument(
         "--port",
-        help="port to listen on (defaults to 6543)",
+        type=int,
+        help="port to listen on",
+    )
+    web_parser.add_argument(
+        "--workers",
+        type=int,
+        help="number of worker processes",
     )
     web_parser.add_argument(
         "--reload",
