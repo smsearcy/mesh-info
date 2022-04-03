@@ -3,7 +3,6 @@ default:
 
 variables:
   PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
-  POETRY_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pypoetry
   PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
   POSTGRES_DB: tests
   POSTGRES_USER: meshmap
@@ -13,75 +12,62 @@ stages:
   - prep
   - test
 
-build:
-  # Confirm Poetry can build - and warm up the cache
+pre-commit:
+  # Run pre-commit first to warm up the cache
   stage: prep
   script:
-    - apt-get update
-    - apt-get install -y librrd-dev
-    - pip install poetry
-    - poetry install
-  cache:
-    paths:
-      - .cache/pip
-      - .cache/pypoetry
-
-pre-commit:
-  stage: test
-  script:
-    - pip install pre-commit poetry
+    - python -m pip install -U pip
+    - pip install pre-commit
     - pre-commit run --all-files
   cache:
     key: pre-commit
     paths:
       - .cache/pip
       - .cache/pre-commit
-    policy: pull
 
 # Template to prepare Poetry (for use with `extends`)
-.poetry:
+.prep:
   before_script:
     - apt-get update
     - apt-get install -y librrd-dev
-    - pip install poetry
-    - poetry install
+    - python -m pip install -U pip
+    - pip install -r requirements.txt -r dev-requirements.txt
+    - pip install -e .
 
 flake8:
   stage: test
-  extends: .poetry
+  extends: .prep
   script:
-    - poetry run flake8 pymeshmap tests --format=junit-xml --output=flake8-report.xml
+    - flake8 pymeshmap tests --format=junit-xml --output=flake8-report.xml
   artifacts:
     reports:
       junit: flake8-report.xml
   cache:
     paths:
       - .cache/pip
-      - .cache/pypoetry
     policy: pull
 
 mypy:
   stage: test
-  extends: .poetry
+  extends: .prep
   script:
-    - poetry run mypy pymeshmap --junit-xml=mypy-report.xml
+    - mypy pymeshmap --junit-xml=mypy-report.xml
   artifacts:
     reports:
       junit: mypy-report.xml
   cache:
     paths:
       - .cache/pip
-      - .cache/pypoetry
     policy: pull
 
 # Template for pytest to simplify testing different versions of Python
 .pytest:
   stage: test
-  extends: .poetry
+  extends: .prep
   services:
     - postgres:12
   script:
-    - poetry run pytest --cov=pymeshmap --junit-xml=pytest-report.xml
+    - pytest --cov=pymeshmap --junit-xml=pytest-report.xml
   coverage: '/^TOTAL.+?(\d+\%)$/'
   artifacts:
     reports:
@@ -94,7 +80,6 @@ pytest 3.7:
     key: poetry37
     paths:
       - .cache/pip
-      - .cache/pypoetry
 
 pytest 3.8:
   extends: .pytest
@@ -102,7 +87,6 @@ pytest 3.8:
   cache:
     paths:
       - .cache/pip
-      - .cache/pypoetry
     policy: pull
 
 pytest 3.9:
@@ -112,7 +96,6 @@ pytest 3.9:
     key: poetry39
     paths:
       - .cache/pip
-      - .cache/pypoetry
 
 pytest 3.10:
   extends: .pytest
@@ -121,7 +104,6 @@ pytest 3.10:
     key: poetry310
     paths:
       - .cache/pip
-      - .cache/pypoetry
 
 include:
   - template: Security/Dependency-Scanning.gitlab-ci.yml

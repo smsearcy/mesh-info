@@ -1,0 +1,15 @@
+-c requirements.txt
+Faker>=8.0.0
+WebTest>=2.0.35
+flake8-bugbear>=21.3.1
+flake8>=3.7.9
+flake8_formatter_junit_xml>=0.0.6
+mypy
+pip-tools
+pyramid-debugtoolbar>=4.9
+pytest-asyncio>=0.15.1
+pytest-cov>=2.8.1
+pytest-mock>=3.3.1
+pytest-postgresql<4.0.0
+pytest>=6.2.0
+types-waitress>=0.1.4
