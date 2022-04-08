@@ -52,6 +52,11 @@ class AppConfig:
         max_retries: int = environ.var(default=5, converter=int)
 
     @environ.config
+    class DB:
+        url: str = environ.var(default="")
+        pool_pre_ping: bool = environ.bool_var(default=True)
+
+    @environ.config
     class Poller:
         max_connections: int = environ.var(default=50, converter=int)
         connect_timeout: int = environ.var(default=10, converter=int)
@@ -68,11 +73,11 @@ class AppConfig:
     local_node: str = environ.var(default="localnode.local.mesh")
     log_level: str = environ.var(default="SUCCESS")
     site_name: str = environ.var(default="pyMeshMap")
-    db_url: str = environ.var(default="")
     data_dir: Path = environ.var(default="")
 
     aredn: Aredn = environ.group(Aredn)
     collector: Collector = environ.group(Collector)
+    db: DB = environ.group(DB)
     poller: Poller = environ.group(Poller)
     web: Web = environ.group(Web)
 
@@ -86,9 +91,9 @@ class AppConfig:
         else:
             self.data_dir = Path(self.data_dir)
 
-        if self.db_url == "":
+        if self.db.url == "":
             # location of default SQLite database depends on the data_dir
-            self.db_url = f"sqlite:///{self.data_dir!s}/pymeshmap.db"
+            self.db.url = f"sqlite:///{self.data_dir!s}/pymeshmap.db"
 
         if self.env == Environment.DEV:
             # Only use 1 worker in development environment for the debug toolbar
@@ -122,17 +127,9 @@ def configure(
     # This is kind of ugly since I'm mashing together
     # (I should update my custom stuff to just use the AppConfig object)
     settings["app_config"] = app_config
-    settings["environment"] = app_config.env
-    settings["site_name"] = app_config.site_name
-    settings["log_level"] = app_config.log_level
-    settings["db.url"] = app_config.db_url
-    settings["db.pool_pre_ping"] = True
-    settings["data_dir"] = app_config.data_dir
-    settings["local_node"] = app_config.local_node
-    settings["poller"] = app_config.poller
-    settings["aredn"] = app_config.aredn
-    settings["collector"] = app_config.collector
-    settings["web"] = app_config.web
+
+    # Configure settings for Pyramid
+    settings["pyramid.retry"] = 3
 
     # define Jinja filters
     filters = settings.setdefault("jinja2.filters", {})
@@ -157,12 +154,10 @@ def configure(
 
     # configure logging
     logger.remove()
-    logger.add(sys.stderr, level=settings["log_level"])
+    logger.add(sys.stderr, level=app_config.log_level)
 
     # configure Pyramid application
     config = Configurator(settings=settings)
-
-    config.add_settings({"pyramid.retry": 3})
 
     config.include("pyramid_retry")
     config.include("pyramid_services")
@@ -192,6 +187,8 @@ def configure(
             return server_timezone.name
 
     config.add_request_method(lambda r: client_timezone(r), "timezone", reify=True)
+
+    # Register services with `pyramid-services`
 
     # Register the `Poller` singleton
     poller = functools.partial(

@@ -65,7 +65,7 @@ def main(argv: list = None):  # noqa: C901
         sys.exit(backup.import_data(args.filename, app_config.data_dir))
 
     try:
-        session_factory = models.get_session_factory(models.get_engine(settings))
+        session_factory = models.get_session_factory(models.get_engine(app_config.db))
     except Exception as exc:
         logger.error(f"Failed to configure database connection: {exc!r}")
         sys.exit("Database configuration failed, review logs for details")
