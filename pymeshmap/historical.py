@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import enum
-import multiprocessing as mp
 from itertools import cycle
 from pathlib import Path
 from typing import Any, Iterable, List, Optional
@@ -617,23 +616,5 @@ class Graph:
         )
         logger.trace("Rendering graph: {}", graphv_args)
 
-        # this is using the default of `fork`,
-        # which supposedly has issues with multi-threading,
-        # however `spawn` was *very* slow (>1s vs <200ms)
-        # (hopefully we're safe since otherwise we should be threadsafe)
-        parent_cnxn, child_cnxn = mp.Pipe(duplex=False)
-        proc = mp.Process(target=_rrdtool_graphv, args=(child_cnxn, graphv_args))
-        proc.start()
-        graph_info = parent_cnxn.recv()
-        proc.join()
-
+        graph_info = rrdtool.graphv(*graphv_args)
         return graph_info["image"]
-
-
-def _rrdtool_graphv(cnxn, args: List[str]):
-    """Wrap graphv so it can be executed in its own process."""
-    # graphv appears to have threading issues (and Waitress is threaded)
-    # https://github.com/oetiker/rrdtool-1.x/issues/867
-    info = rrdtool.graphv(*args)
-    cnxn.send(info)
-    cnxn.close()
