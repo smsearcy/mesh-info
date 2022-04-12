@@ -9,9 +9,9 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import appdirs
 import environ
 import pendulum
+import platformdirs
 from dotenv import load_dotenv
 from loguru import logger
 from pyramid.config import Configurator
@@ -19,6 +19,8 @@ from pyramid.config import Configurator
 from .aredn import VersionChecker
 from .historical import HistoricalStats
 from .poller import network_info
+
+FOLDER_NAME = "pymeshmap"
 
 
 class Environment(enum.Enum):
@@ -78,10 +80,11 @@ class AppConfig:
         if self.data_dir == "":
             # default data directory depends on environment
             if self.env == Environment.PROD:
-                self.data_dir = appdirs.site_data_dir("pymeshmap")
+                self.data_dir = platformdirs.site_data_path(FOLDER_NAME)
             elif self.env == Environment.DEV:
-                self.data_dir = appdirs.user_data_dir("pymeshmap")
-        self.data_dir = Path(self.data_dir)
+                self.data_dir = platformdirs.user_data_path(FOLDER_NAME)
+        else:
+            self.data_dir = Path(self.data_dir)
 
         if self.db_url == "":
             # location of default SQLite database depends on the data_dir

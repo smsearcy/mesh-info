@@ -10,8 +10,6 @@ aiosignal==1.2.0
     # via aiohttp
 alembic==1.7.7
     # via -r requirements.in
-appdirs==1.4.4
-    # via -r requirements.in
 async-timeout==4.0.2
     # via aiohttp
 attrs==21.4.0
@@ -60,6 +58,8 @@ plaster==1.0
     #   pyramid
 plaster-pastedeploy==0.7
     # via pyramid
+platformdirs==2.5.1
+    # via -r requirements.in
 psycopg2==2.9.3
     # via -r requirements.in
 pyramid==2.0

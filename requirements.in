@@ -1,11 +1,11 @@
 aiohttp>=3.7.4,<4
 alembic>=1.4.3
-appdirs>=1.4.4
 attrs>=21.2.0,<22.0
 environ-config>=21.2.0
 gunicorn>=20.1.0
 loguru>=0.5.0,<1.0
 pendulum>=2.1.2,<3.0
+platformdirs>2.0,<3.0
 psycopg2>=2.8.5
 pyramid>=2.0,<3.0
 pyramid-jinja2>=2.8
