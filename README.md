@@ -20,8 +20,9 @@ Getting Started
 
 By default it will use SQLite for the database (but PostgreSQL is also supported),
 and "localnode.local.mesh" to get information about the network via OLSR.
-The default data directory (for SQLite and RRD files) is `/usr/local/share/pymeshmap`.
-Reference `.env.example` for how to customize settings via an `.env` file.
+The default data directory (for SQLite and RRD files) is `/var/lib/pymeshmap`.
+Reference `.env.example` for how to customize settings via an `.env` file
+(in the same folder as the project is checked out to).
 
 ```shell script
 $ sudo apt install python3 python3-virtualenv python3-dev python3-pip
@@ -35,9 +36,9 @@ $ ./bin/pip install -r requirements.txt
 $ ./bin/pip install -e .
 # Run a basic poll of the network to confirm that is working
 $ ./bin/pymeshmap report
-$ sudo mkdir -p /usr/local/share/pymeshmap
+$ sudo mkdir -p /var/lib/pymeshmap
 # Make sure the user that we're running as has write access to that folder
-$ sudo chown [user] /user/local/share/pymeshmap
+$ sudo chown [user] /var/lib/pymeshmap
 $ ./bin/alembic upgrade head
 # These last two commands are the only ones that need to be ran going forward
 $ ./bin/pymeshmap collector &

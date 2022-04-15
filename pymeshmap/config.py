@@ -80,7 +80,7 @@ class AppConfig:
         if self.data_dir == "":
             # default data directory depends on environment
             if self.env == Environment.PROD:
-                self.data_dir = platformdirs.site_data_path(FOLDER_NAME)
+                self.data_dir = Path(f"/var/lib/{FOLDER_NAME}")
             elif self.env == Environment.DEV:
                 self.data_dir = platformdirs.user_data_path(FOLDER_NAME)
         else:
@@ -202,10 +202,11 @@ def configure(
     config.register_service(version_checker, VersionChecker)
 
     # Register the `HistoricalStats` singleton
-    logger.info("RRDtool data directory: {}", app_config.data_dir)
-    config.register_service(
-        HistoricalStats(data_path=app_config.data_dir), HistoricalStats
-    )
+    rrd_directory = app_config.data_dir / "rrd"
+    logger.info("RRDtool data directory: {}", rrd_directory)
+    if not rrd_directory.exists():
+        rrd_directory.mkdir(parents=True, exist_ok=True)
+    config.register_service(HistoricalStats(data_path=rrd_directory), HistoricalStats)
 
     config.scan(".views")
 
