@@ -82,7 +82,7 @@ class AppConfig:
             if self.env == Environment.PROD:
                 self.data_dir = Path(f"/var/lib/{FOLDER_NAME}")
             elif self.env == Environment.DEV:
-                self.data_dir = platformdirs.user_data_path(FOLDER_NAME)
+                self.data_dir = platformdirs.user_data_path(FOLDER_NAME) / "data"
         else:
             self.data_dir = Path(self.data_dir)
 
@@ -93,6 +93,11 @@ class AppConfig:
         if self.env == Environment.DEV:
             # Only use 1 worker in development environment for the debug toolbar
             self.web.workers = 1
+
+    @property
+    def rrd_dir(self) -> Path:
+        """Directory for RRD files under the data directory."""
+        return self.data_dir / "rrd"
 
 
 def from_env() -> AppConfig:
@@ -202,11 +207,10 @@ def configure(
     config.register_service(version_checker, VersionChecker)
 
     # Register the `HistoricalStats` singleton
-    rrd_directory = app_config.data_dir / "rrd"
-    logger.info("RRDtool data directory: {}", rrd_directory)
-    if not rrd_directory.exists():
-        rrd_directory.mkdir(parents=True, exist_ok=True)
-    config.register_service(HistoricalStats(data_path=rrd_directory), HistoricalStats)
+    logger.info("RRDtool data directory: {}", app_config.rrd_dir)
+    config.register_service(
+        HistoricalStats(data_path=app_config.rrd_dir), HistoricalStats
+    )
 
     config.scan(".views")
 
