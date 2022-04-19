@@ -9,7 +9,7 @@ from pathlib import Path
 from loguru import logger
 from pyramid.scripting import prepare
 
-from pymeshmap import __version__, backup, collector, models, report, web
+from pymeshmap import VERSION, backup, collector, models, report, web
 from pymeshmap.aredn import VersionChecker
 from pymeshmap.config import AppConfig, configure
 from pymeshmap.historical import HistoricalStats
@@ -22,7 +22,7 @@ def main(argv: list = None):  # noqa: C901
 
     args = parser.parse_args(argv)
     if args.version:
-        print(f"pymeshmap version {__version__}")
+        print(f"pymeshmap version {VERSION}")
         return
 
     config = configure()
