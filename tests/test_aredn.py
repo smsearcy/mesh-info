@@ -44,7 +44,6 @@ def test_api_version_1_0(data_folder):
     assert system_info.channel == "-2"
     assert system_info.channel_bandwidth == "5"
     assert system_info.api_version == "1.0"
-    assert not system_info.tunnel_installed
 
 
 def test_api_version_1_5(data_folder):
@@ -71,7 +70,6 @@ def test_api_version_1_5(data_folder):
     assert system_info.up_time == "0 days, 2:39:38"
     assert system_info.up_time_seconds == 9_578
     assert system_info.active_tunnel_count == 0
-    assert not system_info.tunnel_installed
 
 
 def test_api_version_1_6(data_folder):
@@ -99,7 +97,6 @@ def test_api_version_1_6(data_folder):
     assert system_info.up_time == "255 days, 3:00:03"
     assert system_info.up_time_seconds == 22_042_803
     assert system_info.active_tunnel_count == 0
-    assert not system_info.tunnel_installed
     assert len(system_info.services) == 1
     assert system_info.wlan_ip_address == "10.159.123.176"
     assert system_info.band == "2GHz"
@@ -129,7 +126,6 @@ def test_api_version_1_7(data_folder):
     assert system_info.up_time == "3 days, 19:44:05"
     assert system_info.up_time_seconds == 330_245
     assert system_info.active_tunnel_count == 0
-    assert not system_info.tunnel_installed
     assert system_info.wlan_ip_address == "10.106.204.11"
     assert system_info.band == "5GHz"
 
@@ -158,7 +154,6 @@ def test_api_version_1_9(data_folder):
     assert system_info.up_time == "7 days, 14:51:22"
     assert system_info.up_time_seconds == 658282
     assert system_info.active_tunnel_count == 0
-    assert not system_info.tunnel_installed
     assert system_info.wlan_ip_address == "10.10.115.143"
     assert system_info.band == "2GHz"
     assert len(system_info.links) == 1
@@ -197,7 +192,6 @@ def test_tunnel_only_1_6(data_folder):
     assert system_info.ssid == ""
     assert system_info.api_version == "1.6"
     assert len(system_info.load_averages) == 3
-    assert system_info.tunnel_installed
     assert system_info.active_tunnel_count == 11
     assert system_info.wlan_ip_address == "10.154.255.82"
     assert system_info.lan_ip_address == "10.215.250.145"
@@ -219,56 +213,6 @@ def test_with_tunnel_1_7(data_folder):
     assert system_info.ssid == "mesh-10-v3"
     assert system_info.api_version == "1.7"
     assert len(system_info.load_averages) == 3
-    assert system_info.tunnel_installed
-    assert isinstance(system_info.tunnel_installed, bool)
-    assert system_info.active_tunnel_count == 0
-    assert system_info.wlan_ip_address == "10.1.2.3"
-    assert system_info.lan_ip_address == "10.3.2.1"
-
-
-def test_with_tunnel_1_7_with_truish_tunnel_value(data_folder):
-    """Load information from a "tunnel" node, check for type coercion"""
-
-    with open(data_folder / "sysinfo-1.7-tunnel-installed.json", "r") as f:
-        json_data = json.load(f)
-        json_data["tunnels"]["tunnel_installed"] = "truish"
-    system_info = aredn.load_system_info(json_data)
-
-    # I could just construct a second object but I'm not checking everything
-    assert system_info.node_name == "call1-hapacl-300-p1"
-    assert system_info.display_name == "CALL1-HAPACL-300-P1"
-    assert len(system_info.interfaces) == 8
-    assert system_info.interfaces["eth0"].ip_address is None
-    assert system_info.status == "on"
-    assert system_info.ssid == "mesh-10-v3"
-    assert system_info.api_version == "1.7"
-    assert len(system_info.load_averages) == 3
-    assert isinstance(system_info.tunnel_installed, bool)
-    assert system_info.tunnel_installed is False
-    assert system_info.active_tunnel_count == 0
-    assert system_info.wlan_ip_address == "10.1.2.3"
-    assert system_info.lan_ip_address == "10.3.2.1"
-
-
-def test_with_tunnel_1_7_with_false_tunnel_value(data_folder):
-    """Load information from a non-"tunnel" node Version 1.7"""
-
-    with open(data_folder / "sysinfo-1.7-tunnel-installed.json", "r") as f:
-        json_data = json.load(f)
-        json_data["tunnels"]["tunnel_installed"] = False
-    system_info = aredn.load_system_info(json_data)
-
-    # I could just construct a second object but I'm not checking everything
-    assert system_info.node_name == "call1-hapacl-300-p1"
-    assert system_info.display_name == "CALL1-HAPACL-300-P1"
-    assert len(system_info.interfaces) == 8
-    assert system_info.interfaces["eth0"].ip_address is None
-    assert system_info.status == "on"
-    assert system_info.ssid == "mesh-10-v3"
-    assert system_info.api_version == "1.7"
-    assert len(system_info.load_averages) == 3
-    assert isinstance(system_info.tunnel_installed, bool)
-    assert system_info.tunnel_installed is False
     assert system_info.active_tunnel_count == 0
     assert system_info.wlan_ip_address == "10.1.2.3"
     assert system_info.lan_ip_address == "10.3.2.1"

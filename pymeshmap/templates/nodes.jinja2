@@ -63,7 +63,7 @@
             '{{ node.status }}',
             '{{ node.band }}',
             '{{ node.link_count }}',
-            '{{ node.active_tunnel_count if node.tunnel_installed else 'No' }}',
+            '{{ node.active_tunnel_count }}',
             '{{ node.firmware_version }}',
             '{{ node.up_time }}',
             '{{ node.last_seen|local_tz }}'

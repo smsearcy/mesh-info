@@ -142,10 +142,7 @@ def pprint_node(node: SystemInfo, checker: VersionChecker):
     print(f"Channel: {node.channel}\tBand: {band_color}{node.band}{END}")
     api_color = VERSION_COLOR.get(checker.api(node.api_version), WARN)
     print(f"API Version: {api_color}{node.api_version}{END}")
-    print(
-        f"Tunnels: {'Yes' if node.tunnel_installed else 'No'}\t"
-        f"Count: {node.active_tunnel_count}"
-    )
+    print(f"Tunnel Count: {node.active_tunnel_count}")
     print(f"Link Count: {node.link_count}")
     print()
 

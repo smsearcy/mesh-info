@@ -55,7 +55,9 @@ class Node(Base):
 
     services = Column(JSON(), nullable=False)
 
-    tunnel_installed = Column(Boolean(), nullable=False)
+    # As of API v1.10 this is irrelevant (because it is always enabled)
+    # (probably worth deleting at some point in the future)
+    tunnel_installed = Column(Boolean(), nullable=False, default=True)
     active_tunnel_count = Column(Integer(), nullable=False)
 
     link_count = Column(Integer())

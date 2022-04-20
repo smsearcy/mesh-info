@@ -42,6 +42,14 @@ Changed
   in preparation for needing a cache directory.
   Moved RRD files into the ``rrd`` subfolder, to mirror production (``~/.local/share/pymeshmap/data/rrd``).
 
+Fixed
+^^^^^
+
+* Fix parse error due to changed tunnel data in nightly firmware (API v1.10).
+  All nodes will now just report their tunnel count,
+  so a 0 instead of "No" if the tunnel plugin is not installed.
+  (`#23 <https://github.com/smsearcy/pymeshmap/issues/23>`_)
+
 
 0.2.0 - 2022-04-11
 ------------------
