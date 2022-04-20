@@ -44,7 +44,6 @@ MODEL_TO_SYSINFO_ATTRS = {
     "channel_bandwidth": "channel_bandwidth",
     "band": "band",
     "services": "services_json",
-    "tunnel_installed": "tunnel_installed",
     "active_tunnel_count": "active_tunnel_count",
     "system_info": "source_json",
     "link_count": "link_count",
