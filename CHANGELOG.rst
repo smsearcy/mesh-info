@@ -21,7 +21,7 @@ so breaking changes are possible but will be highlighted here.
     Security
 
 
-0.3.0 - Unreleased
+0.3.0 - 2022-04-20
 ------------------
 
 Added
