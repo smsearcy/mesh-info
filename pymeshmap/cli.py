@@ -9,7 +9,7 @@ from pathlib import Path
 from loguru import logger
 from pyramid.scripting import prepare
 
-from pymeshmap import __version__, backup, collector, models, report, web
+from pymeshmap import VERSION, backup, collector, models, report, web
 from pymeshmap.aredn import VersionChecker
 from pymeshmap.config import AppConfig, configure
 from pymeshmap.historical import HistoricalStats
@@ -22,7 +22,7 @@ def main(argv: list = None):  # noqa: C901
 
     args = parser.parse_args(argv)
     if args.version:
-        print(f"pymeshmap version {__version__}")
+        print(f"pymeshmap version {VERSION}")
         return
 
     config = configure()
@@ -56,18 +56,13 @@ def main(argv: list = None):  # noqa: C901
             )
         )
 
-    data_dir = app_config.data_dir
-    if not data_dir.exists():
-        try:
-            data_dir.mkdir(parents=True, exist_ok=True)
-        except PermissionError:
-            sys.exit(f"Failed to create data directory: {data_dir!s}")
+    ensure_directories(app_config)
 
     if args.command == "export":
-        sys.exit(backup.export_data(data_dir, args.filename))
+        sys.exit(backup.export_data(app_config.data_dir, args.filename))
 
     if args.command == "import":
-        sys.exit(backup.import_data(args.filename, data_dir))
+        sys.exit(backup.import_data(args.filename, app_config.data_dir))
 
     try:
         session_factory = models.get_session_factory(models.get_engine(settings))
@@ -185,3 +180,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Name of tarball to load",
     )
     return parser
+
+
+def ensure_directories(app_config: AppConfig):
+    """Ensure necessary directories exists."""
+
+    for path in (app_config.data_dir, app_config.rrd_dir):
+        if path.exists():
+            continue
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            sys.exit(f"Failed to create directory: {path!s}")
