@@ -23,6 +23,11 @@ so breaking changes are possible but will be highlighted here.
 0.4.0 - Unreleased
 ------------------
 
+Added
+^^^^^
+
+* Added SSID to the node table for searching/sorting (`#25 <https://github.com/smsearcy/pymeshmap/issues/25>`_)
+
 
 0.3.0 - 2022-04-20
 ------------------

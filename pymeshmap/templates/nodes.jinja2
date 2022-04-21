@@ -34,10 +34,11 @@
         },
         'WLAN IP',
         'Status',
+        'SSID',
         'Band',
         'Links',
         'Tunnels',
-        'Firmware Version',
+        'Firmware',
         {
           name: 'Up Time',
           sort: false
@@ -61,6 +62,7 @@
             '{{ node.display_name }}',
             '{{ node.wlan_ip }}',
             '{{ node.status }}',
+            '{{ node.ssid }}',
             '{{ node.band }}',
             '{{ node.link_count }}',
             '{{ node.active_tunnel_count }}',
