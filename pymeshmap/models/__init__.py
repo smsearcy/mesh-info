@@ -4,9 +4,10 @@ from __future__ import annotations
 import contextlib
 from typing import Iterator
 
+import attr
 import zope.sqlalchemy
 from loguru import logger
-from sqlalchemy import engine_from_config
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, configure_mappers, sessionmaker
 
 # import or define all models here to ensure they are attached to the
@@ -21,8 +22,8 @@ from .node import Node  # noqa
 configure_mappers()
 
 
-def get_engine(settings: dict, prefix="db."):
-    return engine_from_config(settings, prefix)
+def get_engine(settings):
+    return create_engine(**attr.asdict(settings))
 
 
 def get_session_factory(engine) -> sessionmaker:
@@ -108,7 +109,7 @@ def includeme(config):
     # hook to share the dbengine fixture in testing
     dbengine = settings.get("dbengine")
     if not dbengine:
-        dbengine = get_engine(settings)
+        dbengine = get_engine(settings["app_config"].db)
 
     logger.info("Database: {!s}", dbengine)
 

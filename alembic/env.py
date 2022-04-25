@@ -38,7 +38,7 @@ def run_migrations_offline():
     """
     app_config = from_env()
     context.configure(
-        url=app_config.db_url,
+        url=app_config.db.url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -59,7 +59,7 @@ def run_migrations_online():
 
     if connectable is None:
         app_config = from_env()
-        connectable = create_engine(app_config.db_url, poolclass=pool.NullPool)
+        connectable = create_engine(app_config.db.url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)

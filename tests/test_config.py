@@ -26,6 +26,6 @@ def test_config():
 
     assert app_config.env == Environment.DEV
     assert app_config.log_level == "DEBUG"
-    assert app_config.db_url == "foobar"
+    assert app_config.db.url == "foobar"
     assert app_config.poller.max_connections == 25
     assert app_config.collector.node_inactive == 25
