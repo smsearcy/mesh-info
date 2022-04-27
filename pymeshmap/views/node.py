@@ -73,6 +73,25 @@ def node_json(request: Request):
 
 
 @view_config(
+    route_name="node-snippet",
+    renderer="pymeshmap:templates/node-snippet.jinja2",
+    http_cache=120,
+)
+def node_snippet(request: Request):
+    """Node snippet/preview for map pop-ups."""
+
+    node_id = int(request.matchdict["id"])
+    dbsession: Session = request.dbsession
+
+    node: Node = dbsession.query(Node).get(node_id)
+
+    if node is None:
+        raise HTTPNotFound("Sorry, the specified node could not be found")
+
+    return {"node": node}
+
+
+@view_config(
     route_name="node-graphs", renderer="pymeshmap:templates/node-graphs.jinja2"
 )
 def node_graphs(request: Request):

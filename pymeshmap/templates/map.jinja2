@@ -1,0 +1,76 @@
+{% extends "layout.jinja2" %}
+
+{% set active_page = "map" %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ req.static_url("pymeshmap:static/leaflet/leaflet.css") }}">
+{% endblock %}
+
+{% block content %}
+  <div class="container is-fluid">
+    <div id="map" style="height: 85vh;"></div>
+  </div>
+{% endblock %}
+
+{% block javascript %}
+<script src="{{ req.static_url("pymeshmap:static/leaflet/leaflet.js") }}"></script>
+<script type="text/javascript">
+  let map = L.map('map').setView([42.35, -122.83], 13);
+  L.tileLayer('//stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
+    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+    maxZoom: 18,
+  }).addTo(map);
+
+  let node_icons = {
+  {% for band, icon_url in node_icons.items() -%}
+    '{{ band }}': L.icon({iconUrl: '{{ icon_url }}', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9]}),
+  {% endfor -%}
+  }
+
+  let previewUrl = '{{ req.route_url("node-snippet", id=99999) }}'
+  function nodeFeature(feature, layer) {
+    layer.bindTooltip('<b>' + feature.properties.name + '</b>');
+    layer.bindPopup((layer) => {
+      var el = document.createElement('div');
+      fetch(previewUrl.replace("99999", feature.properties.id))
+        .then(response => response.text())
+        .then(data => el.innerHTML = data);
+      return el;
+    }, {minWidth: 300});
+  }
+
+  function linkFeature(feature, layer) {
+    layer.bindPopup(feature.properties.name, {maxWidth: 600});
+  }
+
+  // TODO: different layers per band (like MeshMap)
+  let nodeLayer = L.geoJSON([], {
+      onEachFeature: nodeFeature,
+      pointToLayer: function (feature, latlng) {
+        return L.marker(latlng, {
+          icon: node_icons[feature.properties.band] || node_icons['Unknown']
+        });
+      }
+    }).addTo(map);
+
+  // TODO: different layers per link type (like MeshMap)
+  let linkLayer = L.geoJSON([], {
+    onEachFeature: linkFeature,
+    style: function(feature) {
+      return {
+        color: '#3388ff',
+        weight: 2
+      }
+    }
+  }).addTo(map);
+
+  async function getGeoJson() {
+    let mapData = await fetch('{{ req.route_url("map-data") }}').then(response => response.json()).then(data => data);
+    nodeLayer.addData(mapData.nodes);
+    linkLayer.addData(mapData.links);
+  }
+
+  getGeoJson();
+
+</script>
+{% endblock %}
