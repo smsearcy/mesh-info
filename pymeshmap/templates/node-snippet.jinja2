@@ -1,2 +1,4 @@
-<h6 class="title is-6">{{ node.name }}</h6>
+<h6 class="title is-6">
+<a href="{{ req.route_url("node-details", id=node.id) }}">{{ node.name }}</a>
+</h6>
 <div>{{ node.description }}</div>
