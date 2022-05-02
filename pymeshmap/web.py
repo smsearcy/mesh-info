@@ -5,7 +5,7 @@ from __future__ import annotations
 from gunicorn.app.base import BaseApplication  # type: ignore
 from pyramid.config import Configurator
 
-from .config import AppConfig
+from .config import AppConfig, configure
 
 
 class GunicornApplication(BaseApplication):
@@ -45,3 +45,13 @@ def main(config: Configurator, settings: AppConfig.Web, *, reload: bool = False)
             "reload": reload,
         },
     ).run()
+
+
+def create_app():
+    """For use with command line Gunicorn.
+
+    ``gunicorn --workers=1 --reload 'pymeshmap.web:create_app()'``
+
+    """
+    config = configure()
+    return config.make_wsgi_app()
