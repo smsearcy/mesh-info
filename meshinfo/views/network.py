@@ -7,7 +7,7 @@ from . import schema
 
 
 @view_config(
-    route_name="network-graphs", renderer="pymeshmap:templates/network-graphs.jinja2"
+    route_name="network-graphs", renderer="meshinfo:templates/network-graphs.jinja2"
 )
 def network_graphs(request: Request):
     """Page displaying graphs of particular data over different timeframes."""

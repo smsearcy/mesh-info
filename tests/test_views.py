@@ -1,9 +1,9 @@
 import pendulum
 
-from pymeshmap import models
-from pymeshmap.views.home import overview
-from pymeshmap.views.nodes import NodeListViews
-from pymeshmap.views.notfound import notfound_view
+from meshinfo import models
+from meshinfo.views.home import overview
+from meshinfo.views.nodes import NodeListViews
+from meshinfo.views.notfound import notfound_view
 
 # TODO: Create a unified set of demo/test data
 

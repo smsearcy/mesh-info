@@ -3,9 +3,9 @@ import sys
 import pytest
 from faker import Faker
 
-from pymeshmap import report
-from pymeshmap.aredn import Interface, SystemInfo, VersionChecker
-from pymeshmap.poller import NetworkInfo, network_info
+from meshinfo import report
+from meshinfo.aredn import Interface, SystemInfo, VersionChecker
+from meshinfo.poller import NetworkInfo, network_info
 
 fake = Faker()
 
@@ -124,7 +124,7 @@ SAMPLE_NODES = [
 @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 def test_report_main(mocker, app_config):
     mock_poller = mocker.AsyncMock(return_value=NetworkInfo([], [], {}))
-    mocker.patch("pymeshmap.report.network_info", side_effect=mock_poller)
+    mocker.patch("meshinfo.report.network_info", side_effect=mock_poller)
 
     version_checker = VersionChecker.from_config(app_config.aredn)
 

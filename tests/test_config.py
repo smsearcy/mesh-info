@@ -1,6 +1,6 @@
 """Test the configuration module."""
 
-from pymeshmap.config import AppConfig, Environment
+from meshinfo.config import AppConfig, Environment
 
 
 def test_default_config():
@@ -16,11 +16,11 @@ def test_config():
     """Verify that the environment variables are working as expected."""
     app_config: AppConfig = AppConfig.from_environ(
         {
-            "MESHMAP_ENV": "development",
-            "MESHMAP_LOG_LEVEL": "DEBUG",
-            "MESHMAP_DB_URL": "foobar",
-            "MESHMAP_POLLER_MAX_CONNECTIONS": "25",
-            "MESHMAP_COLLECTOR_NODE_INACTIVE": "25",
+            "MESH_INFO_ENV": "development",
+            "MESH_INFO_LOG_LEVEL": "DEBUG",
+            "MESH_INFO_DB_URL": "foobar",
+            "MESH_INFO_POLLER_MAX_CONNECTIONS": "25",
+            "MESH_INFO_COLLECTOR_NODE_INACTIVE": "25",
         }
     )
 

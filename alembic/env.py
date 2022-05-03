@@ -3,8 +3,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import create_engine, pool
 
-from pymeshmap.config import from_env
-from pymeshmap.models import Base
+from meshinfo.config import from_env
+from meshinfo.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

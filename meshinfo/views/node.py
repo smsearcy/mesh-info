@@ -13,7 +13,7 @@ from . import schema
 
 
 @view_config(
-    route_name="node-details", renderer="pymeshmap:templates/node-details.jinja2"
+    route_name="node-details", renderer="meshinfo:templates/node-details.jinja2"
 )
 def node_detail(request: Request):
     """Detailed view of a single node."""
@@ -72,9 +72,7 @@ def node_json(request: Request):
     return node.system_info
 
 
-@view_config(
-    route_name="node-graphs", renderer="pymeshmap:templates/node-graphs.jinja2"
-)
+@view_config(route_name="node-graphs", renderer="meshinfo:templates/node-graphs.jinja2")
 def node_graphs(request: Request):
     """Display graphs of particular data for a node over different timeframes."""
 

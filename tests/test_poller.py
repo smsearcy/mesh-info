@@ -5,7 +5,7 @@ from asyncio import StreamReader, StreamWriter
 
 import pytest
 
-from pymeshmap import poller
+from meshinfo import poller
 
 
 def olsr_records(filename):
