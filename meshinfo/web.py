@@ -9,7 +9,7 @@ from .config import AppConfig, configure
 
 
 class GunicornApplication(BaseApplication):
-    """Run pyMeshMap WSGI application via Gunicorn.
+    """Run Mesh Info WSGI application via Gunicorn.
 
     Based on the "Custom Application" in the Gunicorn docs.
 
@@ -50,7 +50,7 @@ def main(config: Configurator, settings: AppConfig.Web, *, reload: bool = False)
 def create_app():
     """For use with command line Gunicorn.
 
-    ``gunicorn --workers=1 --reload 'pymeshmap.web:create_app()'``
+    ``gunicorn --workers=1 --reload 'meshinfo.web:create_app()'``
 
     """
     config = configure()

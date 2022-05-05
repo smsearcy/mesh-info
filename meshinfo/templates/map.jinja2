@@ -3,7 +3,7 @@
 {% set active_page = "map" %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ req.static_url("pymeshmap:static/leaflet/leaflet.css") }}">
+<link rel="stylesheet" href="{{ req.static_url("meshinfo:static/leaflet/leaflet.css") }}">
 {% endblock %}
 
 {% block content %}
@@ -13,8 +13,8 @@
 {% endblock %}
 
 {% block javascript %}
-<script src="{{ req.static_url("pymeshmap:static/leaflet/leaflet.js") }}"></script>
-<script src="{{ req.static_url("pymeshmap:static/js/leaflet.polylineoffset.js") }}"></script>
+<script src="{{ req.static_url("meshinfo:static/leaflet/leaflet.js") }}"></script>
+<script src="{{ req.static_url("meshinfo:static/js/leaflet.polylineoffset.js") }}"></script>
 <script type="text/javascript">
   let map = L.map('map').setView([42.35, -122.83], 13);
   L.tileLayer('//stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {

@@ -1,4 +1,4 @@
-"""Input validation schemas/parsing for pyMeshMap views."""
+"""Input validation schemas/parsing for Mesh Info views."""
 
 from pyramid.httpexceptions import HTTPBadRequest
 
