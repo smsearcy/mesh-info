@@ -1,6 +1,6 @@
 """Views for creating the interactive network map."""
 
-from typing import Any, Iterator
+from typing import Any, Dict, Iterator
 
 import attr
 import sqlalchemy as sa
@@ -101,7 +101,7 @@ def _node_geo_json(node: Node, request: Request) -> dict:
 
 def _link_geo_json(link: Link, request: Request) -> dict:
     """Convert link to GeoJSON feature."""
-    geo_json: dict[str, Any] = {
+    geo_json: Dict[str, Any] = {
         "type": "Feature",
         "geometry": {
             "type": "LineString",
