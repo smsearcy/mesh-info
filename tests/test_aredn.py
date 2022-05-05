@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from pymeshmap import aredn
-from pymeshmap.types import LinkType
+from meshinfo import aredn
+from meshinfo.types import LinkType
 
 
 @pytest.mark.parametrize(

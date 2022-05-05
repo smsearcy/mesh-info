@@ -2,4 +2,4 @@
 
 
 def test_models_load():
-    from pymeshmap import models  # noqa
+    from meshinfo import models  # noqa

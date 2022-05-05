@@ -1,13 +1,13 @@
 """Smoke tests for the CLI commands."""
 
-from pymeshmap import cli
-from pymeshmap.config import from_env
+from meshinfo import cli
+from meshinfo.config import from_env
 
 app_config = from_env()
 
 
 def test_collector_cli(mocker):
-    mock = mocker.patch("pymeshmap.collector.main")
+    mock = mocker.patch("meshinfo.collector.main")
     mocker.patch("sys.exit")
 
     cli.main(["collector"])
@@ -15,7 +15,7 @@ def test_collector_cli(mocker):
 
 
 def test_collector_cli_run_once(mocker):
-    mock = mocker.patch("pymeshmap.collector.main")
+    mock = mocker.patch("meshinfo.collector.main")
     mocker.patch("sys.exit")
 
     cli.main(["collector", "--run-once"])
@@ -23,7 +23,7 @@ def test_collector_cli_run_once(mocker):
 
 
 def test_report_cli(mocker):
-    mock = mocker.patch("pymeshmap.report.main")
+    mock = mocker.patch("meshinfo.report.main")
     mocker.patch("sys.exit")
 
     cli.main(["report"])

@@ -1,4 +1,4 @@
-"""Configuration for pyMeshMap from the environment."""
+"""Configuration for Mesh Info from the environment."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from .aredn import VersionChecker
 from .historical import HistoricalStats
 from .poller import network_info
 
-FOLDER_NAME = "pymeshmap"
+FOLDER_NAME = "mesh-info"
 
 
 class Environment(enum.Enum):
@@ -37,7 +37,7 @@ def default_workers():
         return 1
 
 
-@environ.config(prefix="MESHMAP")
+@environ.config(prefix="MESH_INFO")
 class AppConfig:
     @environ.config
     class Aredn:
@@ -72,7 +72,7 @@ class AppConfig:
     env: Environment = environ.var(default="production", converter=Environment)
     local_node: str = environ.var(default="localnode.local.mesh")
     log_level: str = environ.var(default="SUCCESS")
-    site_name: str = environ.var(default="pyMeshMap")
+    site_name: str = environ.var(default="Mesh Info")
     data_dir: Path = environ.var(default="")
 
     aredn: Aredn = environ.group(Aredn)
@@ -93,7 +93,7 @@ class AppConfig:
 
         if self.db.url == "":
             # location of default SQLite database depends on the data_dir
-            self.db.url = f"sqlite:///{self.data_dir!s}/pymeshmap.db"
+            self.db.url = f"sqlite:///{self.data_dir!s}/mesh-info.db"
 
         if self.env == Environment.DEV:
             # Only use 1 worker in development environment for the debug toolbar
@@ -133,9 +133,9 @@ def configure(
 
     # define Jinja filters
     filters = settings.setdefault("jinja2.filters", {})
-    filters.setdefault("duration", "pymeshmap.filters.duration")
-    filters.setdefault("in_tz", "pymeshmap.filters.in_tz")
-    filters.setdefault("local_tz", "pymeshmap.filters.local_tz")
+    filters.setdefault("duration", "meshinfo.filters.duration")
+    filters.setdefault("in_tz", "meshinfo.filters.in_tz")
+    filters.setdefault("local_tz", "meshinfo.filters.local_tz")
 
     if app_config.env == Environment.DEV:
         settings["pyramid.reload_all"] = True

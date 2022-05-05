@@ -8,7 +8,7 @@ Create Date: 2021-11-08 13:36:34.683960
 import sqlalchemy as sa
 from alembic import op
 
-import pymeshmap.models
+import meshinfo.models
 
 # revision identifiers, used by Alembic.
 revision = "f7672ee42a36"
@@ -22,11 +22,11 @@ def upgrade():
     op.create_table(
         "collector_stat",
         sa.Column(
-            "started_at", pymeshmap.models.meta.PDateTime(timezone=True), nullable=False
+            "started_at", meshinfo.models.meta.PDateTime(timezone=True), nullable=False
         ),
         sa.Column(
             "finished_at",
-            pymeshmap.models.meta.PDateTime(timezone=True),
+            meshinfo.models.meta.PDateTime(timezone=True),
             nullable=False,
         ),
         sa.Column("node_count", sa.Integer(), nullable=False),
@@ -51,7 +51,7 @@ def upgrade():
         sa.Column("description", sa.Unicode(length=1024), nullable=False),
         sa.Column("wlan_mac_address", sa.String(length=12), nullable=False),
         sa.Column(
-            "last_seen", pymeshmap.models.meta.PDateTime(timezone=True), nullable=False
+            "last_seen", meshinfo.models.meta.PDateTime(timezone=True), nullable=False
         ),
         sa.Column("up_time", sa.String(length=25), nullable=False),
         sa.Column("up_time_seconds", sa.Integer(), nullable=True),
@@ -77,11 +77,11 @@ def upgrade():
         sa.Column("tunnel_link_count", sa.Integer(), nullable=True),
         sa.Column("system_info", sa.JSON(), nullable=False),
         sa.Column(
-            "created_at", pymeshmap.models.meta.PDateTime(timezone=True), nullable=False
+            "created_at", meshinfo.models.meta.PDateTime(timezone=True), nullable=False
         ),
         sa.Column(
             "last_updated_at",
-            pymeshmap.models.meta.PDateTime(timezone=True),
+            meshinfo.models.meta.PDateTime(timezone=True),
             nullable=False,
         ),
         sa.PrimaryKeyConstraint("node_id", name=op.f("pk_node")),
@@ -104,7 +104,7 @@ def upgrade():
             nullable=False,
         ),
         sa.Column(
-            "last_seen", pymeshmap.models.meta.PDateTime(timezone=True), nullable=False
+            "last_seen", meshinfo.models.meta.PDateTime(timezone=True), nullable=False
         ),
         sa.Column("olsr_cost", sa.Float(), nullable=True),
         sa.Column("distance", sa.Float(), nullable=True),
@@ -116,11 +116,11 @@ def upgrade():
         sa.Column("quality", sa.Float(), nullable=True),
         sa.Column("neighbor_quality", sa.Float(), nullable=True),
         sa.Column(
-            "created_at", pymeshmap.models.meta.PDateTime(timezone=True), nullable=False
+            "created_at", meshinfo.models.meta.PDateTime(timezone=True), nullable=False
         ),
         sa.Column(
             "last_updated_at",
-            pymeshmap.models.meta.PDateTime(timezone=True),
+            meshinfo.models.meta.PDateTime(timezone=True),
             nullable=False,
         ),
         sa.ForeignKeyConstraint(

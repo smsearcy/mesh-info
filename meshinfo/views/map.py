@@ -39,7 +39,7 @@ def network_map(request: Request):
     # TODO: read starting coordinates/zoom from query string
 
     node_icons = {
-        key: request.static_url(f"pymeshmap:static/img/map/{filename}")
+        key: request.static_url(f"meshinfo:static/img/map/{filename}")
         for key, filename in NODE_ICONS
     }
 

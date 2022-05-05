@@ -1,7 +1,7 @@
 Changelog
 =========
 
-Changes to **pyMeshMap** that affect users or are of major impact to developers.
+Changes to **Mesh Info** that affect users or are of major impact to developers.
 
 
 The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
@@ -26,7 +26,18 @@ so breaking changes are possible but will be highlighted here.
 Added
 ^^^^^
 
-* Added SSID to the node table for searching/sorting (`#25 <https://github.com/smsearcy/pymeshmap/issues/25>`_)
+* Added SSID to the node table for searching/sorting (`#25 <https://github.com/smsearcy/mesh-info/issues/25>`_)
+
+Changed
+^^^^^^^
+
+* **BREAKING CHANGE:** Renamed project and data folders (`#26 <https://github.com/smsearcy/mesh-info/issues/26>`_)
+
+  * Renamed project from **pyMeshMap** to **Mesh Info**.
+  * Renamed the Python package from ``pymeshmap`` to ``meshinfo``.
+  * Data folders from ``pymeshmap` to ``mesh-info`` (in ``/var/lib/`` or ``~/.local/share/``).
+  * The default SQLite database from ``pymeshmap.db`` to ``mesh-info.db``.
+  * The GitHub repository from ``smsearcy/pymeshmap`` to ``smsearcy/mesh-info``.
 
 
 0.3.0 - 2022-04-20
@@ -35,12 +46,12 @@ Added
 Added
 ^^^^^
 
-* Start a changelog (`#21 <https://github.com/smsearcy/pymeshmap/issues/21>`_)
+* Start a changelog (`#21 <https://github.com/smsearcy/mesh-info/issues/21>`_)
 
 Changed
 ^^^^^^^
 
-* **BREAKING CHANGE:** Moved default data folder (`#18 <https://github.com/smsearcy/pymeshmap/issues/18>`_)
+* **BREAKING CHANGE:** Moved default data folder (`#18 <https://github.com/smsearcy/mesh-info/issues/18>`_)
 
   For *production*, moved from ``/usr/local/share/pymeshmap`` to ``/var/lib/pymeshmap``,
   to be better aligned with Linux Filesystem Hierarchy Standard.
@@ -56,7 +67,7 @@ Fixed
 * Fix parse error due to changed tunnel data in nightly firmware (API v1.10).
   All nodes will now just report their tunnel count,
   so a 0 instead of "No" if the tunnel plugin is not installed.
-  (`#23 <https://github.com/smsearcy/pymeshmap/issues/23>`_)
+  (`#23 <https://github.com/smsearcy/mesh-info/issues/23>`_)
 
 
 0.2.0 - 2022-04-11
@@ -69,4 +80,4 @@ Fixed
 ^^^^^
 
 * Use Gunicorn instead of Waitress for better stability and performance while dynamically rendering graphs.
-  (`#15 <https://github.com/smsearcy/pymeshmap/issues/15>`_)
+  (`#15 <https://github.com/smsearcy/mesh-info/issues/15>`_)

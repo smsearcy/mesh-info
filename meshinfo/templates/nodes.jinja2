@@ -4,7 +4,7 @@
 
 {% block head %}
   {# Stylesheet for Grid.js #}
-  <link rel="stylesheet" href="{{ req.static_url('pymeshmap:static/css/mermaid.min.css') }}">
+  <link rel="stylesheet" href="{{ req.static_url('meshinfo:static/css/mermaid.min.css') }}">
 {% endblock %}
 
 {% block title %}Nodes{% endblock %}
@@ -20,7 +20,7 @@
 {% endblock %}
 
 {% block javascript %}
-  <script src="{{ req.static_url('pymeshmap:static/js/gridjs.umd.js') }}"></script>
+  <script src="{{ req.static_url('meshinfo:static/js/gridjs.umd.js') }}"></script>
   <script>
     new gridjs.Grid({
       columns: [

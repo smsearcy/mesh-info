@@ -38,7 +38,7 @@ flake8:
   stage: test
   extends: .prep
   script:
-    - flake8 pymeshmap tests --format=junit-xml --output=flake8-report.xml
+    - flake8 meshinfo tests --format=junit-xml --output=flake8-report.xml
   artifacts:
     reports:
       junit: flake8-report.xml
@@ -51,7 +51,7 @@ mypy:
   stage: test
   extends: .prep
   script:
-    - mypy pymeshmap --junit-xml=mypy-report.xml
+    - mypy meshinfo --junit-xml=mypy-report.xml
   artifacts:
     reports:
       junit: mypy-report.xml
@@ -67,7 +67,7 @@ mypy:
   services:
     - postgres:12
   script:
-    - pytest --cov=pymeshmap --junit-xml=pytest-report.xml
+    - pytest --cov=meshinfo --junit-xml=pytest-report.xml
   coverage: '/^TOTAL.+?(\d+\%)$/'
   artifacts:
     reports:

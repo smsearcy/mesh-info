@@ -13,7 +13,7 @@ from . import schema
 
 @view_config(
     route_name="link-preview",
-    renderer="pymeshmap:templates/link-preview.jinja2",
+    renderer="meshinfo:templates/link-preview.jinja2",
     http_cache=120,
 )
 def link_preview(request: Request):
@@ -50,9 +50,7 @@ def link_preview(request: Request):
     }
 
 
-@view_config(
-    route_name="link-graphs", renderer="pymeshmap:templates/link-graphs.jinja2"
-)
+@view_config(route_name="link-graphs", renderer="meshinfo:templates/link-graphs.jinja2")
 def link_graphs(request: Request):
     """Page displaying graphs of particular data over different timeframes."""
 
