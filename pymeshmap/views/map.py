@@ -1,9 +1,9 @@
 """Views for creating the interactive network map."""
 
-from typing import Iterator
+from typing import Any, Iterator
 
+import attr
 import sqlalchemy as sa
-from loguru import logger
 from pyramid.request import Request
 from pyramid.view import view_config
 from sqlalchemy.orm import Session, aliased
@@ -19,6 +19,14 @@ NODE_ICONS = [
     ("5GHz", "goldRadioCircle-icon.png"),
     ("Unknown", "greyRadioCircle-icon.png"),
 ]
+
+
+@attr.s(auto_attribs=True, slots=True)
+class LinkProperties:
+    color: str
+    opacity: float = 1.0
+    weight: int = 2
+    offset: int = 2
 
 
 @view_config(route_name="map", renderer="templates/map.jinja2")
@@ -62,16 +70,18 @@ def map_data(request: Request):
     return {
         "nodes": {
             "type": "FeatureCollection",
-            "features": [_node_geo_json(node) for node in nodes],
+            "features": [_node_geo_json(node, request) for node in nodes],
         },
         "links": {
             "type": "FeatureCollection",
-            "features": [_link_geo_json(link) for link in _dedupe_links(links)],
+            "features": [
+                _link_geo_json(link, request) for link in _dedupe_links(links)
+            ],
         },
     }
 
 
-def _node_geo_json(node: Node) -> dict:
+def _node_geo_json(node: Node, request: Request) -> dict:
     """Convert node to GeoJSON feature."""
     return {
         "type": "Feature",
@@ -84,13 +94,14 @@ def _node_geo_json(node: Node) -> dict:
             "id": str(node.id),
             "name": node.name,
             "band": node.band,
+            "previewUrl": request.route_url("node-preview", id=node.id),
         },
     }
 
 
-def _link_geo_json(link: Link) -> dict:
+def _link_geo_json(link: Link, request: Request) -> dict:
     """Convert link to GeoJSON feature."""
-    geo_json = {
+    geo_json: dict[str, Any] = {
         "type": "Feature",
         "geometry": {
             "type": "LineString",
@@ -104,13 +115,19 @@ def _link_geo_json(link: Link) -> dict:
             "id": link.id.dump(),
             "name": f"{link.source.name} / {link.destination.name} ({link.type})",
             "type": link.type.name,
+            "previewUrl": request.route_url(
+                "link-preview",
+                source=link.source_id,
+                destination=link.destination_id,
+                type=link.type.name.lower(),
+            ),
         },
     }
-    geo_json["properties"].update(_link_properties(link))
+    geo_json["properties"].update(attr.asdict(_link_properties(link)))
     return geo_json
 
 
-def _link_properties(link: Link) -> dict:
+def _link_properties(link: Link) -> LinkProperties:
     """Determine color of link line.
 
     Use fixed color for known tunnels and DTD links.
@@ -119,32 +136,53 @@ def _link_properties(link: Link) -> dict:
     """
     # py310: match?
     if link.type == LinkType.DTD:
-        return {
-            "color": "#3388ff",
-            "opacity": 0.5,
-            "offset": 0,
-        }
-    if link.type == LinkType.TUN:
-        return {
-            "color": "#07070f",
-            "opacity": 0.5,
-            "offset": 0,
-        }
-    if link.olsr_cost is None or link.olsr_cost >= 99.99:
-        return {
-            "color": "#8b0000",
-            "opacity": 0.5,
-        }
-    if link.olsr_cost >= 14:
-        return {"color": "#dc143c"}
-    # color calculations based on KG6WXC's Mesh Map
-    tone = int((link.olsr_cost - 1) * 64)
-    if link.olsr_cost >= 7:
-        return {"color": f"#{tone:02x}ff00"}
-    if link.olsr_cost > 1:
-        return {"color": f"#ff{tone - 255:02x}00"}
+        properties = LinkProperties(
+            color="#3388ff",
+            opacity=0.5,
+            offset=0,
+        )
+    elif link.type == LinkType.TUN:
+        properties = LinkProperties(
+            color="#07070f",
+            opacity=0.5,
+            offset=0,
+        )
+    elif link.quality is not None and link.neighbor_quality is not None:
+        # base color on link quality
+        avg_quality = (link.quality + link.neighbor_quality) / 2
+        hue = _calc_hue(avg_quality, red=0.5, green=1.0)
+        properties = LinkProperties(
+            color=f"hsl({hue}, 100%, 50%)",
+        )
+    elif link.olsr_cost is not None:
+        # base color on OLSR cost
+        hue = _calc_hue(link.olsr_cost, green=1, red=15)
+        properties = LinkProperties(
+            color=f"hsl({hue}, 100%, 50%)",
+        )
+    else:
+        properties = LinkProperties(
+            color="#8b0000",
+            opacity=0.5,
+        )
 
-    return {"color": "#00ff00"}
+    if link.status != LinkStatus.CURRENT:
+        # make non-current links mostly transparent
+        properties.opacity = 0.2
+
+    return properties
+
+
+def _calc_hue(value: float, *, red: float, green: float) -> int:
+    """Calculate the hue between red and green, with the median being green."""
+    range_ = abs(green - red)
+    if red < green:
+        percent = max(min(value, green) - red, 0) / range_
+    else:
+        percent = 1 - max(min(value, red) - green, 0) / range_
+
+    # red hue is 0, green is 120, so just multiple the percentage by 120
+    return round(120 * percent)
 
 
 def _dedupe_links(links: list[Link]) -> Iterator[Link]:

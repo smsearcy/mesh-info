@@ -28,20 +28,25 @@
   {% endfor -%}
   }
 
-  let previewUrl = '{{ req.route_url("node-snippet", id=99999) }}'
   function nodeFeature(feature, layer) {
     layer.bindTooltip('<b>' + feature.properties.name + '</b>');
     layer.bindPopup((layer) => {
       var el = document.createElement('div');
-      fetch(previewUrl.replace("99999", feature.properties.id))
+      fetch(feature.properties.previewUrl)
         .then(response => response.text())
         .then(data => el.innerHTML = data);
       return el;
-    }, {minWidth: 300});
+    }, {minWidth: 350, maxWidth: 500});
   }
 
   function linkFeature(feature, layer) {
-    layer.bindPopup(feature.properties.name, {maxWidth: 600});
+    layer.bindPopup((layer) => {
+      var el = document.createElement('div');
+      fetch(feature.properties.previewUrl)
+        .then(response => response.text())
+        .then(data => el.innerHTML = data);
+      return el;
+    }, {minWidth: 375, maxWidth: 600});
   }
 
   // TODO: different layers per band (like MeshMap)
@@ -49,7 +54,7 @@
       onEachFeature: nodeFeature,
       pointToLayer: function (feature, latlng) {
         return L.marker(latlng, {
-          icon: node_icons[feature.properties.band] || node_icons['Unknown']
+          icon: node_icons[feature.properties.band] ?? node_icons['Unknown']
         });
       }
     }).addTo(map);
@@ -60,9 +65,9 @@
     style: function(feature) {
       return {
         color: feature.properties.color,
-        offset: feature.properties.offset ?? 2,
-        weight: feature.properties.weight ?? 2,
-        opacity: feature.properties.opacity ?? 1,
+        offset: feature.properties.offset,
+        weight: feature.properties.weight,
+        opacity: feature.properties.opacity,
       }
     }
   }).addTo(map);

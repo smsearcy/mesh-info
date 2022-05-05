@@ -73,8 +73,8 @@ def node_json(request: Request):
 
 
 @view_config(
-    route_name="node-snippet",
-    renderer="pymeshmap:templates/node-snippet.jinja2",
+    route_name="node-preview",
+    renderer="pymeshmap:templates/node-preview.jinja2",
     http_cache=120,
 )
 def node_snippet(request: Request):

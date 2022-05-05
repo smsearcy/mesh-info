@@ -144,7 +144,7 @@
       </div>
     </div>
     {% for link in link_types %}
-      <h4 class="is-5 block">Type: {{ link.type }}</h4>
+      <h4 class="is-5 block" id="{{ link.id.dump() }}">Type: {{ link.type }}</h4>
       <div class="columns">
         <div class="column is-narrow">
           <div class="mb-2">
@@ -167,7 +167,7 @@
           </div>
         </div>
         <div class="column is-narrow">
-          {% if link.type_name|lower == "radio" %}
+          {% if link.type|lower == "radio" %}
             <div class="mb-2">
               <div class="heading">Signal/Noise Ratio</div>
               <div>{{ link.signal_noise_ratio }}</div>
