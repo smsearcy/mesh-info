@@ -27,6 +27,9 @@ Added
 ^^^^^
 
 * Added SSID to the node table for searching/sorting (`#25 <https://github.com/smsearcy/mesh-info/issues/25>`_)
+* Basic implementation of network map.
+  Client is required internet access to fetch tiles.
+  All map elements rendered on single layer.
 
 Changed
 ^^^^^^^
