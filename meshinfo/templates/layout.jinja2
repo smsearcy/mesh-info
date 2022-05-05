@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="aredn wireless mesh network map">
-  <link rel="shortcut icon" type="image/png" sizes="16x16" href="{{ req.static_url('pymeshmap:static/mesh-network-16x16.png') }}">
-  <link rel="shortcut icon" type="image/png" sizes="32x32" href="{{ req.static_url('pymeshmap:static/mesh-network-32x32.png') }}">
+  <link rel="shortcut icon" type="image/png" sizes="16x16" href="{{ req.static_url('meshinfo:static/mesh-network-16x16.png') }}">
+  <link rel="shortcut icon" type="image/png" sizes="32x32" href="{{ req.static_url('meshinfo:static/mesh-network-32x32.png') }}">
   <title>
-    {% block title %}pyMeshMap{% endblock %}
+    {% block title %}Mesh Info{% endblock %}
   </title>
-  <link rel="stylesheet" href="{{ req.static_url('pymeshmap:static/css/bulma.min.css') }}">
-  <link rel="stylesheet" href="{{ req.static_url('pymeshmap:static/css/fontawesome.min.css') }}">
-  <link rel="stylesheet" href="{{ req.static_url('pymeshmap:static/css/solid.min.css') }}">
+  <link rel="stylesheet" href="{{ req.static_url('meshinfo:static/css/bulma.min.css') }}">
+  <link rel="stylesheet" href="{{ req.static_url('meshinfo:static/css/fontawesome.min.css') }}">
+  <link rel="stylesheet" href="{{ req.static_url('meshinfo:static/css/solid.min.css') }}">
   {% block head %}{% endblock %}
 </head>
 
@@ -21,7 +21,7 @@
 <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
     <a class="navbar-item" href="{{ req.route_path('home') }}">
-      <img src="{{ req.static_url('pymeshmap:static/mesh-network-32x32.png') }}" width="32" height="32">
+      <img src="{{ req.static_url('meshinfo:static/mesh-network-32x32.png') }}" width="32" height="32">
     </a>
     <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMeshMap">
       <span aria-hidden="true"></span>
@@ -57,7 +57,7 @@
 
 </div>
 
-<script src="{{ req.static_url('pymeshmap:static/js/meshmap.js') }}"></script>
+<script src="{{ req.static_url('meshinfo:static/js/mesh-info.js') }}"></script>
 {% block javascript %}{% endblock %}
 
 </body>

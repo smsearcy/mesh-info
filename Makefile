@@ -4,13 +4,13 @@ format:
 	pre-commit run --all-files
 
 lint:
-	flake8 pymeshmap tests
+	flake8 meshinfo tests
 
 mypy:
-	mypy pymeshmap
+	mypy meshinfo
 
 tests:
-	pytest --cov=pymeshmap --cov-report html --cov-report term
+	pytest --cov=meshinfo --cov-report html --cov-report term
 
 make-migration:
 	alembic revision --autogenerate

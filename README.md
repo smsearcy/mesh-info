@@ -1,4 +1,4 @@
-pyMeshMap
+Mesh Info
 =========
 
 Application for mapping and displaying information about an
@@ -12,7 +12,7 @@ Information about nodes and links is stored in RRDtool for graphing historical t
 Getting Started
 ---------------
 
-**pyMeshMap** requires the following (the instructions below should walk you through the process):
+**Mesh Info** requires the following (the instructions below should walk you through the process):
 * Python 3.7 or later
 * [RRDtool](https://oss.oetiker.ch/rrdtool/index.en.html) development headers to be installed
 (`librrd-dev` on Debian/Ubuntu or `rrdtool-devel` for Fedora/Red Hat)
@@ -20,29 +20,29 @@ Getting Started
 
 By default it will use SQLite for the database (but PostgreSQL is also supported),
 and "localnode.local.mesh" to get information about the network via OLSR.
-The default data directory (for SQLite and RRD files) is `/var/lib/pymeshmap`.
+The default data directory (for SQLite and RRD files) is `/var/lib/mesh-info`.
 Reference `.env.example` for how to customize settings via an `.env` file
 (in the same folder as the project is checked out to).
 
 ```shell script
 $ sudo apt install python3 python3-virtualenv python3-dev python3-pip
 $ sudo apt install libpq-dev librrd-dev
-$ git clone https://github.com/smsearcy/pymeshmap.git
-$ cd pymeshmap
+$ git clone https://github.com/smsearcy/mesh-info.git
+$ cd meshinfo
 # Create a virtual environment to isolate the Python dependencies
 $ python3 -m venv .
 $ ./bin/python -m pip install -U pip
 $ ./bin/pip install -r requirements.txt
 $ ./bin/pip install -e .
 # Run a basic poll of the network to confirm that is working
-$ ./bin/pymeshmap report
-$ sudo mkdir -p /var/lib/pymeshmap
+$ ./bin/meshinfo report
+$ sudo mkdir -p /var/lib/meshinfo
 # Make sure the user that we're running as has write access to that folder
-$ sudo chown [user] /var/lib/pymeshmap
+$ sudo chown [user] /var/lib/meshinfo
 $ ./bin/alembic upgrade head
 # These last two commands are the only ones that need to be ran going forward
-$ ./bin/pymeshmap collector &
-$ ./bin/pymeshmap web &
+$ ./bin/meshinfo collector &
+$ ./bin/meshinfo web &
 ```
 
 Commands
@@ -53,7 +53,7 @@ Run `deactivate` to drop out of the virtualenv.*
 
 ### Network Report
 ```shell script
-$ pymeshmap report [-v] [--save-errors] [--path=.] [HOSTNAME]
+$ meshinfo report [-v] [--save-errors] [--path=.] [HOSTNAME]
 ```
 
 Prints node and link details *after* polling all the nodes on the network.
@@ -71,7 +71,7 @@ Change the directory those are saved with `--path`.
 
 ### Collector Service
 ```shell script
-$ pymeshmap collector [--run-once]
+$ meshinfo collector [--run-once]
 ```
 
 Collects information from the network and stores to the database.
@@ -84,10 +84,10 @@ Use the `--run-once` option to run once and exit.
 
 ### Web Service
 ```shell script
-$ pymeshmap web
+$ meshinfo web
 ```
 
-Serves the web interface on http://localhost:6543 (by default).
+Serves the web interface on http://localhost:8080 (by default).
 
 Goals
 -----
@@ -129,6 +129,6 @@ and `cd` to that directory in a terminal.
 5. Create `.env` and set `PYMESHMAP_ENV = "development"`
 (this enables the Pyramid debug toolbar
 and changes the default data paths to be in the current user's home directory).
-6. To run the `pymeshmap` command execute `pymeshmap [sub-command]`.
+6. To run the `meshinfo` command execute `meshinfo [sub-command]`.
 7. A `Makefile` is included to simplify various tasks such as running `pre-commit`, tests, and linters.
 8. A `pyramid.ini` file is provided for use with the Pyramid development tools like `pserve` and `pshell`.

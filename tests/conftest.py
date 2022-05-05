@@ -11,9 +11,9 @@ from pyramid.testing import DummyRequest, testConfig
 from pytest_postgresql import factories
 from sqlalchemy import create_engine
 
-from pymeshmap import models
-from pymeshmap.config import AppConfig, configure
-from pymeshmap.models.meta import Base
+from meshinfo import models
+from meshinfo.config import AppConfig, configure
+from meshinfo.models.meta import Base
 
 if os.environ.get("CI"):
     postgresql_ci = factories.postgresql_noproc(

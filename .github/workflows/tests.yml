@@ -1,4 +1,4 @@
-name: pyMeshMap Tests
+name: Mesh Info Tests
 
 on: [push]
 
@@ -61,11 +61,11 @@ jobs:
           pip install -r requirements.txt -r dev-requirements.txt
           pip install -e .
       - name: Run flake8
-        run: flake8 pymeshmap tests
+        run: flake8 meshinfo tests
       - name: Run mypy
-        run: mypy pymeshmap
+        run: mypy meshinfo
       - name: Run pytest
-        run: pytest --cov=pymeshmap
+        run: pytest --cov=meshinfo
         env:
           MESHMAP_COLLECTOR_DATA_DIR: "."
           POSTGRES_HOST: localhost

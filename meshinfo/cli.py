@@ -1,4 +1,4 @@
-"""Main command-line entry point for `pymeshmap`."""
+"""Main command-line entry point for `meshinfo`."""
 
 from __future__ import annotations
 
@@ -9,20 +9,20 @@ from pathlib import Path
 from loguru import logger
 from pyramid.scripting import prepare
 
-from pymeshmap import VERSION, backup, collector, models, report, web
-from pymeshmap.aredn import VersionChecker
-from pymeshmap.config import AppConfig, configure
-from pymeshmap.historical import HistoricalStats
+from meshinfo import VERSION, backup, collector, models, report, web
+from meshinfo.aredn import VersionChecker
+from meshinfo.config import AppConfig, configure
+from meshinfo.historical import HistoricalStats
 
 
 def main(argv: list = None):  # noqa: C901
-    """Main CLI entry point for 'pymeshmap'."""
+    """Main CLI entry point for 'meshinfo'."""
 
     parser = build_parser()
 
     args = parser.parse_args(argv)
     if args.version:
-        print(f"pymeshmap version {VERSION}")
+        print(f"meshinfo version {VERSION}")
         return
 
     config = configure()
