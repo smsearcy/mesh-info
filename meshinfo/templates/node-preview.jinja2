@@ -1,4 +1,34 @@
 <h6 class="title is-6">
 <a href="{{ req.route_url("node-details", id=node.id) }}">{{ node.name }}</a>
 </h6>
-<div>{{ node.description }}</div>
+<div class="block">{{ node.description }}</div>
+<div class="columns">
+  <div class="column">
+    <div class="mb-2">
+      <div class="heading">Status</div>
+      <div>{{ node.status }}</div>
+    </div>
+    <div class="mb-2">
+      <div class="heading">Model</div>
+      <div>{{ node.model }}</div>
+    </div>
+    <div class="mb-2">
+      <div class="heading">Firmware</div>
+      <div>{{ node.firmware_version }}</div>
+    </div>
+  </div>
+  <div class="column">
+    <div class="mb-2">
+      <div class="heading">SSID</div>
+      <div>{{ node.ssid }}</div>
+    </div>
+    <div class="mb-2">
+      <div class="heading">Band</div>
+      <div>{{ node.band }}</div>
+    </div>
+    <div class="mb-2">
+      <div class="heading">Channel</div>
+      <div>{{ node.channel }}</div>
+    </div>
+  </div>
+</div>

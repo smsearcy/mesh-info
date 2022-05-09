@@ -147,16 +147,12 @@ def _link_properties(link: Link) -> LinkProperties:
             opacity=0.5,
             offset=0,
         )
-    elif link.quality is not None and link.neighbor_quality is not None:
-        # base color on link quality
-        avg_quality = (link.quality + link.neighbor_quality) / 2
-        hue = _calc_hue(avg_quality, red=0.5, green=1.0)
-        properties = LinkProperties(
-            color=f"hsl({hue}, 100%, 50%)",
-        )
     elif link.olsr_cost is not None:
-        # base color on OLSR cost
-        hue = _calc_hue(link.olsr_cost, green=1, red=15)
+        # Base color on OLSR cost, similar to KG6WXC's MeshMap
+        # I think the OLSR cost is 1 / (LQ * NLQ), so this incorporates the
+        # link quality but on a logarithmic scale, rather than linear
+        # (if we used LQ & NLQ for RF links).
+        hue = _calc_hue(link.olsr_cost, green=1, red=14)
         properties = LinkProperties(
             color=f"hsl({hue}, 100%, 50%)",
         )
@@ -181,7 +177,7 @@ def _calc_hue(value: float, *, red: float, green: float) -> int:
     else:
         percent = 1 - max(min(value, red) - green, 0) / range_
 
-    # red hue is 0, green is 120, so just multiple the percentage by 120
+    # red hue is 0, green is 120, so just multiply the percentage by 120
     return round(120 * percent)
 
 
