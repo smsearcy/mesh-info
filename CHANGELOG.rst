@@ -39,6 +39,12 @@ Changed
   * The default SQLite database from ``pymeshmap.db`` to ``mesh-info.db``.
   * The GitHub repository from ``smsearcy/pymeshmap`` to ``smsearcy/mesh-info``.
 
+* **BREAKING CHANGE:** Change default port for web service to 8000 (`#29 <https://github.com/smsearcy/mesh-info/issues/29>`_)
+
+  Changed default port to 8000 (Gunicorn default)
+  and configuration to use "bind" instead of "host" and "port"
+  This enables binding to a Unix socket instead of a TCP port.
+
 
 0.3.0 - 2022-04-20
 ------------------

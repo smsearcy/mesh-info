@@ -64,8 +64,7 @@ class AppConfig:
 
     @environ.config
     class Web:
-        host: str = environ.var(default="0.0.0.0")
-        port: int = environ.var(default=8080, converter=int)
+        bind: str = environ.var(default="0.0.0.0:8000")
         workers: int = environ.var(default=default_workers(), converter=int)
         # debug_hosts
 
