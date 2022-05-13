@@ -40,7 +40,7 @@ def main(config: Configurator, settings: AppConfig.Web, *, reload: bool = False)
     GunicornApplication(
         config.make_wsgi_app(),
         {
-            "bind": f"{settings.host}:{settings.port}",
+            "bind": settings.bind,
             "workers": settings.workers,
             "reload": reload,
         },
