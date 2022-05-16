@@ -34,7 +34,7 @@ class GunicornApplication(BaseApplication):
         return self.application
 
 
-def main(config: Configurator, settings: AppConfig.Web, *, reload: bool = False):
+def main(config: Configurator, settings: AppConfig.Web):
     """Create and run the Pyramid WSGI application."""
 
     GunicornApplication(
@@ -42,6 +42,5 @@ def main(config: Configurator, settings: AppConfig.Web, *, reload: bool = False)
         {
             "bind": settings.bind,
             "workers": settings.workers,
-            "reload": reload,
         },
     ).run()
