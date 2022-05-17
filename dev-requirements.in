@@ -12,4 +12,6 @@ pytest-cov>=2.8.1
 pytest-mock>=3.3.1
 pytest-postgresql<4.0.0
 pytest>=6.2.0
+sphinx
+sphinx-rtd-theme
 types-waitress>=0.1.4
