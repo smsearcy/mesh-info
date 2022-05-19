@@ -379,8 +379,7 @@ def save_links(
     """Saves link data to the database.
 
     This implements the bearing/distance functionality in Python
-    rather than using SQL triggers,
-    thus the MeshMap triggers will need to be deleted/disabled.
+    rather than using SQL triggers (i.e. how MeshMap does it).
 
     """
     if count is None:
