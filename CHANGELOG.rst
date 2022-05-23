@@ -45,6 +45,11 @@ Changed
   and configuration to use "bind" instead of "host" and "port"
   This enables binding to a Unix socket instead of a TCP port.
 
+Fixed
+^^^^^
+
+* Fix import/export going into the ``rrd`` subdirectory with the RRD folders (`#19 <https://github.com/smsearcy/mesh-info/issues/19>`_)
+
 
 0.3.0 - 2022-04-20
 ------------------
