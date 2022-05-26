@@ -1,16 +1,15 @@
 """Functionality for exporting and importing application data."""
 from __future__ import annotations
 
-import os.path
 import re
 import shutil
 import subprocess
 import tarfile
 from collections import Counter
-from functools import partial
 from multiprocessing.pool import Pool
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Iterator
 
 import rrdtool
 from loguru import logger
@@ -22,14 +21,14 @@ def export_data(
 ) -> str | None:
     """Export RRD files and SQLite database to archive file."""
     with TemporaryDirectory() as temp_dir:
-        export_file = partial(_export_file, destination=temp_dir)
+        temp_path = Path(temp_dir)
         with Pool() as pool:
-            results = pool.map(export_file, data_dir.iterdir())
+            results = pool.starmap(_export_file, _list_files(data_dir, temp_path))
         count = Counter(results)
 
         # Python's tarfile is very slow, use system `tar` when available
         if shutil.which("tar"):
-            files = [item.name for item in Path(temp_dir).iterdir()]
+            files = [item.name for item in temp_path.iterdir()]
             subprocess.run(
                 ("tar", "-czf", str(archive.resolve()), *files),
                 check=True,
@@ -38,7 +37,7 @@ def export_data(
             count["archived"] = len(files)
         else:
             with tarfile.open(archive, "x:gz") as f:
-                for filename in Path(temp_dir).iterdir():
+                for filename in temp_path.iterdir():
                     count["archived"] += 1
                     f.add(filename, arcname=filename.name)
 
@@ -51,15 +50,31 @@ def export_data(
     return None
 
 
-def _export_file(filename: Path, destination: str) -> str:
+def _list_files(path: Path, destination: Path) -> Iterator[tuple[Path, Path]]:
+    """Yield files (recursively) and the corresponding destination folder.
+
+    Used for listing the files to import/export.
+    Creates the destination directory if it does not exist.
+
+    """
+    logger.debug("Temp output: {}", destination)
+    if not destination.exists():
+        destination.mkdir(parents=True)
+    for item in path.iterdir():
+        if item.is_dir():
+            yield from _list_files(item, destination / item.name)
+        else:
+            yield item, destination
+
+
+def _export_file(filename: Path, destination: Path) -> str:
     """Exports a single file for the export process."""
+    if filename.is_dir():
+        raise RuntimeError("Directories should have been walked.")
     if filename.suffix == ".rrd":
         logger.debug("Dumping {} for export", filename)
-        rrdtool.dump(str(filename), os.path.join(destination, f"{filename.stem}.xml"))
+        rrdtool.dump(str(filename), str(destination / f"{filename.stem}.xml"))
         return "rrd"
-    elif filename.is_dir():
-        # assuming for now that sub-folders shouldn't be exported (cache?)
-        return "skipped"
     else:
         logger.debug("Exporting {}", filename)
         shutil.copy(filename, destination)
@@ -75,6 +90,7 @@ def import_data(
         return "Data import requires 'rrdtool' to be available on the command line."
     count: Counter[str] = Counter()
     with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
         # Python's tarfile is very slow, use system `tar` when available
         if shutil.which("tar"):
             subprocess.run(
@@ -91,9 +107,8 @@ def import_data(
                         continue
                     count["extracted"] += 1
                     f.extract(item, temp_dir, set_attrs=False)
-        import_file = partial(_import_file, destination=data_dir)
         with Pool() as pool:
-            results = pool.map(import_file, Path(temp_dir).iterdir())
+            results = pool.starmap(_import_file, _list_files(temp_path, data_dir))
         count.update(results)
 
     print(
