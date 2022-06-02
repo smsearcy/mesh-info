@@ -20,7 +20,10 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
-0.4.0 - Unreleased
+0.5.0 - Unreleased
+------------------
+
+0.4.0 - 2022-06-02
 ------------------
 
 Added
@@ -41,6 +44,17 @@ Changed
   * Data folders from ``pymeshmap` to ``mesh-info`` (in ``/var/lib/`` or ``~/.local/share/``).
   * The default SQLite database from ``pymeshmap.db`` to ``mesh-info.db``.
   * The GitHub repository from ``smsearcy/pymeshmap`` to ``smsearcy/mesh-info``.
+
+* **BREAKING CHANGE:** Change default port for web service to 8000 (`#29 <https://github.com/smsearcy/mesh-info/issues/29>`_)
+
+  Changed default port to 8000 (Gunicorn default)
+  and configuration to use "bind" instead of "host" and "port"
+  This enables binding to a Unix socket instead of a TCP port.
+
+Fixed
+^^^^^
+
+* Fix import/export going into the ``rrd`` subdirectory with the RRD folders (`#19 <https://github.com/smsearcy/mesh-info/issues/19>`_)
 
 
 0.3.0 - 2022-04-20

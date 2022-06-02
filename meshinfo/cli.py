@@ -31,7 +31,11 @@ def main(argv: list = None):  # noqa: C901
 
     if args.command == "web":
         # web process doesn't need to be "prepared"
-        web.main(config, app_config.web, reload=args.reload)
+        if args.bind:
+            app_config.web.bind = args.bind
+        if args.workers:
+            app_config.web.workers = args.workers
+        web.main(config, app_config.web)
         return
 
     env = prepare(registry=config.registry)
@@ -137,23 +141,13 @@ def build_parser() -> argparse.ArgumentParser:
         description="Run web service",
     )
     web_parser.add_argument(
-        "--host",
-        help="ip address to listen on",
-    )
-    web_parser.add_argument(
-        "--port",
-        type=int,
-        help="port to listen on",
+        "--bind",
+        help="server socket to bind to",
     )
     web_parser.add_argument(
         "--workers",
         type=int,
         help="number of worker processes",
-    )
-    web_parser.add_argument(
-        "--reload",
-        action="store_true",
-        help="automatically reload when source changes",
     )
 
     # Export/backup

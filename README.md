@@ -87,7 +87,7 @@ Use the `--run-once` option to run once and exit.
 $ meshinfo web
 ```
 
-Serves the web interface on http://localhost:8080 (by default).
+Serves the web interface on http://localhost:8000 (by default).
 
 Goals
 -----

@@ -379,8 +379,7 @@ def save_links(
     """Saves link data to the database.
 
     This implements the bearing/distance functionality in Python
-    rather than using SQL triggers,
-    thus the MeshMap triggers will need to be deleted/disabled.
+    rather than using SQL triggers (i.e. how MeshMap does it).
 
     """
     if count is None:
@@ -391,19 +390,16 @@ def save_links(
         {Link.status: LinkStatus.RECENT}
     )
 
+    active_nodes: dict[str, Node] = {
+        node.name: node
+        for node in dbsession.query(Node).filter(Node.status == NodeStatus.ACTIVE)
+    }
+
     link_models = []
     for link in links:
         count["links: total"] += 1
-        source: Node = (
-            dbsession.query(Node)
-            .filter(Node.name == link.source, Node.status == NodeStatus.ACTIVE)
-            .one_or_none()
-        )
-        destination: Node = (
-            dbsession.query(Node)
-            .filter(Node.name == link.destination, Node.status == NodeStatus.ACTIVE)
-            .one_or_none()
-        )
+        source = active_nodes.get(link.source)
+        destination = active_nodes.get(link.destination)
         if source is None or destination is None:
             logger.warning(
                 "Failed to save link {} -> {}, node missing from database",
