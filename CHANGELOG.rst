@@ -23,6 +23,13 @@ so breaking changes are possible but will be highlighted here.
 0.5.0 - Unreleased
 ------------------
 
+Added
+^^^^^
+
+* Basic implementation of network map.
+  Client is required internet access to fetch tiles.
+  All map elements rendered on single layer.
+
 0.4.0 - 2022-06-02
 ------------------
 
