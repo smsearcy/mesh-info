@@ -21,6 +21,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version:
           - "3.7"
@@ -57,7 +58,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y librrd-dev
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt -r dev-requirements.txt
           pip install -e .
       - name: Run flake8
@@ -70,3 +71,20 @@ jobs:
           MESHMAP_COLLECTOR_DATA_DIR: "."
           POSTGRES_HOST: localhost
           POSTGRES_PASSWORD: meshmap
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librrd-dev
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt -r dev-requirements.txt
+      - name: Run Sphinx
+        run: sphinx-build -W --keep-going -b html docs docs/_build/html

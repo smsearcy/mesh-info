@@ -26,6 +26,7 @@ so breaking changes are possible but will be highlighted here.
 Added
 ^^^^^
 
+* Add/expand project documentation (`#28 <https://github.com/smsearcy/mesh-info/issues/28>`_)
 * Basic implementation of network map.
   Client is required internet access to fetch tiles.
   All map elements rendered on single layer.
