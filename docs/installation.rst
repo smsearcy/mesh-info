@@ -38,7 +38,7 @@ and create ``/var/lib/mesh-info`` for storing the application data.
     (mesh-info) $ deactivate
     $ exit
 
-To test the application,
+To run a test scan,
 you can run the following
 (optionally specifying the name or IP of the local node,
 in case ``localnode.local.mesh`` does not resolve):
@@ -49,7 +49,8 @@ in case ``localnode.local.mesh`` does not resolve):
 
 If it is unable to connect to ``localnode.local.mesh``,
 then you will need to create ``/opt/mesh-info/src/.env`` with the following
-(using the node's address instead of 10.1.1.1):
+(using the node's address instead of 10.1.1.1)
+for the collector service to run:
 
 .. code-block::
 

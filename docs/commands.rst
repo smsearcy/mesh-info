@@ -5,7 +5,7 @@ Documentation about the ``meshinfo`` command line functionality.
 
 .. note::
 
-    Examples presume that Mesh Info was installed per the :doc:`installation instructions <installation>`_.
+    Examples presume that Mesh Info was installed per the :doc:`installation instructions <installation>`.
 
 Network Report
 --------------

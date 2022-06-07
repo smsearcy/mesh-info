@@ -21,4 +21,8 @@ make-migration:
 migrate-db:
 	alembic upgrade head
 
-.PHONY: all docs pre-commit lint mypy tests
+requirements:
+	pip-compile requirements.in
+	pip-compile dev-requirements.in
+
+.PHONY: all docs pre-commit lint make-migration migrate-db mypy requirements tests
