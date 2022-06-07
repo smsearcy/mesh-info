@@ -1,6 +1,20 @@
 Mesh Info
 =========
 
+.. image:: https://github.com/smsearcy/mesh-info/actions/workflows/tests.yml/badge.svg
+   :target: https://github.com/smsearcy/mesh-info/actions
+
+.. image:: https://readthedocs.org/projects/smsearcy-mesh-info/badge/?version=latest
+   :target: https://smsearcy-mesh-info.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
+
+.. image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
+   :target: https://github.com/pre-commit/pre-commit
+   :alt: pre-commit
+
 .. -begin-content-
 
 Collects information about an `AREDN <https://arednmesh.org/>`_ mesh network,
@@ -11,6 +25,8 @@ but redesigned for tracking the historical data.
 
 Uses Python's `asyncio` library to concurrently query nodes for faster polling times.
 Information about nodes and links is stored in RRDtool for graphing historical trends.
+
+*TODO: Add some screenshots*
 
 
 Goals
@@ -23,8 +39,7 @@ rather than re-inventing the wheel.
 While I was thinking of keeping the same database design
 (so this could be a drop-in replacement for the mapper)
 I've decided to initially focus on storing historical time-series data and
-thus will be architecting the database for that
-(while including enough information to be able to render current-state maps).
+will be working on map visualization after that.
 
 
 Acknowledgements
