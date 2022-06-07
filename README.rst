@@ -4,8 +4,8 @@ Mesh Info
 .. image:: https://github.com/smsearcy/mesh-info/actions/workflows/tests.yml/badge.svg
    :target: https://github.com/smsearcy/mesh-info/actions
 
-.. image:: https://readthedocs.org/projects/smsearcy-mesh-info/badge/?version=latest
-   :target: https://smsearcy-mesh-info.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/mesh-info-ki7onk/badge/?version=latest
+   :target: https://mesh-info-ki7onk.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
@@ -14,6 +14,8 @@ Mesh Info
 .. image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
    :target: https://github.com/pre-commit/pre-commit
    :alt: pre-commit
+
+`Project Documentation <http://mesh-info-ki7onk.readthedocs.io/>`_
 
 .. -begin-content-
 
