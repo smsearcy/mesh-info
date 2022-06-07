@@ -12,7 +12,7 @@ build:
     python: "3.9"
   apt_packages:
     - libpq-dev
-    - libbrd-dev
+    - librrd-dev
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
