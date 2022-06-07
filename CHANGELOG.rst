@@ -23,6 +23,12 @@ so breaking changes are possible but will be highlighted here.
 0.5.0 - Unreleased
 ------------------
 
+Added
+^^^^^
+
+* Add/expand project documentation (`#28 <https://github.com/smsearcy/mesh-info/issues/28>`_)
+
+
 0.4.0 - 2022-06-02
 ------------------
 
