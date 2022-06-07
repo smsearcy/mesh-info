@@ -15,6 +15,9 @@ Mesh Info
    :target: https://github.com/pre-commit/pre-commit
    :alt: pre-commit
 
+|
+|
+
 `Project Documentation <http://mesh-info-ki7onk.readthedocs.io/>`_
 
 .. -begin-content-
