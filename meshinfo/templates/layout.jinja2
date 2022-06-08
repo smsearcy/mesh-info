@@ -34,10 +34,10 @@
       {% set active_page = active_page|default("home") -%}
       <a class="navbar-item {% if active_page == 'home' %}is-active{% endif %}"
          href="{{ req.route_path('home') }}">Overview</a>
-      <a class="navbar-item {% if 'node' in active_page %}is-active{% endif %}"
-         href="{{ req.route_path('nodes', view='table') }}">Nodes</a>
       <a class="navbar-item {% if active_page == 'map' %}is-active{% endif %}"
          href="{{ req.route_path('map') }}">Map</a>
+      <a class="navbar-item {% if 'node' in active_page %}is-active{% endif %}"
+         href="{{ req.route_path('nodes', view='table') }}">Nodes</a>
     </div>
 
     <div class="navbar-end">

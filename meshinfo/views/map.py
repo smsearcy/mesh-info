@@ -138,13 +138,11 @@ def _link_properties(link: Link) -> LinkProperties:
     if link.type == LinkType.DTD:
         properties = LinkProperties(
             color="#3388ff",
-            opacity=0.5,
             offset=0,
         )
     elif link.type == LinkType.TUN:
         properties = LinkProperties(
-            color="#07070f",
-            opacity=0.5,
+            color="#707070",
             offset=0,
         )
     elif link.olsr_cost is not None:
@@ -159,7 +157,6 @@ def _link_properties(link: Link) -> LinkProperties:
     else:
         properties = LinkProperties(
             color="#8b0000",
-            opacity=0.5,
         )
 
     if link.status != LinkStatus.CURRENT:
@@ -170,7 +167,7 @@ def _link_properties(link: Link) -> LinkProperties:
 
 
 def _calc_hue(value: float, *, red: float, green: float) -> int:
-    """Calculate the hue between red and green, with the median being green."""
+    """Calculate the hue between red and green, with the median being yellow."""
     range_ = abs(green - red)
     if red < green:
         percent = max(min(value, green) - red, 0) / range_
