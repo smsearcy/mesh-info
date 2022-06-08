@@ -16,7 +16,6 @@ Mesh Info
    :alt: pre-commit
 
 |
-|
 
 `Project Documentation <http://mesh-info-ki7onk.readthedocs.io/>`_
 

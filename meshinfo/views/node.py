@@ -77,8 +77,8 @@ def node_json(request: Request):
     renderer="meshinfo:templates/node-preview.jinja2",
     http_cache=120,
 )
-def node_snippet(request: Request):
-    """Node snippet/preview for map pop-ups."""
+def node_preview(request: Request):
+    """Node preview for map pop-ups."""
 
     node_id = int(request.matchdict["id"])
     dbsession: Session = request.dbsession

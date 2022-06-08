@@ -37,6 +37,7 @@ def network_map(request: Request):
 
     """
     # TODO: read starting coordinates/zoom from query string
+    # (and/or use https://github.com/mlevans/leaflet-hash)
 
     node_icons = {
         key: request.static_url(f"meshinfo:static/img/map/{filename}")

@@ -36,6 +36,7 @@ def link_preview(request: Request):
     if link is None:
         raise HTTPNotFound("Sorry, the specified link could not be found")
 
+    # TODO: add tabs with graph(s) to the link preview
     # py310: use match operator
     if link.type == LinkType.RF:
         graph = "snr"
