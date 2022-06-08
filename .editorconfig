@@ -22,3 +22,7 @@ indent_style = tab
 [*.{jinja2,js,json,yml,yaml}]
 indent_style = space
 indent_size = 2
+
+[*.rst]
+indent_style = space
+indent_size = 3

@@ -55,7 +55,7 @@ Create a ``.env`` file in the ``mesh-info`` folder and add:
 .. tip::
 
     Setting the environment to ``development`` enables the Pyramid web framework's debug toolbar
-    and puts the data directories in the current's user's home folder.
+    and puts the data directories in the current user's home folder.
 
 
 Architecture
@@ -73,9 +73,10 @@ Repository organization (and significant files)
     meshinfo/
       models/       # SQLAlchemy database models
       static/       # static resources for the web site
-      templates/    # Jinja2 templates for the web site
+      templates/    # Jinja2 templates for HTML rendering
       tests/        # pytest tests
       views/        # Pyramid view functions
+                    # (provide the data that is passed to the templates)
       aredn.py      # AREDN node parsing functionality
       backup.py     # import/export tools
       cli.py        # command line entry points
