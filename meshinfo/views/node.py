@@ -72,6 +72,25 @@ def node_json(request: Request):
     return node.system_info
 
 
+@view_config(
+    route_name="node-preview",
+    renderer="meshinfo:templates/node-preview.jinja2",
+    http_cache=120,
+)
+def node_preview(request: Request):
+    """Node preview for map pop-ups."""
+
+    node_id = int(request.matchdict["id"])
+    dbsession: Session = request.dbsession
+
+    node: Node = dbsession.query(Node).get(node_id)
+
+    if node is None:
+        raise HTTPNotFound("Sorry, the specified node could not be found")
+
+    return {"node": node}
+
+
 @view_config(route_name="node-graphs", renderer="meshinfo:templates/node-graphs.jinja2")
 def node_graphs(request: Request):
     """Display graphs of particular data for a node over different timeframes."""

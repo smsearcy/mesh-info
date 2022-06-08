@@ -36,7 +36,33 @@ and some statistics about types of nodes.
 Map
 ---
 
-Under development.
+Displays nodes and links on a map.
+Click on the node or link for a popup with more information
+and a hyperlink the the node details page.
+
+.. note::
+
+   As of v0.5.0,
+   the client's browser needs internet access to download the map tiles.
+
+Node Legend
+^^^^^^^^^^^
+
+* 900MHz - Magenta
+* 2GHz - Purple
+* 3GHz - Blue
+* 5GHz - Orange
+* Unknown - Grey
+
+Link Legend
+^^^^^^^^^^^
+
+* Radio - Green to Red gradiant, based on link cost
+* DTD - Blue
+* Tunnel - Grey
+* Unknown Cost - Maroon
+
+*Recent* links are faded.
 
 
 Nodes

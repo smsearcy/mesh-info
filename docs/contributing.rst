@@ -92,8 +92,34 @@ Tools
 
 Mesh Info leverages the following Python frameworks/libraries:
 
-* `AIOHTTP <https://docs.aiohttp.org/en/stable/>`_: asynchronous polling of mesh nodes
-* `Pyramid <https://trypyramid.com/>`_: web framework
-* `SQLAlchemy <https://www.sqlalchemy.org/>`_: database ORM
+* `attrs <https://www.attrs.org/en/stable/>`_:
+  classes without boilerplate
+* `AIOHTTP <https://docs.aiohttp.org/en/stable/>`_:
+  asynchronous polling of mesh nodes
+* `Jinja <https://jinja.palletsprojects.com/>`_:
+  template engine
+* `Pyramid <https://trypyramid.com/>`_:
+  web framework
+* `SQLAlchemy <https://www.sqlalchemy.org/>`_:
+  database ORM
 
-(TODO: flesh out this list some more?)
+The following frontend libraries/tools are vendored in this repository
+(because the goal is that clients do not need internet access to use the tool):
+
+* `Bulma <https://bulma.io/>`_:
+  CSS framework
+* `Leaflet <https://leafletjs.com/>`_:
+  Javascript library for interactive maps
+* `Leaflet Polyline Offset <https://github.com/bbecquet/Leaflet.PolylineOffset>`_:
+  Leaflet plugin to offset lines
+* `Grid.js <https://gridjs.io/>`_:
+  Javascript table plugin
+
+.. note::
+
+   An initial goal was avoiding jQuery,
+   hence the choice of Bulma.
+   Bootstrap 5 came out after I started working on the web portion,
+   and I'm opening to switching to that.
+   Especially since I want to add tabs and Bulma only includes styling,
+   not functionality.

@@ -11,6 +11,46 @@ from ..types import LinkType
 from . import schema
 
 
+@view_config(
+    route_name="link-preview",
+    renderer="meshinfo:templates/link-preview.jinja2",
+    http_cache=120,
+)
+def link_preview(request: Request):
+    """Link snippet/preview for map pop-ups."""
+
+    source_id = int(request.matchdict["source"])
+    destination_id = int(request.matchdict["destination"])
+    type_ = getattr(LinkType, request.matchdict["type"].upper())
+    dbsession: Session = request.dbsession
+
+    link = (
+        dbsession.query(Link)
+        .options(
+            joinedload(Link.source).load_only(Node.name),
+            joinedload(Link.destination).load_only(Node.name),
+        )
+        .get((source_id, destination_id, type_))
+    )
+
+    if link is None:
+        raise HTTPNotFound("Sorry, the specified link could not be found")
+
+    # TODO: add tabs with graph(s) to the link preview
+    # py310: use match operator
+    if link.type == LinkType.RF:
+        graph = "snr"
+    elif link.type in {LinkType.DTD, LinkType.TUN}:
+        graph = "quality"
+    else:
+        graph = "cost"
+
+    return {
+        "link": link,
+        "graph": graph,
+    }
+
+
 @view_config(route_name="link-graphs", renderer="meshinfo:templates/link-graphs.jinja2")
 def link_graphs(request: Request):
     """Page displaying graphs of particular data over different timeframes."""
