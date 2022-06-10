@@ -31,13 +31,14 @@
   </div>
   <div id="navbarMeshMap" class="navbar-menu">
     <div class="navbar-start">
-      {% set active_page = active_page|default("home") -%}
-      <a class="navbar-item {% if active_page == 'home' %}is-active{% endif %}"
+      <a class="navbar-item {% if req.matched_route.name == 'home' %}is-active{% endif %}"
          href="{{ req.route_path('home') }}">Overview</a>
-      <a class="navbar-item {% if active_page == 'map' %}is-active{% endif %}"
+      <a class="navbar-item {% if req.matched_route.name == 'map' %}is-active{% endif %}"
          href="{{ req.route_path('map') }}">Map</a>
-      <a class="navbar-item {% if 'node' in active_page %}is-active{% endif %}"
+      <a class="navbar-item {% if 'node' in req.matched_route.name %}is-active{% endif %}"
          href="{{ req.route_path('nodes', view='table') }}">Nodes</a>
+      <a class="navbar-item {% if 'about' in req.matched_route.name %}is-active{% endif %}"
+         href="{{ req.route_path('about') }}">About</a>
     </div>
 
     <div class="navbar-end">

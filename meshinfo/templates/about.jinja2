@@ -1,17 +1,22 @@
 {% extends "layout.jinja2" %}
 
-{% set active_page = "about" %}
+{% block title %}About Mesh Info{% endblock %}
 
 {% block content %}
 <div class="container">
   <h1 class="title">About</h1>
-  <p>
-    Mesh Info was inspired by KG6WXC's MeshMap,
-    but redesigned for tracking historical data.
-  </p>
-  <p>
+  <div class="block">
+    Mesh Info was created by Scott Searcy (KI7ONK).
+    Inspiration and guidance was drawn from KG6WXC's MeshMap,
+    but redesigned for tracking historical data,
+    along with other (hopeful) architectural improvements.
+  </div>
+  <div class="block">
+    Documentation is available <a href="http://mesh-info-ki7onk.readthedocs.io/">here</a>.
+  </div>
+  <div class="block">
     The project is hosted on <a href="https://github.com/smsearcy/mesh-info">GitHub</a>.
-    Please open an issue there if you run into problems and/or have ideas for improvement.
-  </p>
+    Please open an issue or merge request if you run into problems and/or have ideas for improvement.
+  </div>
 </div>
 {% endblock %}
