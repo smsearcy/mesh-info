@@ -1,12 +1,12 @@
-{% extends "layout.jinja2" %}
+{% extends "includes/layout.jinja2" %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ req.static_url("meshinfo:static/leaflet/leaflet.css") }}">
 {% endblock %}
 
-{% block content %}
-  <div class="container is-fluid">
-    <div id="map" style="height: 85vh;"></div>
+{% block root %}
+  <div class="container is-fluid m-0 p-0">
+    <div id="map" style="height: 92vh;"></div>
   </div>
 {% endblock %}
 
