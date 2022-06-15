@@ -19,7 +19,23 @@ if typing.TYPE_CHECKING:
 # these are defined as constants at the module level so they are only initialized once
 # (if the set was initialize for each function then it wouldn't be faster)
 NINE_HUNDRED_MHZ_BOARDS = {"0xe009", "0xe1b9", "0xe239"}
-TWO_GHZ_CHANNELS = {"-1", "-2", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"}
+TWO_GHZ_CHANNELS = {
+    "-4",
+    "-3",
+    "-2",
+    "-1",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+}
 # according to MeshMap sometimes it will show channel, sometimes frequency
 THREE_GHZ_CHANNELS = {
     "76",
