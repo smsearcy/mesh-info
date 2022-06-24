@@ -31,6 +31,17 @@ Added
   Client is required internet access to fetch tiles.
   All map elements rendered on single layer.
 
+Changed
+^^^^^^^
+
+* Bumped current AREDN version (`#38 <https://github.com/smsearcy/mesh-info/issues/38>`_)
+
+Fixed
+^^^^^
+
+* Added new 2GHz channels (`#40 <https://github.com/smsearcy/mesh-info/issues/40>`_)
+
+
 0.4.0 - 2022-06-02
 ------------------
 
