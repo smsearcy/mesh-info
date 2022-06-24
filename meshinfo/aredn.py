@@ -17,7 +17,10 @@ if typing.TYPE_CHECKING:
     from .config import AppConfig
 
 # these are defined as constants at the module level so they are only initialized once
-# (if the set was initialize for each function then it wouldn't be faster)
+
+# TODO: calculate the channels similar to how AREDN does it for `rf_channel_map`?
+# https://github.com/aredn/aredn/blob/b006c1040a48bf4d8866ab764a86d56cdb0f46f5/files/www/cgi-bin/setup
+
 NINE_HUNDRED_MHZ_BOARDS = {"0xe009", "0xe1b9", "0xe239"}
 TWO_GHZ_CHANNELS = {
     "-4",
@@ -87,7 +90,6 @@ THREE_GHZ_CHANNELS = {
     "3490",
     "3495",
 }
-# per MeshMap 133+ are US channel numbers, info taken from "channelmaps.pm" in AREDEN
 FIVE_GHZ_CHANNELS = {
     "37",
     "40",
@@ -105,6 +107,7 @@ FIVE_GHZ_CHANNELS = {
     "120",
     "124",
     "128",
+    "131",
     "132",
     "133",
     "134",
