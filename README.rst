@@ -24,7 +24,7 @@ Mesh Info
 Collects information about an `AREDN <https://arednmesh.org/>`_ mesh network,
 tracking and graphing historical data such as link quality and cost.
 
-Inspired by based on KG6WXC's `MeshMap`_,
+Inspired by and based on  KG6WXC's `MeshMap`_,
 but redesigned for tracking the historical data.
 
 Uses Python's `asyncio` library to concurrently query nodes for faster polling times.
@@ -43,14 +43,17 @@ rather than re-inventing the wheel.
 While I was thinking of keeping the same database design
 (so this could be a drop-in replacement for the mapper)
 I've decided to initially focus on storing historical time-series data and
-will be working on map visualization after that.
+then started adding some basic map visualizations.
 
 
 Acknowledgements
 ----------------
 
-As mentioned above, this is based on the work done by Eric (KG6WXC),
+As mentioned above,
+this is based on the work done by Eric (KG6WXC),
 who has been very helpful when I had questions.
+Besides learning that I could get all the nodes from OLSR and about AREDN's ``sysinfo.json``,
+the map uses his icons and much of the Javascript is based on what he did.
 
 Project icon is from `here <https://commons.wikimedia.org/wiki/File:FullMeshNetwork.svg>`_.
 

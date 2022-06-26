@@ -57,6 +57,12 @@ class AppConfig:
         pool_pre_ping: bool = environ.bool_var(default=True)
 
     @environ.config
+    class Map:
+        latitude: float = environ.var(default=19.64, converter=float)
+        longitude: float = environ.var(default=-1.58, converter=float)
+        zoom: int = environ.var(default=3, converter=int)
+
+    @environ.config
     class Poller:
         max_connections: int = environ.var(default=50, converter=int)
         connect_timeout: int = environ.var(default=10, converter=int)
@@ -77,6 +83,7 @@ class AppConfig:
     aredn: Aredn = environ.group(Aredn)
     collector: Collector = environ.group(Collector)
     db: DB = environ.group(DB)
+    map: Map = environ.group(Map)
     poller: Poller = environ.group(Poller)
     web: Web = environ.group(Web)
 
