@@ -41,6 +41,7 @@ Fixed
 
 * Added new 2GHz channels (`#40 <https://github.com/smsearcy/mesh-info/issues/40>`_)
 * Added new 5GHz channel (`#44 <https://github.com/smsearcy/mesh-info/issues/44>`_)
+* Fix 3GHz icon color (`#49 <https://github.com/smsearcy/mesh-info/issues/49>`_)
 
 
 0.4.0 - 2022-06-02
