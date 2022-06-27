@@ -17,7 +17,7 @@ from ..types import LinkStatus, LinkType, NodeStatus
 NODE_ICONS = [
     ("900MHz", "magentaRadioCircle-icon.png"),
     ("2GHz", "purpleRadioCircle-icon.png"),
-    ("3GHz", "blueRadioCircle-icon.png"),
+    ("3GHZ", "blueRadioCircle-icon.png"),
     ("5GHz", "goldRadioCircle-icon.png"),
     ("Unknown", "greyRadioCircle-icon.png"),
 ]
