@@ -13,6 +13,7 @@ from meshinfo import VERSION, backup, collector, models, report, web
 from meshinfo.aredn import VersionChecker
 from meshinfo.config import AppConfig, configure
 from meshinfo.historical import HistoricalStats
+from meshinfo.poller import Poller
 
 
 def main(argv: list = None):  # noqa: C901
@@ -41,7 +42,7 @@ def main(argv: list = None):  # noqa: C901
     env = prepare(registry=config.registry)
     request = env["request"]
 
-    poller = request.find_service(name="poller")
+    poller = request.find_service(Poller)
     version_checker: VersionChecker = request.find_service(VersionChecker)
 
     # Check the report command first since it doesn't require database or storage

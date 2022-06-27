@@ -18,7 +18,8 @@ from pyramid.config import Configurator
 
 from .aredn import VersionChecker
 from .historical import HistoricalStats
-from .poller import network_info
+from .network import reverse_dns_lookup
+from .poller import Poller
 
 FOLDER_NAME = "mesh-info"
 
@@ -197,13 +198,18 @@ def configure(
     # Register services with `pyramid-services`
 
     # Register the `Poller` singleton
-    poller = functools.partial(
-        network_info,
+    # create reverse DNS lookup partial
+    lookup_node_name = functools.partial(
+        reverse_dns_lookup,
+        dns_server=app_config.local_node,
+    )
+    poller = Poller.create(
+        lookup_name=lookup_node_name,
         max_connections=app_config.poller.max_connections,
         connect_timeout=app_config.poller.connect_timeout,
         read_timeout=app_config.poller.read_timeout,
     )
-    config.register_service(poller, name="poller")
+    config.register_service(poller, Poller)
 
     # Register the `VersionChecker` singleton
     version_checker = VersionChecker.from_config(app_config.aredn)

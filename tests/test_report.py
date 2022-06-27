@@ -5,7 +5,7 @@ from faker import Faker
 
 from meshinfo import report
 from meshinfo.aredn import Interface, SystemInfo, VersionChecker
-from meshinfo.poller import NetworkInfo, network_info
+from meshinfo.poller import NetworkInfo, Poller
 
 fake = Faker()
 
@@ -123,13 +123,14 @@ SAMPLE_NODES = [
 
 @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 def test_report_main(mocker, app_config):
-    mock_poller = mocker.AsyncMock(return_value=NetworkInfo([], [], {}))
+    mock_poller = mocker.AsyncMock(return_value=NetworkInfo([], [], []))
     mocker.patch("meshinfo.report.network_info", side_effect=mock_poller)
 
+    poller = Poller(0, None, None)
     version_checker = VersionChecker.from_config(app_config.aredn)
 
-    report.main("localnode", network_info, version_checker)
-    mock_poller.assert_awaited_once_with("localnode", network_info)
+    report.main("localnode", poller, version_checker)
+    mock_poller.assert_awaited_once_with("localnode", poller)
 
 
 @pytest.mark.parametrize("node", SAMPLE_NODES)

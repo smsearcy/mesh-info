@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, configure_mappers, sessionmaker
 
 # import or define all models here to ensure they are attached to the
 # Base.metadata prior to any initialization routines
-from .collector import CollectorStat  # noqa
+from .collector import CollectorStat, NodeError  # noqa
 from .link import Link  # noqa
 from .meta import Base  # noqa
 from .node import Node  # noqa
