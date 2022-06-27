@@ -10,6 +10,7 @@ from pyramid.request import Request
 from pyramid.view import view_config
 from sqlalchemy.orm import Session, aliased
 
+from ..config import AppConfig
 from ..models import Link, Node
 from ..types import LinkStatus, LinkType, NodeStatus
 
@@ -41,12 +42,19 @@ def network_map(request: Request):
     # TODO: read starting coordinates/zoom from query string
     # (and/or use https://github.com/mlevans/leaflet-hash)
 
+    config: AppConfig = request.registry.settings["app_config"]
+
     node_icons = {
         key: request.static_url(f"meshinfo:static/img/map/{filename}")
         for key, filename in NODE_ICONS
     }
 
-    return {"node_icons": node_icons}
+    return {
+        "node_icons": node_icons,
+        "latitude": config.map.latitude,
+        "longitude": config.map.longitude,
+        "zoom": config.map.zoom,
+    }
 
 
 @view_config(route_name="map-data", renderer="json")

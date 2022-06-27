@@ -30,6 +30,7 @@ Added
 * Basic implementation of network map.
   Client is required internet access to fetch tiles.
   All map elements rendered on single layer.
+* Set starting map coordinates via configuration file (`#45 <https://github.com/smsearcy/mesh-info/issues/45>`_)
 
 Changed
 ^^^^^^^

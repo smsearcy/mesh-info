@@ -34,7 +34,7 @@ and create ``/var/lib/mesh-info`` for storing the application data.
     (mesh-info) $ pip install -r /opt/mesh-info/src/requirements.txt
     (mesh-info) $ pip install -e /opt/mesh-info/src
     # Run the database migrations
-    (mesh-info) $ alembic upgrade head
+    (mesh-info) $ alembic -c /opt/mesh-info/src/alembic.ini upgrade head
     (mesh-info) $ deactivate
     $ exit
 
@@ -56,7 +56,9 @@ for the collector service to run:
 
     MESH_INFO_LOCAL_NODE="10.1.1.1"
 
-*TODO: Document the rest of the configuration options in a "Configuration" section.*
+.. tip::
+
+   See :doc:`config` for more details and options.
 
 You can also do a test of the poller/collector to confirm database access and data folder.
 The ``--run-once`` option means it will poll the network once, save the results, and quit.
@@ -213,7 +215,7 @@ To get the latest version of Mesh Info, run the following:
     $ sudo systemctl stop meshinfo-web meshinfo-collector
     $ cd /opt/mesh-info/src
     $ sudo -u meshinfo git pull
-    $ sudo -u meshinfo /opt/mesh-info/bin/alembic upgrade head
+    $ sudo -u meshinfo /opt/mesh-info/bin/alembic -c /opt/mesh-info/src/alembic.ini upgrade head
     $ sudo systemctl restart meshinfo-web meshinfo-collector
 
 .. warning::

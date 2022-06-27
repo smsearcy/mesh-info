@@ -37,10 +37,6 @@ Then, setup the Python virtual environment:
     (venv) $ pip install -r dev-requirements.txt -r requirements.txt
     (venv) $ pip install -e .
     (venv) $ make migrate-db
-    # run the test suite locally
-    (venv) $ make
-    # run web service with development settings
-    (venv) $ make web
 
 Create a ``.env`` file in the ``mesh-info`` folder and add:
 
@@ -56,6 +52,52 @@ Create a ``.env`` file in the ``mesh-info`` folder and add:
 
     Setting the environment to ``development`` enables the Pyramid web framework's debug toolbar
     and puts the data directories in the current user's home folder.
+
+To get data, either run ``meshinfo collector``
+or use ``meshinfo import`` to import data.
+
+Run the development web server via:
+
+.. code-block:: console
+
+   (venv) $ ./dev-web.sh
+
+Connect to the server at http://localhost:8000.
+
+
+Testing
+-------
+
+There is a ``Makefile`` with some commonly used commands and tests.
+Run ``make`` to run the general test suite.
+
+make pre-commit
+   Runs `pre-commit <https://pre-commit.com/>`_ to check/format files.
+
+make lint
+   Runs `Flake8 <https://flake8.pycqa.org/en/latest/index.html>`_ to do static linting.
+
+make mypy
+   Run `mypy <http://mypy-lang.org/>`_ static type checker.
+
+make tests
+   Run test suite.
+
+   .. tip::
+
+      Copy ``sysinfo.json`` samples into ``tests/data`` to verify they can be successfully parsed.
+
+make docs
+   Generate HTML documentation locally via `Sphinx <https://www.sphinx-doc.org/>`_.
+
+make make-migration
+   Create new database migrations via `Alembic <https://alembic.sqlalchemy.org/>`_.
+
+make migrate-db
+   Apply `Alembic <https://alembic.sqlalchemy.org/>`_ database migrations.
+
+make requirements
+   Generate requirements files via `pip-tools <https://pypi.org/project/pip-tools/>`_.
 
 
 Architecture

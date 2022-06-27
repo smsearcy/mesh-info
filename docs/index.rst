@@ -16,6 +16,7 @@ Mesh Info: AREDN Network Information
 
    guide
    installation
+   config
    commands
    contributing
 
