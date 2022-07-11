@@ -7,7 +7,6 @@ import math
 import time
 from collections import defaultdict
 from operator import attrgetter
-from typing import Callable, DefaultDict, List, Optional
 
 import pendulum
 from loguru import logger
@@ -17,8 +16,8 @@ from . import models
 from .aredn import LinkInfo, SystemInfo
 from .config import AppConfig
 from .historical import HistoricalStats
-from .models import CollectorStat, Link, Node
-from .poller import OlsrData
+from .models import CollectorStat, Link, Node, NodeError
+from .poller import OlsrData, Poller
 from .types import LinkStatus, NodeStatus
 
 # TODO: align names so that this can just be a list
@@ -56,7 +55,7 @@ MODEL_TO_SYSINFO_ATTRS = {
 def main(
     local_node: str,
     dbsession_factory,
-    poller: Callable,
+    poller: Poller,
     historical_stats: HistoricalStats,
     *,
     config: AppConfig.Collector,
@@ -135,7 +134,7 @@ async def service(collect, *, polling_period: int, max_retries: int = 5):
 
 async def collector(
     local_node: str,
-    poller: Callable,
+    poller: Poller,
     session_factory,
     historical_stats: HistoricalStats,
     *,
@@ -163,7 +162,7 @@ async def collector(
             f"Failed to connect to OLSR daemon on {local_node} for network data"
         )
 
-    nodes, links, errors = await poller(olsr_data)
+    nodes, links, errors = await poller.get_network_info(olsr_data)
 
     poller_finished = time.monotonic()
     poller_elapsed = poller_finished - start_time
@@ -173,7 +172,7 @@ async def collector(
         poller_elapsed / 60,
     )
 
-    summary: DefaultDict[str, int] = defaultdict(int)
+    summary: defaultdict[str, int] = defaultdict(int)
     with models.session_scope(session_factory) as dbsession:
         node_models = save_nodes(nodes, dbsession, count=summary)
         link_models = save_links(links, dbsession, count=summary)
@@ -209,19 +208,28 @@ async def collector(
 
         total_duration = time.monotonic() - start_time
 
-        # TODO: fill in "other_stats" with error types and node/link details
-
-        dbsession.add(
-            CollectorStat(
-                started_at=started_at,
-                node_count=len(nodes),
-                link_count=len(links),
-                error_count=len(errors),
-                polling_duration=poller_elapsed,
-                total_duration=total_duration,
-                other_stats=dict(summary),
-            )
+        stats = CollectorStat(
+            started_at=started_at,
+            node_count=len(nodes),
+            link_count=len(links),
+            error_count=len(errors),
+            polling_duration=poller_elapsed,
+            total_duration=total_duration,
+            other_stats=dict(summary),
         )
+        for result in errors:
+            if not result.error:
+                # shouldn't happen, appeasing mypy
+                continue
+            stats.node_errors.append(
+                NodeError(
+                    ip_address=result.ip_address,
+                    dns_name=result.name,
+                    error_type=result.error.error,
+                    details=result.error.response,
+                )
+            )
+        dbsession.add(stats)
 
     total_elapsed = time.monotonic() - start_time
     logger.info("Total time: {:.2f}s ({:.2f}m)", total_elapsed, total_elapsed / 60)
@@ -241,7 +249,7 @@ def expire_data(
     *,
     nodes_expire: int,
     links_expire: int,
-    count: DefaultDict[str, int] = None,
+    count: defaultdict[str, int] = None,
 ):
     """Update the status of nodes/links that have not been seen recently.
 
@@ -290,8 +298,8 @@ def expire_data(
 
 
 def save_nodes(
-    nodes: List[SystemInfo], dbsession: Session, *, count: DefaultDict[str, int] = None
-) -> List[Node]:
+    nodes: list[SystemInfo], dbsession: Session, *, count: defaultdict[str, int] = None
+) -> list[Node]:
     """Saves node information to the database.
 
     Looks for existing nodes by WLAN MAC address and name.
@@ -328,7 +336,7 @@ def save_nodes(
     return node_models
 
 
-def get_db_model(dbsession: Session, node: SystemInfo) -> Optional[Node]:
+def get_db_model(dbsession: Session, node: SystemInfo) -> Node | None:
     """Get the best match database record for this node."""
     # Find the most recently seen node that matches both name and MAC address
     query = dbsession.query(Node).filter(
@@ -359,7 +367,7 @@ def get_db_model(dbsession: Session, node: SystemInfo) -> Optional[Node]:
     return None
 
 
-def _get_most_recent(results: List[Node]) -> Optional[Node]:
+def _get_most_recent(results: list[Node]) -> Node | None:
     """Get the most recently seen node, marking the others inactive."""
     if len(results) == 0:
         return None
@@ -374,8 +382,8 @@ def _get_most_recent(results: List[Node]) -> Optional[Node]:
 
 
 def save_links(
-    links: List[LinkInfo], dbsession: Session, *, count: DefaultDict[str, int] = None
-) -> List[Link]:
+    links: list[LinkInfo], dbsession: Session, *, count: defaultdict[str, int] = None
+) -> list[Link]:
     """Saves link data to the database.
 
     This implements the bearing/distance functionality in Python
@@ -512,7 +520,7 @@ def bearing(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 async def save_historical_data(
-    nodes: List[Node], links: List[Link], stats: HistoricalStats
+    nodes: list[Node], links: list[Link], stats: HistoricalStats
 ):
     """Save current node and link data to our time series storage.
 

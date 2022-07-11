@@ -31,6 +31,7 @@ Added
   Client is required internet access to fetch tiles.
   All map elements rendered on single layer.
 * Set starting map coordinates via configuration file (`#45 <https://github.com/smsearcy/mesh-info/issues/45>`_)
+* Save node polling errors to database (`#55 <https://github.com/smsearcy/mesh-info/issues/55>`_)
 
 Changed
 ^^^^^^^

@@ -5,12 +5,11 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import Callable, Dict
 
 from loguru import logger
 
 from .aredn import LinkInfo, SystemInfo, VersionChecker
-from .poller import NetworkInfo, NodeError, OlsrData, PollingError
+from .poller import NetworkInfo, NodeResult, OlsrData, Poller, PollingError
 from .types import LinkType
 
 VERBOSE_TO_LOGGING = {0: "SUCCESS", 1: "INFO", 2: "DEBUG", 3: "TRACE"}
@@ -36,7 +35,7 @@ VERSION_COLOR = {
 
 def main(
     local_node: str,
-    poller: Callable,
+    poller: Poller,
     version_checker: VersionChecker,
     *,
     verbose: int = 0,
@@ -95,10 +94,10 @@ def main(
     print(f"{NOTE}Network report took {total_time:.2f} seconds{END}")
 
 
-async def network_info(node: str, poller: Callable) -> NetworkInfo:
+async def network_info(node: str, poller: Poller) -> NetworkInfo:
     """Connect to the OLSR daemon on the local node and get the network information."""
     olsr = await OlsrData.connect(node)
-    return await poller(olsr)
+    return await poller.get_network_info(olsr)
 
 
 def pprint_node(node: SystemInfo, checker: VersionChecker):
@@ -204,7 +203,7 @@ def _colorize_load(value: float) -> str:
     return f"{color}{value}{END}"
 
 
-def handle_errors(errors: Dict[str, NodeError], output: Path, *, save: bool):
+def handle_errors(errors: list[NodeResult], output: Path, *, save: bool):
     """Report on the nodes that had errors."""
 
     print(f"{BAD}Encountered errors with {len(errors):,d} nodes{END}")
@@ -212,17 +211,20 @@ def handle_errors(errors: Dict[str, NodeError], output: Path, *, save: bool):
         print("Saving responses for nodes with errors")
     else:
         print("Use the --save-errors option to save responses from nodes with errors")
-    for ip_address, result in errors.items():
-        # TODO: MeshMap did a reverse DNS lookup to get the node name
-        print(f"{WARN}{ip_address}: {result.error!s}{END}")
+    for result in errors:
+        if not result.error:
+            # this shouldn't happen, mainly here to appease mypy
+            continue
+        error = result.error.error
+        print(f"{WARN}{result.label}: {error!s}{END}")
         if save:
-            if result.error == PollingError.PARSE_ERROR:
-                filename = f"sysinfo-{ip_address}-error.json"
-            elif result.error in (
+            if error == PollingError.PARSE_ERROR:
+                filename = f"sysinfo-{result.ip_address}-error.json"
+            elif error in (
                 PollingError.HTTP_ERROR,
                 PollingError.INVALID_RESPONSE,
             ):
-                filename = f"{ip_address}-response.txt"
+                filename = f"{result.ip_address}-response.txt"
             else:
-                filename = f"{ip_address}-error.txt"
-            open(output / filename, "w").write(result.response)
+                filename = f"{result.ip_address}-error.txt"
+            open(output / filename, "w").write(result.error.response)
