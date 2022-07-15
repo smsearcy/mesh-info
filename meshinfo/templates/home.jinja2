@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container">
-  <h1 class="title">Network Info</h1>
+  <h1 class="title is-2">Network Info</h1>
   <div class="level">
     <div class="level-item has-text-centered">
       <div>
@@ -12,7 +12,7 @@
     </div>
   </div>
 
-  <h2 class="subtitle">Collector Statistics</h2>
+  <h2 class="title is-3">Collector Statistics</h2>
 {% if last_run is not none %}
   <div class="columns">
     <div class="column is-narrow">
@@ -73,7 +73,7 @@
   {% endfor %}
   </div>
 
-  <h2 class="subtitle">Network Statistics</h2>
+  <h2 class="title is-3">Network Statistics</h2>
   <div class="columns">
     <div class="column is-narrow">
       <div class="card">
@@ -117,5 +117,44 @@
         </div>
       </div>
     </div>
+  </div>
+  <h2 class="title is-3">Recent Node Errors</h2>
+{% if last_run %}
+  <div class="columns">
+  {% for error_type, errors in node_errors|dictsort %}
+    <div class="column is-narrow">
+      <div class="subtitle">{{ error_type }}</div>
+      <div class="block">Count: {{ errors|length }}</div>
+      <table class="table is-striped">
+        <thead>
+          <tr>
+            <th>Name (DNS)</th>
+            <th>IP Address</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for error in errors|sort(attribute='dns_name') %}
+          <tr>
+            <td>{{ error.dns_name }}</td>
+            <td>
+              <a href="{{ req.route_url('node-errors', timestamp=last_run.started_at.timestamp(), _query={'highlight': error.ip_address}, _anchor=error.ip_address) }}">
+                {{ error.ip_address }}
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="column">
+      No node errors in most recent network poll.
+    </div>
+  {% endfor %}
+  </div>
+  <div class="content">
+    <a href="{{ req.route_url('node-errors', timestamp=last_run.started_at.timestamp()) }}">View all</a>
+  </div>
+{% endif %}
 </div>
 {% endblock %}

@@ -26,12 +26,13 @@ so breaking changes are possible but will be highlighted here.
 Added
 ^^^^^
 
-* Add/expand project documentation (`#28 <https://github.com/smsearcy/mesh-info/issues/28>`_)
+* Add/expand project documentation. (`#28 <https://github.com/smsearcy/mesh-info/issues/28>`_)
 * Basic implementation of network map.
   Client is required internet access to fetch tiles.
   All map elements rendered on single layer.
-* Set starting map coordinates via configuration file (`#45 <https://github.com/smsearcy/mesh-info/issues/45>`_)
-* Save node polling errors to database (`#55 <https://github.com/smsearcy/mesh-info/issues/55>`_)
+* Set starting map coordinates via configuration file. (`#45 <https://github.com/smsearcy/mesh-info/issues/45>`_)
+* Save node polling errors to database. (`#55 <https://github.com/smsearcy/mesh-info/issues/55>`_)
+* Display node polling errors. (`#47 <https://github.com/smsearcy/mesh-info/issues/47>`_)
 
 Changed
 ^^^^^^^

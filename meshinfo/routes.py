@@ -7,6 +7,7 @@ def includeme(config: Configurator):
     config.add_route("about", "/about")
     config.add_route("map", "/map")
     config.add_route("map-data", "/map-data.json")
+    config.add_route("node-errors", "/nodes/errors/{timestamp}")
     config.add_route("node-details", r"/nodes/{id:\d+}")
     config.add_route("node-json", r"/nodes/{id:\d+}/json")
     config.add_route("node-preview", r"/nodes/{id:\d+}/preview")
