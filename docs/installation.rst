@@ -215,8 +215,8 @@ To get the latest version of Mesh Info, run the following:
     $ sudo systemctl stop meshinfo-web meshinfo-collector
     $ cd /opt/mesh-info/src
     $ sudo -u meshinfo git pull
-    $ sudo -u meshinfo pip install -r requirements.txt
-    $ sudo -u meshinfo /opt/mesh-info/bin/alembic -c /opt/mesh-info/src/alembic.ini upgrade head
+    $ sudo -u meshinfo /opt/mesh-info/bin/pip install -r requirements.txt
+    $ sudo -u meshinfo /opt/mesh-info/bin/alembic upgrade head
     $ sudo systemctl restart meshinfo-web meshinfo-collector
 
 .. warning::
