@@ -137,7 +137,7 @@
           <tr>
             <td>{{ error.dns_name }}</td>
             <td>
-              <a href="{{ req.route_url('node-errors', timestamp=last_run.started_at.timestamp(), _query={'highlight': error.ip_address}, _anchor=error.ip_address) }}">
+              <a href="{{ req.route_url('network-errors', timestamp=last_run.started_at.timestamp(), _query={'highlight': error.ip_address}, _anchor=error.ip_address) }}">
                 {{ error.ip_address }}
               </a>
             </td>
@@ -153,7 +153,7 @@
   {% endfor %}
   </div>
   <div class="content">
-    <a href="{{ req.route_url('node-errors', timestamp=last_run.started_at.timestamp()) }}">View all</a>
+    <a href="{{ req.route_url('network-errors', timestamp=last_run.started_at.timestamp()) }}">View all</a>
   </div>
 {% endif %}
 </div>

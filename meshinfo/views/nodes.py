@@ -3,13 +3,11 @@ import io
 from operator import attrgetter
 from typing import List
 
-import pendulum
-from pyramid.httpexceptions import HTTPBadRequest, HTTPNotFound
 from pyramid.request import Request, Response
 from pyramid.view import view_config, view_defaults
-from sqlalchemy.orm import Session, subqueryload
+from sqlalchemy.orm import Session
 
-from ..models import CollectorStat, Node
+from ..models import Node
 from ..types import NodeStatus
 
 
@@ -70,29 +68,3 @@ class NodeListViews:
         response.content_disposition = "attachment; filename=node-export.csv"
 
         return response
-
-
-@view_config(route_name="node-errors", renderer="meshinfo:templates/node-errors.jinja2")
-def node_errors(request: Request):
-    dbsession: Session = request.dbsession
-    try:
-        timestamp = pendulum.from_format(request.matchdict["timestamp"], "X")
-    except Exception as exc:
-        raise HTTPBadRequest("Invalid timestamp") from exc
-
-    marked_row = request.GET.get("highlight")
-
-    collector = (
-        dbsession.query(CollectorStat)
-        .options(subqueryload(CollectorStat.node_errors))
-        .filter(CollectorStat.started_at == timestamp)
-        .one_or_none()
-    )
-    if collector is None:
-        raise HTTPNotFound(f"No collection statistics available for {timestamp}")
-
-    return {
-        "marked_ip": marked_row,
-        "node_errors": collector.node_errors,
-        "stats": collector,
-    }
