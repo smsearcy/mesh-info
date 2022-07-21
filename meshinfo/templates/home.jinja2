@@ -117,6 +117,27 @@
         </div>
       </div>
     </div>
+    <div class="column is-narrow">
+      <div class="card">
+        <header class="card-header">
+          <p class="card-header-title">API Versions</p>
+        </header>
+        <div class="card-content">
+          <div class="content">
+            <table class="table">
+              <tbody>
+              {% for version, count in api_stats|dictsort(by='value', reverse=True) %}
+                <tr>
+                  <th>{{ version }}:</th>
+                  <td>{{ "{:,d}".format(count) }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <h2 class="title is-3">Recent Node Errors</h2>
 {% if last_run %}
