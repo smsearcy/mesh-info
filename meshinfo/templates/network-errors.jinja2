@@ -1,0 +1,70 @@
+{% extends "includes/section.jinja2" %}
+
+{% block title %}Node Polling Errors{% endblock %}
+
+{% block content %}
+<div class="container is-fluid">
+  <h1 class="title">Node Polling Errors at {{ stats.started_at|local_tz }}</h1>
+  <div class="content">
+    <div class="columns container">
+      <div class="column">
+        <div class="mb-2">
+          <div class="heading">Started At</div>
+          <div>{{ stats.started_at|local_tz }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Finished At</div>
+          <div>{{ stats.finished_at|local_tz }}</div>
+        </div>
+      </div>
+      <div class="column">
+        <div class="mb-2">
+          <div class="heading">Polling Time</div>
+          <div>{{ stats.polling_duration|duration }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Total Run Time</div>
+          <div>{{ stats.total_duration|duration }}</div>
+        </div>
+      </div>
+      <div class="column">
+        <div class="mb-2">
+          <div class="heading">Node Count</div>
+          <div>{{ stats.node_count }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Link Count</div>
+          <div>{{ stats.link_count }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Error Count</div>
+          <div>{{ stats.error_count }}</div>
+        </div>
+      </div>
+    </div>
+    <table class="table is-striped">
+      <thead>
+        <tr>
+          <th>IP Address</th>
+          <th>Name (DNS)</th>
+          <th>Error Type</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <body>
+      {% for error in node_errors|sort(attribute='dns_name') %}
+        <tr {% if marked_ip == error.ip_address %}class="is-selected"{% endif %}>
+          <td><a id="{{ error.ip_address }}"></a>{{ error.ip_address }}</td>
+          <td>{{ error.dns_name }}</td>
+          <td>{{ error.error_type }}</td>
+          <td>{{ error.details }}</td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="4">No node errors for this run.</td>
+        </tr>
+      {% endfor %}
+      </body>
+    </table>
+  </div>
+{% endblock %}

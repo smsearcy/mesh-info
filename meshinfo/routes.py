@@ -12,6 +12,7 @@ def includeme(config: Configurator):
     config.add_route("node-preview", r"/nodes/{id:\d+}/preview")
     config.add_route("node-graphs", r"/nodes/{id:\d+}/graphs/{name}")
     config.add_route("nodes", "/nodes/{view}")
+    config.add_route("network-errors", "/errors/{timestamp}")
     config.add_route("network-graphs", "/network/graphs/{name}")
     config.add_route(
         "link-graphs", r"/links/{source:\d+}-{destination:\d+}-{type}/graphs/{name}"

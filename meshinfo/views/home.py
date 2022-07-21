@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import sqlalchemy as sa
 from pyramid.request import Request
 from pyramid.view import view_config
 from sqlalchemy.orm import Session
 
-from ..models import CollectorStat, Link, Node
+from ..models import CollectorStat, Link, Node, NodeError
 from ..types import LinkStatus, NodeStatus
 
 
@@ -38,10 +40,19 @@ def overview(request: Request):
         .first()
     )
 
+    node_errors_by_type: dict[str, list[NodeError]] = {}
+    if last_run:
+        query = dbsession.query(NodeError).filter(
+            NodeError.timestamp == last_run.started_at
+        )
+        for error in query.all():
+            node_errors_by_type.setdefault(str(error.error_type), []).append(error)
+
     return {
-        "node_count": node_count,
-        "link_count": link_count,
-        "last_run": last_run,
-        "firmware_stats": firmware_stats,
         "band_stats": band_stats,
+        "firmware_stats": firmware_stats,
+        "last_run": last_run,
+        "link_count": link_count,
+        "node_count": node_count,
+        "node_errors": node_errors_by_type,
     }

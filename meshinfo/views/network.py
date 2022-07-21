@@ -1,8 +1,12 @@
+import pendulum
+from pyramid.httpexceptions import HTTPBadRequest, HTTPNotFound
 from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.view import view_config, view_defaults
+from sqlalchemy.orm import Session, subqueryload
 
 from ..historical import HistoricalStats
+from ..models import CollectorStat
 from . import schema
 
 
@@ -51,3 +55,31 @@ class NetworkGraphs:
             status="200 OK",
             content_type="image/png",
         )
+
+
+@view_config(
+    route_name="network-errors", renderer="meshinfo:templates/network-errors.jinja2"
+)
+def network_errors(request: Request):
+    dbsession: Session = request.dbsession
+    try:
+        timestamp = pendulum.from_format(request.matchdict["timestamp"], "X")
+    except Exception as exc:
+        raise HTTPBadRequest("Invalid timestamp") from exc
+
+    marked_row = request.GET.get("highlight")
+
+    collector = (
+        dbsession.query(CollectorStat)
+        .options(subqueryload(CollectorStat.node_errors))
+        .filter(CollectorStat.started_at == timestamp)
+        .one_or_none()
+    )
+    if collector is None:
+        raise HTTPNotFound(f"No collection statistics available for {timestamp}")
+
+    return {
+        "marked_ip": marked_row,
+        "node_errors": collector.node_errors,
+        "stats": collector,
+    }
