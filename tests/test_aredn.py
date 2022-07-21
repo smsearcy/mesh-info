@@ -311,6 +311,24 @@ def test_dtd_link_info_no_type(data_folder):
     assert sample_link == expected
 
 
+def test_link_name_with_leading_period(data_folder):
+    """Confirm that fix for extra period in names is working."""
+    with open(data_folder / "sysinfo-1.7-invalid-link-name.json", "r") as f:
+        json_data = json.load(f)
+    system_info = aredn.load_system_info(json_data)
+
+    assert system_info.links[1].destination == "n0call-tun-slm"
+
+
+def test_empty_link_info(data_folder):
+    """Empty `link_info` data returns empty list instead of empty dictionary."""
+    with open(data_folder / "sysinfo-1.11-no-links.json", "r") as f:
+        json_data = json.load(f)
+    system_info = aredn.load_system_info(json_data)
+
+    assert system_info.links == []
+
+
 def test_invalid_link_json():
     """Confirm that an unknown link is gracefully handled."""
     link_json = {
