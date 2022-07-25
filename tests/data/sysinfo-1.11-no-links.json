@@ -1,0 +1,106 @@
+{
+  "lon": "4.807427",
+  "sysinfo": {
+    "uptime": "22 days, 13:17:23",
+    "loads": [
+      0.72,
+      0.64,
+      0.63
+    ]
+  },
+  "interfaces": [
+    {
+      "mac": "49:26:0F:BD:EA:31",
+      "name": "br-lan",
+      "ip": "10.126.149.161"
+    },
+    {
+      "name": "tun62",
+      "ip": "172.31.92.97"
+    },
+    {
+      "name": "tun50",
+      "ip": "172.31.174.74"
+    },
+    {
+      "mac": "49:26:0F:BD:EA:31",
+      "name": "eth1.2",
+      "ip": "10.16.210.180"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "mac": "CC:27:C9:7A:33:0D",
+      "name": "eth0",
+      "ip": "10.0.2.5"
+    },
+    {
+      "name": "tun61",
+      "ip": "172.31.166.65"
+    },
+    {
+      "name": "wlan0",
+      "mac": "D5:BB:E5:74:CF:25"
+    },
+    {
+      "name": "tun53",
+      "ip": "172.31.174.86"
+    },
+    {
+      "name": "tun52",
+      "ip": "172.31.174.82"
+    },
+    {
+      "name": "tun60",
+      "ip": "172.31.245.121"
+    },
+    {
+      "name": "tun51",
+      "ip": "172.31.174.78"
+    },
+    {
+      "name": "eth1.0",
+      "mac": "49:26:0F:BD:EA:31"
+    },
+    {
+      "mac": "98:8B:18:6E:E0:D4",
+      "name": "wlan1",
+      "ip": "10.15.210.180"
+    },
+    {
+      "name": "eth1",
+      "mac": "49:26:0F:BD:EA:31"
+    }
+  ],
+  "api_version": "1.11",
+  "lat": "-61.127232",
+  "meshrf": {
+    "ssid": "ArednMeshNetwork",
+    "channel": "-2",
+    "status": "on",
+    "freq": "2397",
+    "chanbw": "10"
+  },
+  "services_local": [
+    {
+      "name": "MeshChat",
+      "protocol": "tcp",
+      "link": "http://N0CALL-hAP:8080/meshchat"
+    }
+  ],
+  "tunnels": {
+    "active_tunnel_count": "7"
+  },
+  "link_info": [],
+  "grid_square": "EB76co",
+  "node": "N0CALL-hAP",
+  "node_details": {
+    "model": "MikroTik RouterBOARD RB952Ui-5ac2nD",
+    "mesh_gateway": "0",
+    "firmware_mfg": "AREDN",
+    "board_id": "0x0000",
+    "firmware_version": "3.22.6.0"
+  }
+}

@@ -1,0 +1,198 @@
+{
+  "lon": "59.121308",
+  "sysinfo": {
+    "uptime": "45 days, 1:16:22",
+    "loads": [
+      1.19,
+      1.24,
+      1.17
+    ]
+  },
+  "interfaces": [
+    {
+      "mac": "7B:B1:72:E7:50:8B",
+      "name": "br-lan",
+      "ip": "10.250.72.1"
+    },
+    {
+      "name": "tun62",
+      "ip": "172.31.174.49"
+    },
+    {
+      "mac": "7B:B1:72:E7:50:8B",
+      "name": "eth1.2",
+      "ip": "10.88.210.64"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "mac": "B5:F6:0B:6D:26:B5",
+      "name": "eth0",
+      "ip": "192.168.55.3"
+    },
+    {
+      "name": "tun61",
+      "ip": "172.31.95.129"
+    },
+    {
+      "name": "wlan0",
+      "mac": "8C:C9:6D:1C:AB:E3"
+    },
+    {
+      "name": "tun60",
+      "ip": "172.31.8.229"
+    },
+    {
+      "mac": "7B:B1:72:E7:50:8B",
+      "name": "eth1.3975",
+      "ip": "10.87.210.64"
+    },
+    {
+      "name": "tun53",
+      "ip": "172.31.58.86"
+    },
+    {
+      "name": "tun54",
+      "ip": "172.31.58.90"
+    },
+    {
+      "name": "tun58",
+      "ip": "172.31.58.106"
+    },
+    {
+      "name": "eth1.0",
+      "mac": "7B:B1:72:E7:50:8B"
+    },
+    {
+      "name": "tun52",
+      "ip": "172.31.58.82"
+    },
+    {
+      "name": "wlan1",
+      "mac": "48:87:9A:A5:A8:3C"
+    },
+    {
+      "name": "eth1",
+      "mac": "7B:B1:72:E7:50:8B"
+    }
+  ],
+  "api_version": "1.7",
+  "link_info": {
+    "172.31.58.81": {
+      "neighborLinkQuality": 1,
+      "linkQuality": 1,
+      "hostname": "N0CALL-QTW-RF",
+      "olsrInterface": "tun52",
+      "linkType": "TUN"
+    },
+    "172.31.95.130": {
+      "neighborLinkQuality": 1,
+      "linkQuality": 1,
+      "hostname": ".N0CALL-TUN-SLM",
+      "olsrInterface": "tun61",
+      "linkType": "TUN"
+    },
+    "172.31.58.105": {
+      "neighborLinkQuality": 1,
+      "linkQuality": 1,
+      "hostname": "N0CALL-QTH-TUN",
+      "olsrInterface": "tun58",
+      "linkType": "TUN"
+    },
+    "172.31.58.85": {
+      "neighborLinkQuality": 1,
+      "linkQuality": 1,
+      "hostname": "N0CALL-GLENADA-RTR",
+      "olsrInterface": "tun53",
+      "linkType": "TUN"
+    },
+    "172.31.8.230": {
+      "neighborLinkQuality": 1,
+      "linkQuality": 1,
+      "hostname": "N0CALL-QTH",
+      "olsrInterface": "tun60",
+      "linkType": "TUN"
+    },
+    "172.31.58.89": {
+      "neighborLinkQuality": 1,
+      "linkQuality": 1,
+      "hostname": "N0CALL-hAP01",
+      "olsrInterface": "tun54",
+      "linkType": "TUN"
+    },
+    "172.31.174.50": {
+      "neighborLinkQuality": 1,
+      "linkQuality": 1,
+      "hostname": "N0CALL-QTH-hAP",
+      "olsrInterface": "tun62",
+      "linkType": "TUN"
+    }
+  },
+  "meshrf": {
+    "status": "off"
+  },
+  "tunnels": {
+    "active_tunnel_count": "7",
+    "tunnel_installed": "true"
+  },
+  "services_local": [
+    {
+      "name": "RMS",
+      "protocol": "tcp",
+      "link": "http://N0CALL-RMS:0/"
+    },
+    {
+      "name": "APRS-IS Status",
+      "protocol": "tcp",
+      "link": "http://N0CALL-APRS-IS:14501/"
+    },
+    {
+      "name": "PBX INFO",
+      "protocol": "tcp",
+      "link": "http://N0CALL-PBX:80/"
+    },
+    {
+      "name": "DMR-Server INFO",
+      "protocol": "tcp",
+      "link": "http://N0CALL-DMR-SERVER:80/"
+    },
+    {
+      "name": "File Server",
+      "protocol": "tcp",
+      "link": "http://N0CALL-Server:80/file-manager/"
+    },
+    {
+      "name": "MeshMap",
+      "protocol": "tcp",
+      "link": "http://N0CALL-Server:80/meshmap/"
+    },
+    {
+      "name": "WVMN-Wiki",
+      "protocol": "tcp",
+      "link": "http://N0CALL-Server:80/wiki/"
+    },
+    {
+      "name": "APRS Map",
+      "protocol": "tcp",
+      "link": "http://N0CALL-Server:80/aprsmap/"
+    },
+    {
+      "name": "SpotRep Map",
+      "protocol": "tcp",
+      "link": "http://N0CALL-Server:80/spotrep/"
+    }
+  ],
+  "lat": "-38.922138",
+  "nodes": "262",
+  "grid_square": "MI36fv",
+  "node": "N0CALL-QTW-TUN",
+  "node_details": {
+    "description": "K9RCP Work Tunnel Device",
+    "model": "MikroTik RouterBOARD RB952Ui-5ac2nD",
+    "board_id": "0x0000",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "0.00.0"
+  }
+}

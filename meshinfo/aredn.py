@@ -242,9 +242,12 @@ class LinkInfo:
             logger.warning(str(exc))
             link_type = LinkType.UNKNOWN
 
+        # ensure consistent node names
+        node_name = raw_data["hostname"].replace(".local.mesh", "").lstrip(".").lower()
+
         return LinkInfo(
             source=source,
-            destination=raw_data["hostname"].lower().replace(".local.mesh", ""),
+            destination=node_name,
             destination_ip=ip_address,
             type=link_type,
             interface=raw_data["olsrInterface"],
@@ -475,12 +478,14 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
     else:
         data["active_tunnel_count"] = int(json_data["active_tunnel_count"])
 
-    data["links"] = [
-        LinkInfo.from_json(
-            link_info, source=data["node_name"].lower(), ip_address=ip_address
-        )
-        for ip_address, link_info in json_data.get("link_info", {}).items()
-    ]
+    # py3.8: use walrus operator
+    if json_data.get("link_info"):
+        data["links"] = [
+            LinkInfo.from_json(
+                link_info, source=data["node_name"].lower(), ip_address=ip_address
+            )
+            for ip_address, link_info in json_data["link_info"].items()
+        ]
 
     return SystemInfo(**data)
 
