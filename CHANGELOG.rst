@@ -46,6 +46,7 @@ Fixed
 * Added new 5GHz channel (`#44 <https://github.com/smsearcy/mesh-info/issues/44>`_)
 * Fix 3GHz icon color (`#49 <https://github.com/smsearcy/mesh-info/issues/49>`_)
 * Fix link destination name issue (`#52 <https://github.com/smsearcy/mesh-info/issues/52>`_)
+* Node list firmware sorted "naturally" (`#48 <https://github.com/smsearcy/mesh-info/issues/48>`_)
 
 
 0.4.0 - 2022-06-02
