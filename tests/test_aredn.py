@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from meshinfo import aredn
-from meshinfo.types import LinkType
+from meshinfo.types import Band, LinkType
 
 
 @pytest.mark.parametrize(
@@ -99,7 +99,7 @@ def test_api_version_1_6(data_folder):
     assert system_info.active_tunnel_count == 0
     assert len(system_info.services) == 1
     assert system_info.wlan_ip_address == "10.159.123.176"
-    assert system_info.band == "2GHz"
+    assert system_info.band == Band.TWO_GHZ
 
 
 def test_api_version_1_7(data_folder):
@@ -127,7 +127,7 @@ def test_api_version_1_7(data_folder):
     assert system_info.up_time_seconds == 330_245
     assert system_info.active_tunnel_count == 0
     assert system_info.wlan_ip_address == "10.106.204.11"
-    assert system_info.band == "5GHz"
+    assert system_info.band == Band.FIVE_GHZ
 
 
 def test_api_version_1_9(data_folder):
@@ -155,7 +155,7 @@ def test_api_version_1_9(data_folder):
     assert system_info.up_time_seconds == 658282
     assert system_info.active_tunnel_count == 0
     assert system_info.wlan_ip_address == "10.10.115.143"
-    assert system_info.band == "2GHz"
+    assert system_info.band == Band.TWO_GHZ
     assert len(system_info.links) == 1
 
     sample_link = system_info.links[0]

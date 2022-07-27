@@ -12,15 +12,15 @@ from sqlalchemy.orm import Session, aliased
 
 from ..config import AppConfig
 from ..models import Link, Node
-from ..types import LinkStatus, LinkType, NodeStatus
+from ..types import Band, LinkStatus, LinkType, NodeStatus
 
 # TODO: make an enum for bands
 NODE_ICONS = [
-    ("900MHz", "magentaRadioCircle-icon.png"),
-    ("2GHz", "purpleRadioCircle-icon.png"),
-    ("3GHZ", "blueRadioCircle-icon.png"),
-    ("5GHz", "goldRadioCircle-icon.png"),
-    ("Unknown", "greyRadioCircle-icon.png"),
+    (Band.NINE_HUNDRED_MHZ, "magentaRadioCircle-icon.png"),
+    (Band.TWO_GHZ, "purpleRadioCircle-icon.png"),
+    (Band.THREE_GHZ, "blueRadioCircle-icon.png"),
+    (Band.FIVE_GHZ, "goldRadioCircle-icon.png"),
+    (Band.OFF, "greyRadioCircle-icon.png"),
 ]
 
 
@@ -104,7 +104,7 @@ def _node_geo_json(node: Node, request: Request) -> dict:
         "properties": {
             "id": str(node.id),
             "name": node.name,
-            "band": node.band,
+            "band": node.band.value,
             "previewUrl": request.route_url("node-preview", id=node.id),
         },
     }

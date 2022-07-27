@@ -67,7 +67,20 @@ def upgrade():
         sa.Column("ssid", sa.String(length=50), nullable=False),
         sa.Column("channel", sa.String(length=50), nullable=False),
         sa.Column("channel_bandwidth", sa.String(length=50), nullable=False),
-        sa.Column("band", sa.String(length=25), nullable=False),
+        sa.Column(
+            "band",
+            sa.Enum(
+                "900MHz",
+                "2GHz",
+                "3GHz",
+                "5GHz",
+                "Unknown",
+                "",
+                name="band",
+                native_enum=False,
+            ),
+            nullable=False,
+        ),
         sa.Column("services", sa.JSON(), nullable=False),
         sa.Column("tunnel_installed", sa.Boolean(), nullable=False),
         sa.Column("active_tunnel_count", sa.Integer(), nullable=False),
@@ -93,7 +106,7 @@ def upgrade():
         sa.Column("destination_id", sa.Integer(), nullable=False),
         sa.Column(
             "type",
-            sa.Enum("DTD", "TUN", "RF", "UNKNOWN", name="linktype"),
+            sa.Enum("DTD", "TUN", "RF", "UNKNOWN", name="linktype", native_enum=False),
             nullable=False,
         ),
         sa.Column(
