@@ -10,7 +10,7 @@ from loguru import logger
 
 from .aredn import LinkInfo, SystemInfo, VersionChecker
 from .poller import NetworkInfo, NodeResult, OlsrData, Poller, PollingError
-from .types import LinkType
+from .types import Band, LinkType
 
 VERBOSE_TO_LOGGING = {0: "SUCCESS", 1: "INFO", 2: "DEBUG", 3: "TRACE"}
 
@@ -137,7 +137,7 @@ def pprint_node(node: SystemInfo, checker: VersionChecker):
         mesh_info = f"{OK}on{END}\tSSID: {INFO}{node.ssid}{END}"
     print("MESH RF:", mesh_info)
 
-    band_color = WARN if node.band == "Unknown" else INFO
+    band_color = WARN if node.band == Band.UNKNOWN else INFO
     print(f"Channel: {node.channel}\tBand: {band_color}{node.band}{END}")
     api_color = VERSION_COLOR.get(checker.api(node.api_version), WARN)
     print(f"API Version: {api_color}{node.api_version}{END}")

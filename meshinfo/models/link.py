@@ -15,7 +15,7 @@ class Link(Base):
     destination_id = sa.Column(
         sa.Integer, sa.ForeignKey("node.node_id"), primary_key=True
     )
-    type = sa.Column(sa.Enum(LinkType), primary_key=True)
+    type = sa.Column(sa.Enum(LinkType, native_enum=False), primary_key=True)
     status = sa.Column(sa.Enum(LinkStatus, native_enum=False), nullable=False)
     last_seen = sa.Column(PDateTime(), nullable=False, default=pendulum.now)
 

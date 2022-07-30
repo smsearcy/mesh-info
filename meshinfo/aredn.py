@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import attr
 from loguru import logger
 
-from .types import LinkType
+from .types import Band, LinkType
 
 if typing.TYPE_CHECKING:
     from .config import AppConfig
@@ -338,19 +338,19 @@ class SystemInfo:
         return getattr(self.wlan_interface, "mac_address", "").replace(":", "").lower()
 
     @property
-    def band(self) -> str:
+    def band(self) -> Band:
         if self.status != "on":
-            return ""
+            return Band.OFF
         if self.board_id in NINE_HUNDRED_MHZ_BOARDS:
-            return "900MHz"
+            return Band.NINE_HUNDRED_MHZ
         elif self.channel in TWO_GHZ_CHANNELS:
-            return "2GHz"
+            return Band.TWO_GHZ
         elif self.channel in THREE_GHZ_CHANNELS:
-            return "3GHZ"
+            return Band.THREE_GHZ
         elif self.channel in FIVE_GHZ_CHANNELS:
-            return "5GHz"
+            return Band.FIVE_GHZ
         else:
-            return "Unknown"
+            return Band.UNKNOWN
 
     @property
     def up_time_seconds(self) -> Optional[int]:

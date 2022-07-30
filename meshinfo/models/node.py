@@ -12,7 +12,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from ..types import NodeStatus
+from ..types import Band, NodeStatus
 from .meta import Base, PDateTime
 
 
@@ -51,7 +51,10 @@ class Node(Base):
     ssid = Column(String(50), nullable=False)
     channel = Column(String(50), nullable=False)
     channel_bandwidth = Column(String(50), nullable=False)
-    band = Column(String(25), nullable=False)
+    band = Column(
+        Enum(Band, values_callable=lambda x: [e.value for e in x], native_enum=False),
+        nullable=False,
+    )
 
     services = Column(JSON(), nullable=False)
 

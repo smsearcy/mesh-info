@@ -25,7 +25,7 @@
 
   let node_icons = {
   {% for band, icon_url in node_icons.items() -%}
-    '{{ band }}': L.icon({iconUrl: '{{ icon_url }}', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9]}),
+    '{{ band.value }}': L.icon({iconUrl: '{{ icon_url }}', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9]}),
   {% endfor -%}
   }
 

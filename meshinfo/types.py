@@ -82,3 +82,26 @@ class NodeStatus(enum.Enum):
 
     def __str__(self):
         return self.name.title()
+
+
+class Band(enum.Enum):
+    """Enumerate possible AREDN mesh bands."""
+
+    # These values need to stay consistent because they are used in the database
+    NINE_HUNDRED_MHZ = "900MHz"
+    TWO_GHZ = "2GHz"
+    THREE_GHZ = "3GHz"
+    FIVE_GHZ = "5GHz"
+    UNKNOWN = "Unknown"
+    OFF = ""
+
+    def __str__(self):
+        labels = {
+            Band.NINE_HUNDRED_MHZ: "900 MHz",
+            Band.TWO_GHZ: "2 GHz",
+            Band.THREE_GHZ: "3 GHz",
+            Band.FIVE_GHZ: "5 GHz",
+            Band.UNKNOWN: "Unknown",
+            Band.OFF: "RF Off",
+        }
+        return labels.get(self, "Unknown")
