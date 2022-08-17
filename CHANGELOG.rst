@@ -48,6 +48,7 @@ Fixed
 * Fix 3GHz icon color (`#49 <https://github.com/smsearcy/mesh-info/issues/49>`_)
 * Fix link destination name issue (`#52 <https://github.com/smsearcy/mesh-info/issues/52>`_)
 * Node list firmware sorted "naturally" (`#48 <https://github.com/smsearcy/mesh-info/issues/48>`_)
+* Use node name for link to AREDN page (`#65 <https://github.com/smsearcy/mesh-info/issues/65>`_)
 
 
 0.4.0 - 2022-06-02

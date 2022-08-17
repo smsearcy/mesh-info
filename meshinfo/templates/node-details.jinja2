@@ -41,7 +41,7 @@
         <div>{{ node.last_seen|local_tz }}</div>
       </div>
       <div class="mb-2">
-        <a href="http://{{ node.wlan_ip }}:8080" target="_blank" rel="noopener noreferrer">AREDN Page</a>
+        <a href="http://{{ node.name }}.local.mesh:8080" target="_blank" rel="noopener noreferrer">AREDN Page</a>
       </div>
       <div class="mb-2">
         <a href="{{ req.route_url("node-json", id=node.id) }}" target="_blank" rel="noopener noreferrer">Most Recent System Info</a>
