@@ -33,6 +33,7 @@ Added
 * Set starting map coordinates via configuration file. (`#45 <https://github.com/smsearcy/mesh-info/issues/45>`_)
 * Save node polling errors to database. (`#55 <https://github.com/smsearcy/mesh-info/issues/55>`_)
 * Display node polling errors. (`#47 <https://github.com/smsearcy/mesh-info/issues/47>`_)
+* Configure map tile URL and attribution via configuration file.  (`#63 <https://github.com/smsearcy/mesh-info/issues/63>`_)
 
 Changed
 ^^^^^^^

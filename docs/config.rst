@@ -33,7 +33,27 @@ MESH_INFO_MAP_LATITUDE
 MESH_INFO_MAP_ZOOM
    Default zoom level.
    Passed to `Leaflet <https://leafletjs.com/>`_.
-   General range is 2 (whole world) to 16 (several blocks?).
+
+MESH_INFO_MAP_MAX_ZOOM
+   Set the max zoom level.
+   Passed to Leaflet's `tileLayer()`_.
+   Default is 18.
+
+MESH_INFO_MAP_TILE_URL
+   The template URL for the tile server.
+   Passed to Leaflet's `tileLayer()`_.
+   Default is ``//stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg``
+
+MESH_INFO_MAP_TILE_ATTRIBUTION
+   The attribution to display on the map.
+   Passed to Leaflet's `tileLayer()`_.
+   Default is appropriate for the default tile server.
+
+   .. warning::
+
+      Because the attribution often contains HTML,
+      special characters will *not* be escaped,
+      and thus vulnerabilities could be introduced with a bad attribution.
 
 MESH_INFO_LOG_LEVEL
    Controls how much information is logged/displayed in terminal.
@@ -76,3 +96,6 @@ MESH_INFO_ENVIRONMENT
    Either ``production`` or ``development``.
    Defaults to ``production``, use ``development`` to enable more debugging options.
    See :doc:`contributing` for more information.
+
+
+.. _tileLayer(): https://leafletjs.com/reference.html#tilelayer
