@@ -54,6 +54,9 @@ def network_map(request: Request):
         "latitude": config.map.latitude,
         "longitude": config.map.longitude,
         "zoom": config.map.zoom,
+        "max_zoom": config.map.max_zoom,
+        "tile_url": config.map.tile_url,
+        "tile_attribution": config.map.tile_attribution,
     }
 
 
