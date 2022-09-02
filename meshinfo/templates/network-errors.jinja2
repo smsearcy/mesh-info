@@ -4,17 +4,17 @@
 
 {% block content %}
 <div class="container is-fluid">
-  <h1 class="title">Node Polling Errors at {{ stats.started_at|local_tz }}</h1>
+  <h1 class="title">Node Polling Errors at {{ stats.started_at|client_tz }}</h1>
   <div class="content">
     <div class="columns container">
       <div class="column">
         <div class="mb-2">
           <div class="heading">Started At</div>
-          <div>{{ stats.started_at|local_tz }}</div>
+          <div>{{ stats.started_at|client_tz }}</div>
         </div>
         <div class="mb-2">
           <div class="heading">Finished At</div>
-          <div>{{ stats.finished_at|local_tz }}</div>
+          <div>{{ stats.finished_at|client_tz }}</div>
         </div>
       </div>
       <div class="column">

@@ -18,7 +18,7 @@
     <div class="column is-narrow">
       <div class="mb-2">
         <div class="heading">Last Ran</div>
-        <div>{{ last_run.started_at|local_tz }}</div>
+        <div>{{ last_run.started_at|client_tz }}</div>
       </div>
       <div class="mb-2">
         <div class="heading">Polling Time</div>

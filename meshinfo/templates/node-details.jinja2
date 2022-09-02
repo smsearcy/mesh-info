@@ -38,7 +38,7 @@
       </div>
       <div class="mb-2">
         <div class="heading">Last Seen</div>
-        <div>{{ node.last_seen|local_tz }}</div>
+        <div>{{ node.last_seen|client_tz }}</div>
       </div>
       <div class="mb-2">
         <a href="http://{{ node.name }}.local.mesh:8080" target="_blank" rel="noopener noreferrer">AREDN Page</a>
@@ -153,7 +153,7 @@
           </div>
           <div class="mb-2">
             <div class="heading">Last Seen</div>
-            <div>{{ link.last_seen|local_tz }}</div>
+            <div>{{ link.last_seen|client_tz }}</div>
           </div>
         </div>
         <div class="column is-narrow">

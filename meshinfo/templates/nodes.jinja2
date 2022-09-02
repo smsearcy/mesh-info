@@ -87,7 +87,7 @@
             '{{ node.active_tunnel_count }}',
             '{{ node.firmware_version }}',
             '{{ node.up_time }}',
-            '{{ node.last_seen|local_tz }}'
+            '{{ node.last_seen|client_tz }}'
           ]{% if not loop.last %},{% endif %}
         {% endfor %}
       ],

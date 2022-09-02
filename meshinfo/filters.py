@@ -18,6 +18,6 @@ def in_tz(dt, tz="utc"):
 
 
 @jinja2.pass_context
-def local_tz(ctx, dt):
+def client_tz(ctx, dt):
     request = ctx.get("request") or get_current_request()
     return dt.in_tz(request.timezone).format("YYYY-MM-DD HH:mm:ss zz")

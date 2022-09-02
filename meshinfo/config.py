@@ -152,7 +152,7 @@ def configure(
     filters = settings.setdefault("jinja2.filters", {})
     filters.setdefault("duration", "meshinfo.filters.duration")
     filters.setdefault("in_tz", "meshinfo.filters.in_tz")
-    filters.setdefault("local_tz", "meshinfo.filters.local_tz")
+    filters.setdefault("client_tz", "meshinfo.filters.client_tz")
 
     if app_config.env == Environment.DEV:
         settings["pyramid.reload_all"] = True
@@ -185,23 +185,21 @@ def configure(
     if app_config.env == Environment.DEV:
         config.include("pyramid_debugtoolbar")
 
-    server_timezone = pendulum.tz.local_timezone()
-
     def client_timezone(request):
-        if "local_tz" in request.cookies:
+        if "client_tz" in request.cookies:
             try:
-                client_tz = pendulum.timezone(request.cookies["local_tz"])
+                client_tz = pendulum.timezone(request.cookies["client_tz"])
             except Exception as exc:
                 # TODO: identify client?
                 logger.warning(
                     "Invalid timezone specified: {} ({!r})",
-                    request.cookies["local_tz"],
+                    request.cookies["client_tz"],
                     exc,
                 )
-                client_tz = server_timezone
+                client_tz = "utc"
             return client_tz.name
         else:
-            return server_timezone.name
+            return "utc"
 
     config.add_request_method(lambda r: client_timezone(r), "timezone", reify=True)
 
