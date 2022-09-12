@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import enum
+import os
 from itertools import cycle
 from pathlib import Path
 from typing import Any, Iterable, List, Optional
@@ -132,6 +133,7 @@ class HistoricalStats:
         self,
         *,
         params: GraphParams,
+        timezone: str,
     ) -> bytes:
         """Graph network poller statistics."""
         rrd_file = self._network_filename()
@@ -150,9 +152,9 @@ class HistoricalStats:
                 legend=ds.replace("_count", "s"),
             )
 
-        return graph.render()
+        return graph.render(timezone=timezone)
 
-    def graph_poller_stats(self, *, params: GraphParams) -> bytes:
+    def graph_poller_stats(self, *, params: GraphParams, timezone: str) -> bytes:
         """Graph network info."""
         rrd_file = self._network_filename()
         colors = cycle(COLORS)
@@ -170,13 +172,14 @@ class HistoricalStats:
                 style="LINE1",
                 legend=ds.replace("_time", ""),
             )
-        return graph.render()
+        return graph.render(timezone=timezone)
 
     def graph_node_uptime(
         self,
         node: Node,
         *,
         params: GraphParams,
+        timezone: str,
     ) -> bytes:
         """Graph node uptime."""
         rrd_file = self._node_filename(node)
@@ -193,13 +196,14 @@ class HistoricalStats:
             style="AREA",
             legend="uptime",
         )
-        return graph.render()
+        return graph.render(timezone=timezone)
 
     def graph_node_load(
         self,
         node: Node,
         *,
         params: GraphParams,
+        timezone: str,
     ) -> bytes:
         """Graph node uptime."""
         rrd_file = self._node_filename(node)
@@ -216,13 +220,14 @@ class HistoricalStats:
             style="LINE1",
             legend="load",
         )
-        return graph.render()
+        return graph.render(timezone=timezone)
 
     def graph_node_links(
         self,
         node: Node,
         *,
         params: GraphParams,
+        timezone: str,
     ) -> bytes:
         """Graph node links."""
         rrd_file = self._node_filename(node)
@@ -256,13 +261,14 @@ class HistoricalStats:
             style="LINE1",
         )
 
-        return graph.render()
+        return graph.render(timezone=timezone)
 
     def graph_link_cost(
         self,
         link: Link,
         *,
         params: GraphParams,
+        timezone: str,
     ) -> bytes:
         """Graph link routing cost."""
 
@@ -278,13 +284,14 @@ class HistoricalStats:
             style="LINE1",
             legend="route cost",
         )
-        return graph.render()
+        return graph.render(timezone=timezone)
 
     def graph_link_snr(
         self,
         link: Link,
         *,
         params: GraphParams,
+        timezone: str,
     ) -> bytes:
         """Graph node uptime."""
         # TODO: add a black line at 0 so it stands out
@@ -316,13 +323,14 @@ class HistoricalStats:
             style="LINE1",
             legend="noise",
         )
-        return graph.render()
+        return graph.render(timezone=timezone)
 
     def graph_link_quality(
         self,
         link: Link,
         *,
         params: GraphParams,
+        timezone: str,
     ) -> bytes:
         """Graph link quality and neighbor quality."""
 
@@ -347,7 +355,7 @@ class HistoricalStats:
             style="LINE1",
             legend="neighbor",
         )
-        return graph.render()
+        return graph.render(timezone=timezone)
 
     def update_link_stats(self, link: Link) -> bool:
         # switch to async after testing!
@@ -590,8 +598,8 @@ class Graph:
         )
         self.elements[-1] += r"\l"
 
-    def render(self) -> bytes:
-        """Draw the graph via RRDtool."""
+    def render(self, *, timezone: str) -> bytes:
+        """Draw the graph via RRDtool in a particular timezone."""
 
         self.options.extend(("--start", self.start))
         if self.end:
@@ -616,5 +624,11 @@ class Graph:
         )
         logger.trace("Rendering graph: {}", graphv_args)
 
+        current_timezone = os.getenv("TZ")
+        os.environ["TZ"] = timezone
         graph_info = rrdtool.graphv(*graphv_args)
+        if current_timezone is None:
+            del os.environ["TZ"]
+        else:
+            os.environ["TZ"] = current_timezone
         return graph_info["image"]

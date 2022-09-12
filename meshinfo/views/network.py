@@ -27,6 +27,7 @@ class NetworkGraphs:
     def __init__(self, request: Request):
         self.graph_params = schema.graph_params(request.GET)
         self.stats: HistoricalStats = request.find_service(HistoricalStats)
+        self.timezone: str = request.timezone.name
 
     @view_config(match_param="name=info")
     def info(self):
@@ -35,9 +36,11 @@ class NetworkGraphs:
             self.graph_params.title,
         )
         self.graph_params.title = " - ".join(part for part in title_parts if part)
-
+        graph_data = self.stats.graph_network_stats(
+            params=self.graph_params, timezone=self.timezone
+        )
         return Response(
-            self.stats.graph_network_stats(params=self.graph_params),
+            graph_data,
             status="200 OK",
             content_type="image/png",
         )
@@ -49,9 +52,11 @@ class NetworkGraphs:
             self.graph_params.title,
         )
         self.graph_params.title = " - ".join(part for part in title_parts if part)
-
+        graph_data = self.stats.graph_poller_stats(
+            params=self.graph_params, timezone=self.timezone
+        )
         return Response(
-            self.stats.graph_poller_stats(params=self.graph_params),
+            graph_data,
             status="200 OK",
             content_type="image/png",
         )

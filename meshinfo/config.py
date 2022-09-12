@@ -186,20 +186,19 @@ def configure(
         config.include("pyramid_debugtoolbar")
 
     def client_timezone(request):
-        if "client_tz" in request.cookies:
-            try:
-                client_tz = pendulum.timezone(request.cookies["client_tz"])
-            except Exception as exc:
-                # TODO: identify client?
-                logger.warning(
-                    "Invalid timezone specified: {} ({!r})",
-                    request.cookies["client_tz"],
-                    exc,
-                )
-                client_tz = "utc"
-            return client_tz.name
-        else:
-            return "utc"
+        if "client_tz" not in request.cookies:
+            return pendulum.timezone("UTC")
+        try:
+            client_tz = pendulum.timezone(request.cookies["client_tz"])
+        except Exception as exc:
+            # TODO: identify client?
+            logger.warning(
+                "Invalid timezone specified: {} ({!r})",
+                request.cookies["client_tz"],
+                exc,
+            )
+            client_tz = pendulum.timezone("UTC")
+        return client_tz
 
     config.add_request_method(lambda r: client_timezone(r), "timezone", reify=True)
 

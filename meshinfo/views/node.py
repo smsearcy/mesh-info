@@ -126,6 +126,7 @@ class NodeGraphs:
         self.name_in_title = asbool(request.GET.get("name_in_title", False))
 
         self.stats: HistoricalStats = request.find_service(HistoricalStats)
+        self.timezone: str = request.timezone.name
 
     @view_config(match_param="name=links")
     def links(self):
@@ -135,8 +136,11 @@ class NodeGraphs:
             self.graph_params.title,
         )
         self.graph_params.title = " - ".join(part for part in title_parts if part)
+        graph_data = self.stats.graph_node_links(
+            self.node, params=self.graph_params, timezone=self.timezone
+        )
         return Response(
-            self.stats.graph_node_links(self.node, params=self.graph_params),
+            graph_data,
             status="200 OK",
             content_type="image/png",
         )
@@ -149,8 +153,11 @@ class NodeGraphs:
             self.graph_params.title,
         )
         self.graph_params.title = " - ".join(part for part in title_parts if part)
+        graph_data = self.stats.graph_node_load(
+            self.node, params=self.graph_params, timezone=self.timezone
+        )
         return Response(
-            self.stats.graph_node_load(self.node, params=self.graph_params),
+            graph_data,
             status="200 OK",
             content_type="image/png",
         )
@@ -163,8 +170,11 @@ class NodeGraphs:
             self.graph_params.title,
         )
         self.graph_params.title = " - ".join(part for part in title_parts if part)
+        graph_data = self.stats.graph_node_uptime(
+            self.node, params=self.graph_params, timezone=self.timezone
+        )
         return Response(
-            self.stats.graph_node_uptime(self.node, params=self.graph_params),
+            graph_data,
             status="200 OK",
             content_type="image/png",
         )
