@@ -9,6 +9,10 @@
       <div>{{ node.status }}</div>
     </div>
     <div class="mb-2">
+      <div class="heading">Last Seen</div>
+      <div>{{ node.last_seen|local_tz }}</div>
+    </div>
+    <div class="mb-2">
       <div class="heading">Model</div>
       <div>{{ node.model }}</div>
     </div>
