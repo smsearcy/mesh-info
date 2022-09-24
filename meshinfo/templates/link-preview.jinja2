@@ -14,8 +14,8 @@
       <div>{{ link.status }}</div>
     </div>
     <div class="mb-2">
-      <div class="heading">Cost</div>
-      <div>{{ link.olsr_cost }}</div>
+      <div class="heading">Last Seen</div>
+      <div>{{ link.last_seen|local_tz }}</div>
     </div>
   </div>
   <div class="column">
@@ -26,6 +26,10 @@
     <div class="mb-2">
       <div class="heading">Bearing</div>
       <div>{{ link.bearing }}</div>
+    </div>
+    <div class="mb-2">
+      <div class="heading">Cost</div>
+      <div>{{ link.olsr_cost }}</div>
     </div>
   </div>
   <div class="column">
