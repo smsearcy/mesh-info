@@ -159,11 +159,11 @@
         <div class="column is-narrow">
           <div class="mb-2">
             <div class="heading">Link Quality</div>
-            <div>{{ link.quality or "Unknown" }}</div>
+            <div>{% if link.quality is none %}Unknown{% else %}{{ link.quality }}{% endif %}</div>
           </div>
           <div class="mb-2">
             <div class="heading">Neighbor Link Quality</div>
-            <div>{{ link.neighbor_quality or "Unknown" }}</div>
+            <div>{% if link.neighbor_quality is none %}Unknown{% else %}{{ link.neighbor_quality }}{% endif %}</div>
           </div>
         </div>
         <div class="column is-narrow">
