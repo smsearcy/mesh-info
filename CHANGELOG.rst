@@ -39,6 +39,7 @@ Changed
 ^^^^^^^
 
 * Bumped current AREDN version (`#38 <https://github.com/smsearcy/mesh-info/issues/38>`_)
+* Group nightly firmware versions and add API version statistics (`#42 <https://github.com/smsearcy/mesh-info/issues/42>`_)
 
 Fixed
 ^^^^^

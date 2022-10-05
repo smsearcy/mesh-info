@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import re
+from collections import defaultdict
+
 import sqlalchemy as sa
 from pyramid.request import Request
 from pyramid.view import view_config
@@ -21,12 +24,30 @@ def overview(request: Request):
         dbsession.query(Link).filter(Link.status != LinkStatus.INACTIVE).count()
     )
 
+    # Get node counts by firmware version
     query = (
-        dbsession.query(Node.firmware_version, sa.func.count(Node.id))
+        dbsession.query(
+            Node.firmware_manufacturer, Node.firmware_version, sa.func.count(Node.id)
+        )
         .filter(Node.status == NodeStatus.ACTIVE)
-        .group_by(Node.firmware_version)
+        .group_by(Node.firmware_manufacturer, Node.firmware_version)
     )
-    firmware_stats = {version: count for version, count in query.all()}
+    firmware_stats: defaultdict[str, int] = defaultdict(int)
+    for manufacturer, version, count in query.all():
+        if manufacturer.lower() != "aredn":
+            firmware_stats["Non-AREDN"] += 1
+        elif re.match(r"\d+\.\d+\.\d+\.\d+", version):
+            firmware_stats[version] = count
+        else:
+            firmware_stats["Nightly"] += count
+    # Get node counts by API version
+    query = (
+        dbsession.query(Node.api_version, sa.func.count(Node.id))
+        .filter(Node.status == NodeStatus.ACTIVE)
+        .group_by(Node.api_version)
+    )
+    api_version_stats = {version: count for version, count in query.all()}
+    # Get node counts by band
     query = (
         dbsession.query(Node.band, sa.func.count(Node.id))
         .filter(Node.status == NodeStatus.ACTIVE)
@@ -49,6 +70,7 @@ def overview(request: Request):
             node_errors_by_type.setdefault(str(error.error_type), []).append(error)
 
     return {
+        "api_stats": api_version_stats,
         "band_stats": band_stats,
         "firmware_stats": firmware_stats,
         "last_run": last_run,
