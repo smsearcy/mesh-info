@@ -30,6 +30,7 @@ Added
 * Basic implementation of network map.
   Client is required internet access to fetch tiles.
   All map elements rendered on single layer.
+* Map legend (`#35 <https://github.com/smsearcy/mesh-info/issues/35>`_)
 * Set starting map coordinates via configuration file. (`#45 <https://github.com/smsearcy/mesh-info/issues/45>`_)
 * Save node polling errors to database. (`#55 <https://github.com/smsearcy/mesh-info/issues/55>`_)
 * Display node polling errors. (`#47 <https://github.com/smsearcy/mesh-info/issues/47>`_)

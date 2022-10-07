@@ -2,6 +2,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ req.static_url("meshinfo:static/leaflet/leaflet.css") }}">
+<link rel="stylesheet" href="{{ req.static_url("meshinfo:static/css/map.css") }}">
 {% endblock %}
 
 {% block root %}
@@ -18,6 +19,7 @@
     center: [{{ latitude }}, {{ longitude }}],
     zoom: {{ zoom }}
   });
+
   L.tileLayer('{{ tile_url }}', {
     attribution: '{{ tile_attribution|replace("'", '"')|safe }}',
     maxZoom: {{ max_zoom }},
@@ -25,7 +27,7 @@
 
   let node_icons = {
   {% for band, icon_url in node_icons.items() -%}
-    '{{ band.value }}': L.icon({iconUrl: '{{ icon_url }}', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -9]}),
+    '{{ band.value }}': L.icon({iconUrl: '{{ icon_url }}', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10]}),
   {% endfor -%}
   }
 
@@ -80,6 +82,38 @@
   }
 
   getGeoJson();
+
+  let scale = L.control.scale();
+  scale.addTo(map);
+
+  let legend = L.control({position: 'topright'});
+  legend.onAdd = function (map) {
+    let div = L.DomUtil.create('div', 'box p-1 m-1');
+    let legendHTML = '<div id="legend" class="has-text-weight-bold">' +
+      '<div class="is-clearfix mb-3 has-text-centered" id="rf-link-gradient">' +
+      '<div class="is-pulled-left ml-4 has-text-white">1</div>' +
+      'RF Link Cost' +
+      '<div class="is-pulled-right mr-4 has-text-white">10</div>' +
+      '</div>' +
+      '<div class="columns">' +
+      '<div class="column">';
+    {% for band, icon_url in node_icons.items() -%}
+      legendHTML += '<div>' +
+        '<figure class="image pt-1 is-16x16 is-inline-block">' +
+        '<img src="{{ icon_url }}" width="16px" height="16px">' +
+        '</figure> {{ band }}</div>';
+    {% endfor -%}
+    legendHTML += '</div>' +
+      '<div class="column has-text-centered">' +
+      '<div class="block mb-1 link-legend" style="background: #3388ff;">DTD Link</div>' +
+      '<div class="block mb-1 link-legend" style="background: #707070;">Tunnel</div>' +
+      '<div class="block mb-1 link-legend" style="background: #8b0000;">Unknown</div>' +
+      '</div>' +
+      '</div>';
+    div.innerHTML = legendHTML;
+    return div;
+  };
+  legend.addTo(map);
 
 </script>
 {% endblock %}

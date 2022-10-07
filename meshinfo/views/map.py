@@ -14,13 +14,13 @@ from ..config import AppConfig
 from ..models import Link, Node
 from ..types import Band, LinkStatus, LinkType, NodeStatus
 
-# TODO: make an enum for bands
+# map legend uses the order of the bands here
 NODE_ICONS = [
-    (Band.NINE_HUNDRED_MHZ, "magentaRadioCircle-icon.png"),
-    (Band.TWO_GHZ, "purpleRadioCircle-icon.png"),
-    (Band.THREE_GHZ, "blueRadioCircle-icon.png"),
-    (Band.FIVE_GHZ, "goldRadioCircle-icon.png"),
-    (Band.OFF, "greyRadioCircle-icon.png"),
+    (Band.FIVE_GHZ, "gold-radio-small.png"),
+    (Band.THREE_GHZ, "blue-radio-small.png"),
+    (Band.TWO_GHZ, "purple-radio-small.png"),
+    (Band.NINE_HUNDRED_MHZ, "magenta-radio-small.png"),
+    (Band.OFF, "grey-radio-small.png"),
 ]
 
 
@@ -164,7 +164,7 @@ def _link_properties(link: Link) -> LinkProperties:
         # I think the OLSR cost is 1 / (LQ * NLQ), so this incorporates the
         # link quality but on a logarithmic scale, rather than linear
         # (if we used LQ & NLQ for RF links).
-        hue = _calc_hue(link.olsr_cost, green=1, red=14)
+        hue = _calc_hue(link.olsr_cost, green=1, red=10)
         properties = LinkProperties(
             color=f"hsl({hue}, 100%, 50%)",
         )
