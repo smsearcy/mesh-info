@@ -9,7 +9,7 @@ from pathlib import Path
 from loguru import logger
 from pyramid.scripting import prepare
 
-from meshinfo import VERSION, backup, collector, models, report, web
+from meshinfo import VERSION, backup, collector, models, purge, report, web
 from meshinfo.aredn import VersionChecker
 from meshinfo.config import AppConfig, configure
 from meshinfo.historical import HistoricalStats
@@ -75,8 +75,8 @@ def main(argv: list = None):  # noqa: C901
         logger.error(f"Failed to configure database connection: {exc!r}")
         sys.exit("Database configuration failed, review logs for details")
 
+    historical_stats: HistoricalStats = request.find_service(HistoricalStats)
     if args.command == "collector":
-        historical_stats: HistoricalStats = request.find_service(HistoricalStats)
         sys.exit(
             collector.main(
                 app_config.local_node,
@@ -86,6 +86,11 @@ def main(argv: list = None):  # noqa: C901
                 config=app_config.collector,
                 run_once=args.run_once,
             )
+        )
+
+    if args.command == "purge":
+        sys.exit(
+            purge.main(args.days, session_factory, historical_stats, update=args.update)
         )
 
     sys.exit(f"command not recognized: {args.command}")
@@ -174,6 +179,18 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="Name of tarball to load",
     )
+
+    # Purge data
+    purge_parser = sub_parsers.add_parser(
+        "purge",
+        help="purge old data",
+        description="Purges old data from the database and RRD files.",
+    )
+    purge_parser.add_argument(
+        "--days", default=180, help="Purge nodes not seen in this many days."
+    )
+    purge_parser.add_argument("--update", action=argparse.BooleanOptionalAction)
+
     return parser
 
 
