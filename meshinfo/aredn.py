@@ -244,6 +244,10 @@ class LinkInfo:
 
         # ensure consistent node names
         node_name = raw_data["hostname"].replace(".local.mesh", "").lstrip(".").lower()
+        # py3.8 use walrus?
+        link_cost = raw_data.get("linkCost")
+        if link_cost is not None and link_cost > 99.99:
+            link_cost = 99.99
 
         return LinkInfo(
             source=source,
@@ -257,7 +261,7 @@ class LinkInfo:
             noise=raw_data.get("noise"),
             tx_rate=raw_data.get("tx_rate"),
             rx_rate=raw_data.get("rx_rate"),
-            olsr_cost=raw_data.get("linkCost"),
+            olsr_cost=link_cost,
         )
 
 

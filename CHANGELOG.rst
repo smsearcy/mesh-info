@@ -41,6 +41,7 @@ Changed
 
 * Bumped current AREDN version (`#38 <https://github.com/smsearcy/mesh-info/issues/38>`_)
 * Group nightly firmware versions and add API version statistics (`#42 <https://github.com/smsearcy/mesh-info/issues/42>`_)
+* Cap link cost from API at 99.99 for consistency (`#81 <https://github.com/smsearcy/mesh-info/issues/81>`_)
 
 Fixed
 ^^^^^
