@@ -20,6 +20,15 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
+0.5.1 - 2022-10-07
+------------------
+
+Fixed
+^^^^^
+
+* Corrected version typo.
+
+
 0.5.0 - 2022-10-07
 ------------------
 
