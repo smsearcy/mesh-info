@@ -353,6 +353,56 @@ def test_invalid_link_json():
     assert link_info == expected
 
 
+def test_link_cost_cap():
+    """Confirm that high link cost is being capped to match OLSR."""
+    link_json = {
+        "helloTime": 0,
+        "lostLinkTime": 0,
+        "linkQuality": 0.094,
+        "vtime": 20000,
+        "linkCost": 4194304,
+        "linkType": "RF",
+        "hostname": "N0CALL-NSM2-3-RVAA",
+        "previousLinkStatus": "SYMMETRIC",
+        "currentLinkStatus": "SYMMETRIC",
+        "rx_rate": 1.4,
+        "neighborLinkQuality": 0.784,
+        "noise": -86,
+        "symmetryTime": 18193,
+        "seqnoValid": False,
+        "lossMultiplier": 65536,
+        "pending": False,
+        "lossHelloInterval": 2000,
+        "asymmetryTime": 388749418,
+        "tx_rate": 3.2,
+        "hysteresis": 0,
+        "seqno": 0,
+        "lossTime": 1193,
+        "validityTime": 36989,
+        "olsrInterface": "wlan0",
+        "lastHelloTime": 0,
+        "signal": -83,
+    }
+    link_info = aredn.LinkInfo.from_json(
+        link_json, source="N0CALL-hAP-AC-4", ip_address="10.84.160.54"
+    )
+    expected = aredn.LinkInfo(
+        source="N0CALL-hAP-AC-4",
+        destination="n0call-nsm2-3-rvaa",
+        destination_ip="10.84.160.54",
+        quality=0.094,
+        neighbor_quality=0.784,
+        olsr_cost=99.99,
+        signal=-83,
+        noise=-86,
+        tx_rate=3.2,
+        rx_rate=1.4,
+        type=LinkType.RF,
+        interface="wlan0",
+    )
+    assert link_info == expected
+
+
 def test_version_checker():
     checker = aredn.VersionChecker((3, 20, 2, 0), (1, 7))
     assert checker.firmware("3.20.2.0") == 0
