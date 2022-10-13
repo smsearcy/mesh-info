@@ -134,12 +134,9 @@ class OlsrData:
         line_str = line_bytes.decode("utf-8").rstrip()
         logger.trace("OLSR data: {}", line_str)
 
-        # TODO: Use walrus operator when Python 3.8 is the minimum requirement (py38)
-        node_address = self._get_address(line_str)
-        if node_address:
+        if node_address := self._get_address(line_str):
             self.nodes.queue.append(node_address)
-        link = self._get_link(line_str)
-        if link:
+        if link := self._get_link(line_str):
             self.links.queue.append(link)
 
         return
@@ -292,7 +289,6 @@ class Poller:
                 continue
             for link in node_olsr_links:
                 sys_info.link_count += 1
-                # py3.8: use walrus operator
                 if link.destination not in ip_name_map:
                     logger.warning(
                         "OLSR IP not found in node information, skipping: {}", link

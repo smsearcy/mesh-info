@@ -20,8 +20,7 @@ Installing
 
 For starters, you will need:
 
-* Python 3.7 or greater, with the "dev" or "devel" libraries
-  (I think Buster is still common enough on Raspberry Pis that it's worth targeting 3.7).
+* Python 3.9 or greater, with the "dev" or "devel" libraries
 * RRDtool libraries (``librrd-dev`` on Debian/Ubuntu or ``rrdtool-devel`` on Fedora).
 * PostgreSQL libraries (``libpq-dev`` on Debian/Ubuntu or ``libpq-devel`` on Fedora).
 * Fork/clone the Git repository using your preferred tool.

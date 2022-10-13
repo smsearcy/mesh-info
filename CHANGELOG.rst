@@ -29,6 +29,8 @@ Added
 Changed
 ^^^^^^^
 
+* **BREAKING CHANGE:** Dropped support for Python 3.7 and 3.8.
+
 Fixed
 ^^^^^
 

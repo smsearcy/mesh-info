@@ -244,9 +244,7 @@ class LinkInfo:
 
         # ensure consistent node names
         node_name = raw_data["hostname"].replace(".local.mesh", "").lstrip(".").lower()
-        # py3.8 use walrus?
-        link_cost = raw_data.get("linkCost")
-        if link_cost is not None and link_cost > 99.99:
+        if (link_cost := raw_data.get("linkCost")) is not None and link_cost > 99.99:
             link_cost = 99.99
 
         return LinkInfo(
@@ -482,13 +480,12 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
     else:
         data["active_tunnel_count"] = int(json_data["active_tunnel_count"])
 
-    # py3.8: use walrus operator
-    if json_data.get("link_info"):
+    if link_info := json_data.get("link_info"):
         data["links"] = [
             LinkInfo.from_json(
                 link_info, source=data["node_name"].lower(), ip_address=ip_address
             )
-            for ip_address, link_info in json_data["link_info"].items()
+            for ip_address, link_info in link_info.items()
         ]
 
     return SystemInfo(**data)

@@ -133,8 +133,7 @@ def _dns_lookup_message(ip_address: str) -> tuple[bytes, bytes]:
     """Construct the DNS query message for a reverse name lookup."""
     header = struct.pack(
         ">2sBBHHHH",
-        # py3.9 can use random.randbytes(2)
-        bytes([random.randint(0, 255), random.randint(0, 255)]),
+        random.randbytes(2),
         0b01,
         0b00,
         1,

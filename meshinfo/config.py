@@ -37,9 +37,8 @@ class Environment(enum.Enum):
 
 
 def default_workers():
-    # py38: use walrus operator
-    cpu_count = os.cpu_count()
-    if cpu_count:
+    """Defaults to Gunicorn recommendations."""
+    if cpu_count := os.cpu_count():
         return cpu_count * 2 + 1
     else:
         return 1

@@ -12,7 +12,6 @@ pytest-cov>=2.8.1
 pytest-mock>=3.3.1
 pytest-postgresql<4.0.0
 pytest>=6.2.0
-# using Sphinx >= 4.4.0 causes dependency collisions in Python 3.7
-sphinx==4.3.2
+sphinx>=4.4.0
 sphinx-rtd-theme
 types-waitress>=0.1.4

@@ -1,5 +1,5 @@
 default:
-  image: python:3.8
+  image: python:3.9
 
 variables:
   PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
@@ -72,22 +72,6 @@ mypy:
   artifacts:
     reports:
       junit: pytest-report.xml
-
-pytest 3.7:
-  extends: .pytest
-  image: python:3.7
-  cache:
-    key: poetry37
-    paths:
-      - .cache/pip
-
-pytest 3.8:
-  extends: .pytest
-  image: python:3.8
-  cache:
-    paths:
-      - .cache/pip
-    policy: pull
 
 pytest 3.9:
   extends: .pytest
