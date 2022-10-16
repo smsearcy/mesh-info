@@ -147,6 +147,8 @@ Mesh Info leverages the following Python frameworks/libraries:
 The following frontend libraries/tools are vendored in this repository
 (because the goal is that clients do not need internet access to use the tool):
 
+* `Alpine.js <https://alpinejs.dev/>`_:
+  Lightweight Javascript framework
 * `Bulma <https://bulma.io/>`_:
   CSS framework
 * `Leaflet <https://leafletjs.com/>`_:
@@ -155,12 +157,3 @@ The following frontend libraries/tools are vendored in this repository
   Leaflet plugin to offset lines
 * `Grid.js <https://gridjs.io/>`_:
   Javascript table plugin
-
-.. note::
-
-   An initial goal was avoiding jQuery,
-   hence the choice of Bulma.
-   Bootstrap 5 came out after I started working on the web portion,
-   and I'm opening to switching to that.
-   Especially since I want to add tabs and Bulma only includes styling,
-   not functionality.
