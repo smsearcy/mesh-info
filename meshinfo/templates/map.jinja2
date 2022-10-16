@@ -2,7 +2,6 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ req.static_url("meshinfo:static/leaflet/leaflet.css") }}">
-<link rel="stylesheet" href="{{ req.static_url("meshinfo:static/css/map.css") }}">
 {% endblock %}
 
 {% block root %}
@@ -88,7 +87,7 @@
 
   let legend = L.control({position: 'topright'});
   legend.onAdd = function (map) {
-    let div = L.DomUtil.create('div', 'box p-1 m-1');
+    let div = L.DomUtil.create('div', 'm-0 p-0');
     div.innerHTML = `{% include "map-legend.jinja2" %}`;
     return div;
   };
