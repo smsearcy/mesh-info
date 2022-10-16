@@ -1,0 +1,24 @@
+<div id="legend" class="has-text-weight-bold">
+  <div class="is-clearfix mb-3 has-text-centered" id="rf-link-gradient">
+    <div class="is-pulled-left ml-4 has-text-white">1</div>
+    RF Link Cost
+    <div class="is-pulled-right mr-4 has-text-white">10</div>
+  </div>
+  <div class="columns">
+    <div class="column">
+      {% for band, icon_url in node_icons.items() -%}
+        <div>
+          <figure class="image pt-1 is-16x16 is-inline-block">
+            <img src="{{ icon_url }}" width="16px" height="16px">
+          </figure>
+          {{ band }}
+        </div>
+      {% endfor -%}
+    </div>
+    <div class="column has-text-centered">
+      <div class="block mb-1 link-legend" style="background: #3388ff;">DTD Link</div>
+      <div class="block mb-1 link-legend" style="background: #707070;">Tunnel</div>
+      <div class="block mb-1 link-legend" style="background: #8b0000;">Unknown</div>
+    </div>
+  </div>
+</div>
