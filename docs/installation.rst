@@ -180,6 +180,7 @@ Create ``/etc/nginx/sites-available/mesh-info`` with the following content
         gzip_types application/json;
         gzip_proxied any;
 
+        # reverse proxy the Gunicorn app server
         location / {
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
@@ -189,8 +190,11 @@ Create ``/etc/nginx/sites-available/mesh-info`` with the following content
             # redirects, we set the Host: header above already.
             proxy_redirect off;
             proxy_pass http://app_server;
+        }
 
-            # TODO: have NGINX cache static content once cache busting is configured
+        # server static files via NGINX
+        location /static {
+            root /opt/mesh-info/src/meshinfo;
         }
     }
 

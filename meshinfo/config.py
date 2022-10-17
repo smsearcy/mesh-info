@@ -154,19 +154,12 @@ def configure(
     filters.setdefault("local_tz", "meshinfo.filters.local_tz")
 
     if app_config.env == Environment.DEV:
-        settings["pyramid.reload_all"] = True
-        settings["pyramid.debug_authorization"] = False
-        settings["pyramid.debug_notfound"] = False
-        settings["pyramid.debug_routematch"] = False
-        settings["pyramid.default_locale_name"] = "en"
         settings["debugtoolbar.max_visible_requests"] = 25
-
-    else:
-        settings["pyramid.reload_templates"] = False
         settings["pyramid.debug_authorization"] = False
         settings["pyramid.debug_notfound"] = False
         settings["pyramid.debug_routematch"] = False
-        settings["pyramid.default_locale_name"] = "en"
+        settings["pyramid.prevent_cachebust"] = True
+        settings["pyramid.reload_all"] = True
 
     # configure logging
     logger.remove()
