@@ -14,14 +14,69 @@ from ..config import AppConfig
 from ..models import Link, Node
 from ..types import Band, LinkId, LinkStatus, LinkType, NodeStatus
 
+
+@attrs.define
+class NodeLayer:
+    key: str
+    description: str
+    band: Band
+    icon: str
+    features: list[GeoNode] = attrs.field(factory=list, init=False)
+
+    def __json__(self, request: Request) -> dict:
+        return {
+            "key": self.key,
+            "description": self.description,
+            "band": self.band.value,
+            "icon": request.static_url(f"meshinfo:static/img/map/{self.icon}"),
+            "geoJSON": {"type": "FeatureCollection", "features": self.features},
+        }
+
+
+@attrs.define
+class LinkLayer:
+    key: str
+    description: str
+    type: LinkType | LinkStatus
+    active: bool = True
+    features: list[GeoLink] = attrs.field(factory=list, init=False)
+
+    def __json__(self, request: Request) -> dict:
+        return {
+            "key": self.key,
+            "description": self.description,
+            "active": self.active,
+            "geoJSON": {"type": "FeatureCollection", "features": self.features},
+        }
+
+
 # map legend uses the order of the bands here
-NODE_ICONS = [
-    (Band.FIVE_GHZ, "gold-radio-small.png"),
-    (Band.THREE_GHZ, "blue-radio-small.png"),
-    (Band.TWO_GHZ, "purple-radio-small.png"),
-    (Band.NINE_HUNDRED_MHZ, "magenta-radio-small.png"),
-    (Band.OFF, "grey-radio-small.png"),
-]
+_NODE_LAYERS = (
+    NodeLayer("fiveGHzNodes", "5 GHz Nodes", Band.FIVE_GHZ, "gold-radio-small.png"),
+    NodeLayer("threeGHzNodes", "3 GHz Nodes", Band.THREE_GHZ, "blue-radio-small.png"),
+    NodeLayer("twoGHzNodes", "2 GHz Nodes", Band.TWO_GHZ, "purple-radio-small.png"),
+    NodeLayer(
+        "nineHundredMHzNodes",
+        "900 MHz Nodes",
+        Band.NINE_HUNDRED_MHZ,
+        "magenta-radio-small.png",
+    ),
+    NodeLayer("noRFNodes", "No RF Nodes", Band.OFF, "grey-radio-small.png"),
+    # TODO: use a red icon
+    NodeLayer("unknownNodes", "Unknown Nodes", Band.UNKNOWN, "red-radio-small.png"),
+)
+
+_NODE_BAND_LAYER_MAP = {layer.band: layer for layer in _NODE_LAYERS}
+
+_LINK_LAYERS = (
+    LinkLayer("rfLinks", "Radio Links", LinkType.RF),
+    LinkLayer("dtdLinks", "DTD Links", LinkType.DTD),
+    LinkLayer("tunnelLinks", "Tunnel Links", LinkType.TUN),
+    LinkLayer("unknownLinks", "Unknown Links", LinkType.UNKNOWN),
+    LinkLayer("recentLinks", "Recent Links", LinkStatus.RECENT, active=False),
+)
+
+_LINK_TYPE_LAYER_MAP = {layer.type: layer for layer in _LINK_LAYERS}
 
 
 @attrs.define
@@ -33,6 +88,7 @@ class GeoNode:
     band: Band
     latitude: float
     longitude: float
+    layer: NodeLayer
 
     @classmethod
     def from_model(cls, node: Node) -> GeoNode:
@@ -42,6 +98,7 @@ class GeoNode:
             band=node.band,
             latitude=node.latitude,
             longitude=node.longitude,
+            layer=_NODE_BAND_LAYER_MAP[node.band],
         )
 
     def __json__(self, request: Request):
@@ -75,6 +132,7 @@ class GeoLink:
     start_longitude: float
     end_latitude: float
     end_longitude: float
+    layer: LinkLayer
 
     @property
     def color(self) -> str:
@@ -104,6 +162,10 @@ class GeoLink:
 
     @classmethod
     def from_model(cls, link: Link) -> GeoLink:
+        if link.status == LinkStatus.CURRENT:
+            layer = _LINK_TYPE_LAYER_MAP[link.type]
+        else:
+            layer = _LINK_TYPE_LAYER_MAP[LinkStatus.RECENT]
         return cls(
             id=link.id,
             name=f"{link.source.name} / {link.destination.name} ({link.type})",
@@ -114,6 +176,7 @@ class GeoLink:
             start_longitude=link.source.longitude,
             end_latitude=link.destination.latitude,
             end_longitude=link.destination.longitude,
+            layer=layer,
         )
 
     def __json__(self, request: Request):
@@ -159,10 +222,9 @@ def network_map(request: Request):
     config: AppConfig = request.registry.settings["app_config"]
 
     node_icons = {
-        key: request.static_url(f"meshinfo:static/img/map/{filename}")
-        for key, filename in NODE_ICONS
+        layer.band: request.static_url(f"meshinfo:static/img/map/{layer.icon}")
+        for layer in _NODE_LAYERS
     }
-    # FIXME: add map layers
 
     return {
         "node_icons": node_icons,
@@ -196,15 +258,22 @@ def map_data(request: Request):
         .filter(Link.status != LinkStatus.INACTIVE)
         .all()
     )
+
+    node_layers = {layer.key: layer for layer in _NODE_LAYERS}
+    link_layers = {layer.key: layer for layer in _LINK_LAYERS}
+    for node in (GeoNode.from_model(node) for node in nodes):
+        node_layers[node.layer.key].features.append(node)
+    for link in (GeoLink.from_model(link) for link in _dedupe_links(links)):
+        link_layers[link.layer.key].features.append(link)
+
+    # return only the layers with features in them
     return {
-        "nodes": {
-            "type": "FeatureCollection",
-            "features": [GeoNode.from_model(node) for node in nodes],
-        },
-        "links": {
-            "type": "FeatureCollection",
-            "features": [GeoLink.from_model(link) for link in _dedupe_links(links)],
-        },
+        "nodeLayers": [
+            layer for layer in node_layers.values() if len(layer.features) > 0
+        ],
+        "linkLayers": [
+            layer for layer in link_layers.values() if len(layer.features) > 0
+        ],
     }
 
 
