@@ -26,6 +26,8 @@ so breaking changes are possible but will be highlighted here.
 Added
 ^^^^^
 
+* Add ``purge`` command to delete old data. (`#30 <https://github.com/smsearcy/mesh-info/issues/30>`_)
+
 Changed
 ^^^^^^^
 

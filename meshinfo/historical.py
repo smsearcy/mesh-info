@@ -426,6 +426,14 @@ class HistoricalStats:
             return False
         return True
 
+    def delete_node_data(self, node: Node):
+        """Delete node data file."""
+        self._node_filename(node).unlink()
+
+    def delete_link_data(self, link: Link):
+        """Delete link data file."""
+        self._link_filename(link).unlink()
+
     def _network_filename(self) -> Path:
         return self.data_path / "network.rrd"
 

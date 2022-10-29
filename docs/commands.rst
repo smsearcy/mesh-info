@@ -5,7 +5,9 @@ Documentation about the ``meshinfo`` command line functionality.
 
 .. note::
 
-    Examples presume that Mesh Info was installed per the :doc:`installation instructions <installation>`.
+   Examples presume that Mesh Info was installed per the :doc:`installation instructions <installation>`.
+   Commands that modify data (e.g. ``collector``, ``web``, ``import``, and ``purge``) need to run as the ``meshinfo`` user.
+
 
 Network Report
 --------------
@@ -24,28 +26,6 @@ Amount of information logged to the console can be increased by passing ``-v`` u
 If you pass ``--save-errors`` then the response from any nodes that have issues will be saved as ``{ip_address}-response.txt``.
 Change the directory those responses are saved to with ``--path``.
 
-Export/Import
--------------
-
-.. code-block:: console
-
-    $ /opt/mesh-info/bin/meshinfo export FILENAME
-    $ /opt/mesh-info/bin/meshinfo import FILENAME
-
-Commands to export the RRD data files and SQLite database to a ``.tgz`` file and import them again.
-
-Uses the currently configured data directory.
-
-.. warning::
-
-    The ``import`` command requires the RRDtool client installed,
-    not just the libraries.
-
-.. tip::
-
-    RRD files are platform-specific,
-    so you cannot copy ``.rrd`` files from a Raspberry Pi to desktop.
-    Use this command instead.
 
 Collector Service
 -----------------
@@ -74,3 +54,43 @@ Serves the web interface on http://localhost:8000 (by default).
 Change the port/socket it binds to via the the ``--bind`` option (e.g. "0.0.0.0:80" or "unix:/run/mesh-info.sock").
 
 The installation instructions setup this process as the Systemd service ``meshinfo-web``.
+
+
+Export/Import
+-------------
+
+.. code-block:: console
+
+    $ /opt/mesh-info/bin/meshinfo export FILENAME
+    $ /opt/mesh-info/bin/meshinfo import FILENAME
+
+Commands to export the RRD data files and SQLite database to a ``.tgz`` file and import them again.
+
+Uses the currently configured data directory.
+
+.. warning::
+
+    The ``import`` command requires the RRDtool client installed,
+    not just the libraries.
+
+.. tip::
+
+    RRD files are platform-specific,
+    so you cannot copy ``.rrd`` files from a Raspberry Pi to desktop.
+    Use this command instead.
+
+
+Purge
+-----
+
+.. code-block:: console
+
+   $ /opt/mesh-info/bin/meshinfo purge [--days 180] [--update|--no-update]
+
+Purges old data from the system.
+Delete RRD files and database entries for nodes
+(and their associated links)
+that have not been seen in specified number of days
+(defaults to 180).
+Deletes from the database the collector statistics and node errors older than specified days
+(this does not affect the RRD files for the network info and poller stats graphs).
