@@ -13,23 +13,24 @@
   <link rel="stylesheet" href="{{ req.static_url('meshinfo:static/css/fontawesome.min.css') }}">
   <link rel="stylesheet" href="{{ req.static_url('meshinfo:static/css/solid.min.css') }}">
   {% block head %}{% endblock %}
+  <script src="{{ req.static_url('meshinfo:static/js/alpine.min.js') }}" defer></script>
 </head>
 
 <body>
 <div id="app">
 
-<nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+<nav class="navbar is-dark" role="navigation" aria-label="main navigation" x-data="{ burger: false }">
   <div class="navbar-brand">
     <a class="navbar-item" href="{{ req.route_path('home') }}">
       <img src="{{ req.static_url('meshinfo:static/mesh-network-32x32.png') }}" width="32" height="32">
     </a>
-    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMeshMap">
+    <a role="button" class="navbar-burger" @click="burger = !burger" :class="{ 'is-active': burger }" aria-label="menu" aria-expanded="false">
       <span aria-hidden="true"></span>
       <span aria-hidden="true"></span>
       <span aria-hidden="true"></span>
     </a>
   </div>
-  <div id="navbarMeshMap" class="navbar-menu">
+  <div id="navbarMeshMap" class="navbar-menu" :class="{ 'is-active': burger }">
     <div class="navbar-start">
       <a class="navbar-item {% if req.matched_route.name == 'home' %}is-active{% endif %}"
          href="{{ req.route_path('home') }}">Overview</a>
@@ -55,7 +56,6 @@
 
 </div>
 
-<script src="{{ req.static_url('meshinfo:static/js/mesh-info.js') }}"></script>
 {% block javascript %}{% endblock %}
 
 </body>

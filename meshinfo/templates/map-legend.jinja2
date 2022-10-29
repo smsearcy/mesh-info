@@ -1,0 +1,26 @@
+<div class="box p-1 m-1 is-hidden-mobile" x-data="{ show: true }">
+  <div class="p-1 has-text-weight-bold" style="width: 12rem;" :class="{ 'is-hidden': !show }">
+    <div class="is-clearfix mb-3 has-text-centered" style="background: linear-gradient(to right, hsl(120, 100%, 50%), hsl(60, 100%, 50%), hsl(0, 100%, 50%))">
+      <div class="is-pulled-left ml-4 has-text-white">1</div>
+      RF Link Cost
+      <div class="is-pulled-right mr-4 has-text-white">10</div>
+    </div>
+    <div class="columns">
+      <div class="column">
+        {% for band, icon_url in node_icons.items() -%}
+          <div>
+            <figure class="image pt-1 is-16x16 is-inline-block"><img src="{{ icon_url }}" width="16px" height="16px"></figure>&nbsp;{{ band }}
+          </div>
+        {% endfor -%}
+      </div>
+      <div class="column has-text-centered has-text-white">
+        <div class="block mb-1" style="background: #3388ff; border-radius: 0.2rem;">DTD Link</div>
+        <div class="block mb-1" style="background: #707070; border-radius: 0.2rem;">Tunnel</div>
+        <div class="block mb-1" style="background: #8b0000; border-radius: 0.2rem;">Unknown</div>
+        <div class="block mb-1">&nbsp;</div>
+        <div class="block is-clickable has-text-weight-normal has-text-dark" @click="show = ! show">Hide Legend</div>
+      </div>
+    </div>
+  </div>
+  <div class="is-clickable" @click="show = ! show" :class="{ 'is-hidden': show }">Show Legend</div>
+</div>
