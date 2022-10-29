@@ -1,8 +1,47 @@
+import hashlib
+import subprocess
+from pathlib import Path
+
 from pyramid.config import Configurator
+from pyramid.static import QueryStringCacheBuster
+
+from meshinfo import VERSION
+
+
+class CacheBuster(QueryStringCacheBuster):
+    """Add query string parameter to static assets for busting cache on updates.
+
+    Uses Git commit SHA1 if available, otherwise the app version.
+
+    """
+
+    def __init__(self, param="x", repo_path=None):
+        super().__init__(param=param)
+        if repo_path is None:
+            repo_path = Path(__file__).parent.absolute()
+        try:
+            self.sha1 = subprocess.run(
+                ("git", "rev-parse", "HEAD"),
+                cwd=repo_path,
+                check=True,
+                stdout=subprocess.PIPE,
+            ).stdout.decode()[:12]
+        except OSError:
+            # hash the current version of the application
+            hash_ = hashlib.md5()
+            hash_.update(VERSION.encode())
+            self.sha1 = hash_.hexdigest()[:12]
+
+    def tokenize(self, request, pathspec, kw):
+        return self.sha1
 
 
 def includeme(config: Configurator):
+    """Configure application routes."""
+
     config.add_static_view("static", "static")
+    config.add_cache_buster("static", CacheBuster())
+
     config.add_route("home", "/")
     config.add_route("about", "/about")
     config.add_route("map", "/map")
