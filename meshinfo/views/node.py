@@ -12,9 +12,7 @@ from ..types import LinkStatus
 from . import schema
 
 
-@view_config(
-    route_name="node-details", renderer="meshinfo:templates/node-details.jinja2"
-)
+@view_config(route_name="node-details", renderer="pages/node-details.jinja2")
 def node_detail(request: Request):
     """Detailed view of a single node."""
 
@@ -74,7 +72,7 @@ def node_json(request: Request):
 
 @view_config(
     route_name="node-preview",
-    renderer="meshinfo:templates/node-preview.jinja2",
+    renderer="components/node-preview.jinja2",
     http_cache=120,
 )
 def node_preview(request: Request):
@@ -91,7 +89,7 @@ def node_preview(request: Request):
     return {"node": node}
 
 
-@view_config(route_name="node-graphs", renderer="meshinfo:templates/node-graphs.jinja2")
+@view_config(route_name="node-graphs", renderer="pages/node-graphs.jinja2")
 def node_graphs(request: Request):
     """Display graphs of particular data for a node over different timeframes."""
 

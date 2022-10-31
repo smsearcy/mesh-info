@@ -32,7 +32,7 @@ class LinkProperties:
     offset: int = 2
 
 
-@view_config(route_name="map", renderer="templates/map.jinja2")
+@view_config(route_name="map", renderer="pages/map.jinja2")
 def network_map(request: Request):
     """Network map view - basic page to load/define the necessary Javascript.
 

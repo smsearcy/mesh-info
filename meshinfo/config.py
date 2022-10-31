@@ -147,11 +147,13 @@ def configure(
     # Configure settings for Pyramid
     settings["pyramid.retry"] = 3
 
-    # define Jinja filters
-    filters = settings.setdefault("jinja2.filters", {})
-    filters.setdefault("duration", "meshinfo.filters.duration")
-    filters.setdefault("in_tz", "meshinfo.filters.in_tz")
-    filters.setdefault("local_tz", "meshinfo.filters.local_tz")
+    # Configure Jinja2
+    settings["jinja2.directories"] = "meshinfo:templates"
+    settings["jinja2.filters"] = {
+        "duration": "meshinfo.filters.duration",
+        "in_tz": "meshinfo.filters.in_tz",
+        "local_tz": "meshinfo.filters.local_tz",
+    }
 
     if app_config.env == Environment.DEV:
         settings["debugtoolbar.max_visible_requests"] = 25

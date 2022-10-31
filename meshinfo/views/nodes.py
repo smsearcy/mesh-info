@@ -21,7 +21,7 @@ class NodeListViews:
         self.nodes: List[Node] = sorted(query.all(), key=attrgetter("name"))
         self.request = request
 
-    @view_config(match_param="view=table", renderer="meshinfo:templates/nodes.jinja2")
+    @view_config(match_param="view=table", renderer="pages/nodes.jinja2")
     def table(self):
         return {"nodes": self.nodes}
 

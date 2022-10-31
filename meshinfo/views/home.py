@@ -12,7 +12,7 @@ from ..models import CollectorStat, Link, Node, NodeError
 from ..types import LinkStatus, NodeStatus
 
 
-@view_config(route_name="home", renderer="meshinfo:templates/home.jinja2")
+@view_config(route_name="home", renderer="pages/home.jinja2")
 def overview(request: Request):
 
     dbsession: Session = request.dbsession

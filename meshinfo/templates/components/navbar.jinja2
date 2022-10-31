@@ -1,24 +1,3 @@
-<!DOCTYPE html>
-<html lang="{{ req.locale_name }}">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="aredn wireless mesh network map">
-  <link rel="shortcut icon" type="image/png" sizes="16x16" href="{{ req.static_url('meshinfo:static/mesh-network-16x16.png') }}">
-  <link rel="shortcut icon" type="image/png" sizes="32x32" href="{{ req.static_url('meshinfo:static/mesh-network-32x32.png') }}">
-  <title>
-    {% block title %}Mesh Info{% endblock %}
-  </title>
-  <link rel="stylesheet" href="{{ req.static_url('meshinfo:static/css/bulma.min.css') }}">
-  <link rel="stylesheet" href="{{ req.static_url('meshinfo:static/css/fontawesome.min.css') }}">
-  <link rel="stylesheet" href="{{ req.static_url('meshinfo:static/css/solid.min.css') }}">
-  {% block head %}{% endblock %}
-  <script src="{{ req.static_url('meshinfo:static/js/alpine.min.js') }}" defer></script>
-</head>
-
-<body>
-<div id="app">
-
 <nav class="navbar is-dark" role="navigation" aria-label="main navigation" x-data="{ burger: false }">
   <div class="navbar-brand">
     <a class="navbar-item" href="{{ req.route_path('home') }}">
@@ -51,12 +30,3 @@
     </div>
   </div>
 </nav>
-
-{% block root %}{% endblock %}
-
-</div>
-
-{% block javascript %}{% endblock %}
-
-</body>
-</html>

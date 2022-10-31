@@ -10,9 +10,7 @@ from ..models import CollectorStat
 from . import schema
 
 
-@view_config(
-    route_name="network-graphs", renderer="meshinfo:templates/network-graphs.jinja2"
-)
+@view_config(route_name="network-graphs", renderer="pages/network-graphs.jinja2")
 def network_graphs(request: Request):
     """Page displaying graphs of particular data over different timeframes."""
     graph = request.matchdict["name"]
@@ -57,9 +55,7 @@ class NetworkGraphs:
         )
 
 
-@view_config(
-    route_name="network-errors", renderer="meshinfo:templates/network-errors.jinja2"
-)
+@view_config(route_name="network-errors", renderer="pages/network-errors.jinja2")
 def network_errors(request: Request):
     dbsession: Session = request.dbsession
     try:
