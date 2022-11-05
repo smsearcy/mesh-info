@@ -19,24 +19,17 @@ and create ``/var/lib/mesh-info`` for storing the application data.
 
 .. code-block:: console
 
-    $ sudo apt update
-    $ sudo apt install -y libpq-dev librrd-dev python3 python3-dev python3-pip python3-venv
-    $ sudo useradd meshinfo
-    $ sudo mkdir /opt/mesh-info
-    $ sudo chown -R meshinfo: /opt/mesh-info/
-    # Login as the meshinfo user to run the following commands
-    $ sudo -u meshinfo -i
-    $ clone https://github.com/smsearcy/mesh-info.git /opt/mesh-info/src
-    $ python3 -m venv /opt/mesh-info/
-    # Activate the Python virtualenv for the next few commands
-    $ . /opt/mesh-info/bin/activate
-    (mesh-info) $ pip install -U pip setuptools wheel
-    (mesh-info) $ pip install -r /opt/mesh-info/src/requirements.txt
-    (mesh-info) $ pip install -e /opt/mesh-info/src
-    # Run the database migrations
-    (mesh-info) $ alembic -c /opt/mesh-info/src/alembic.ini upgrade head
-    (mesh-info) $ deactivate
-    $ exit
+    sudo apt update
+    sudo apt install -y git libpq-dev librrd-dev python3 python3-dev python3-pip python3-venv rrdtool
+    sudo useradd meshinfo
+    sudo mkdir /opt/mesh-info /var/lib/mesh-info
+    sudo chown meshinfo: /opt/mesh-info /var/lib/mesh-info
+    sudo -u meshinfo git clone https://github.com/smsearcy/mesh-info.git /opt/mesh-info/src
+    sudo -u meshinfo python3 -m venv /opt/mesh-info/
+    sudo -u meshinfo /opt/mesh-info/bin/pip install -U pip wheel
+    cd /opt/mesh-info/src
+    sudo -u meshinfo /opt/mesh-info/bin/pip install -r requirements.txt -e .
+    sudo -u meshinfo /opt/mesh-info/bin/alembic upgrade head
 
 To run a test scan,
 you can run the following
@@ -45,7 +38,7 @@ in case ``localnode.local.mesh`` does not resolve):
 
 .. code-block:: console
 
-    $ /opt/mesh-info/bin/meshinfo report [LOCAL_NODE]
+    /opt/mesh-info/bin/meshinfo report [LOCAL_NODE]
 
 If it is unable to connect to ``localnode.local.mesh``,
 then you will need to create ``/opt/mesh-info/src/.env`` with the following
@@ -65,7 +58,7 @@ The ``--run-once`` option means it will poll the network once, save the results,
 
 .. code-block:: console
 
-    $ /opt/mesh-info/bin/meshinfo collector --run-once
+    /opt/mesh-info/bin/meshinfo collector --run-once
 
 While you could run the web service and collector via ``/opt/mesh-info/bin/meshinfo web`` and ``/opt/mesh-info/bin/meshinfo collecotr``,
 it is advantageous to setup Systemd services to run automatically
@@ -143,8 +136,7 @@ and start them now.
 
 .. code-block:: console
 
-    $ sudo systemctl enable --now meshinfo-web.service
-    $ sudo systemctl enable --now meshinfo-collector.service
+    sudo systemctl enable --now meshinfo-web.service meshinfo-collector.service
 
 
 NGINX Reverse Proxy
@@ -156,7 +148,7 @@ behind a NGINX reverse proxy.
 
 .. code-block:: console
 
-    $ sudo apt install -y nginx-light
+    sudo apt install -y nginx-light
 
 Create ``/etc/nginx/sites-available/mesh-info`` with the following content
 (setting the ``server_name`` directive to whatever name(s) and/or IP(s) Mesh Info should be served on):
@@ -203,9 +195,9 @@ Now enable the site, test the config, and then reload NGINX
 
 .. code-block:: console
 
-    $ sudo ln -s /etc/nginx/sites-available/mesh-info /etc/nginx/sites-enabled/
-    $ nginx -t
-    $ sudo systemctl reload nginx
+    sudo ln -s /etc/nginx/sites-available/mesh-info /etc/nginx/sites-enabled/
+    sudo nginx -t
+    sudo systemctl reload nginx
 
 Now you can verify it is working by connecting to http://your.server.name:8080.
 
@@ -216,12 +208,12 @@ To get the latest version of Mesh Info, run the following:
 
 .. code-block:: console
 
-    $ sudo systemctl stop meshinfo-web meshinfo-collector
-    $ cd /opt/mesh-info/src
-    $ sudo -u meshinfo git pull
-    $ sudo -u meshinfo /opt/mesh-info/bin/pip install -r requirements.txt
-    $ sudo -u meshinfo /opt/mesh-info/bin/alembic upgrade head
-    $ sudo systemctl restart meshinfo-web meshinfo-collector
+    sudo systemctl stop meshinfo-web meshinfo-collector
+    cd /opt/mesh-info/src
+    sudo -u meshinfo git pull
+    sudo -u meshinfo /opt/mesh-info/bin/pip install -r requirements.txt
+    sudo -u meshinfo /opt/mesh-info/bin/alembic upgrade head
+    sudo systemctl restart meshinfo-web meshinfo-collector
 
 .. warning::
 
