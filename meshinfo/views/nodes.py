@@ -26,7 +26,7 @@ class NodeListViews:
         return {"nodes": self.nodes}
 
     @view_config(match_param="view=csv")
-    def csv(self):
+    def csv(self) -> Response:
         output = io.StringIO(newline="")
         csv_out = csv.writer(output)
         csv_out.writerow(

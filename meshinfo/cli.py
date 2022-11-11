@@ -16,7 +16,7 @@ from meshinfo.historical import HistoricalStats
 from meshinfo.poller import Poller
 
 
-def main(argv: list = None):  # noqa: C901
+def main(argv: list | None = None):  # noqa: C901
     """Main CLI entry point for 'meshinfo'."""
 
     parser = build_parser()

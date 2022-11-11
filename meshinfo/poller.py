@@ -418,7 +418,11 @@ class Poller:
         return result
 
     async def _handle_response_error(
-        self, ip_address: str, error: PollingError, response: str, exc: Exception = None
+        self,
+        ip_address: str,
+        error: PollingError,
+        response: str,
+        exc: Exception | None = None,
     ) -> NodeResult:
         result = NodeResult(
             ip_address=ip_address,

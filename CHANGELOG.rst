@@ -28,6 +28,7 @@ Added
 
 * Add ``purge`` command to delete old data. (`#30 <https://github.com/smsearcy/mesh-info/issues/30>`_)
 * Toggle to hide the link legend (`#84 <https://github.com/smsearcy/mesh-info/issues/84>`_)
+* Support Python 3.11.
 
 Changed
 ^^^^^^^

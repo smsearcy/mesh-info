@@ -17,7 +17,7 @@ Mesh Info
 
 |
 
-`Project Documentation <http://mesh-info-ki7onk.readthedocs.io/>`_
+`Project Documentation <https://mesh-info-ki7onk.readthedocs.io/>`_
 
 .. -begin-content-
 

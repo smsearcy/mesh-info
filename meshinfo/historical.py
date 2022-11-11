@@ -444,7 +444,7 @@ class HistoricalStats:
         return self.data_path / f"link-{link.id.dump()}.rrd"
 
 
-def _create_node_rrd_file(filename: Path, *, start: int = None) -> bool:
+def _create_node_rrd_file(filename: Path, *, start: int | None = None) -> bool:
     """Create RRD file to track node statistics."""
 
     args = [str(filename)]
@@ -472,7 +472,7 @@ def _create_node_rrd_file(filename: Path, *, start: int = None) -> bool:
     return True
 
 
-def _create_link_rrd_file(filename: Path, *, start: int = None) -> bool:
+def _create_link_rrd_file(filename: Path, *, start: int | None = None) -> bool:
     """Create RRD file to track link statistics."""
 
     args = [str(filename)]
@@ -501,7 +501,7 @@ def _create_link_rrd_file(filename: Path, *, start: int = None) -> bool:
     return True
 
 
-def _create_network_rrd_file(filename: Path, *, start: int = None) -> bool:
+def _create_network_rrd_file(filename: Path, *, start: int | None = None) -> bool:
     """Create RRD file to track network and poller statistics."""
 
     args = [str(filename)]
