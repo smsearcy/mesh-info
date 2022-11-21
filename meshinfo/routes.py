@@ -43,6 +43,7 @@ def includeme(config: Configurator):
     config.add_cache_buster("static", CacheBuster())
 
     config.add_route("home", "/")
+    config.add_route("iperf-tool", "/iperf-tool")
     config.add_route("about", "/about")
     config.add_route("map", "/map")
     config.add_route("map-data", "/map-data.json")
