@@ -40,7 +40,7 @@ def main(
     *,
     verbose: int = 0,
     save_errors: bool = False,
-    output_path: Path = None,
+    output_path: Path | None = None,
 ):
     """Crawls network and prints information about the nodes and links.
 

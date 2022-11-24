@@ -249,7 +249,7 @@ def expire_data(
     *,
     nodes_expire: int,
     links_expire: int,
-    count: defaultdict[str, int] = None,
+    count: defaultdict[str, int] | None = None,
 ):
     """Update the status of nodes/links that have not been seen recently.
 
@@ -298,7 +298,10 @@ def expire_data(
 
 
 def save_nodes(
-    nodes: list[SystemInfo], dbsession: Session, *, count: defaultdict[str, int] = None
+    nodes: list[SystemInfo],
+    dbsession: Session,
+    *,
+    count: defaultdict[str, int] | None = None,
 ) -> list[Node]:
     """Saves node information to the database.
 
@@ -382,7 +385,10 @@ def _get_most_recent(results: list[Node]) -> Node | None:
 
 
 def save_links(
-    links: list[LinkInfo], dbsession: Session, *, count: defaultdict[str, int] = None
+    links: list[LinkInfo],
+    dbsession: Session,
+    *,
+    count: defaultdict[str, int] | None = None,
 ) -> list[Link]:
     """Saves link data to the database.
 

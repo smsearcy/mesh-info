@@ -26,6 +26,7 @@ jobs:
         python-version:
           - "3.9"
           - "3.10"
+          - "3.11"
 
     services:
       postgres:
@@ -58,9 +59,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y librrd-dev
-          python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt -r dev-requirements.txt
-          pip install -e .
+          python -m pip install --upgrade pip wheel
+          pip install -r requirements.txt -r dev-requirements.txt -e .
       - name: Run flake8
         run: flake8 meshinfo tests
       - name: Run mypy
@@ -84,7 +84,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y librrd-dev
-          python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt -r dev-requirements.txt
+          python -m pip install --upgrade pip wheel
+          pip install -r requirements.txt -r dev-requirements.txt -e .
       - name: Run Sphinx
         run: sphinx-build -W --keep-going -b html docs docs/_build/html
