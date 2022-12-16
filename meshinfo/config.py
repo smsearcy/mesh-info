@@ -48,7 +48,7 @@ def default_workers():
 class AppConfig:
     @environ.config
     class Aredn:
-        current_firmware: str = environ.var(default="3.22.8.0")
+        current_firmware: str = environ.var(default="3.22.12.0")
         current_api: str = environ.var(default="1.11")
 
     @environ.config
