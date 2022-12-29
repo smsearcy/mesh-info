@@ -32,9 +32,8 @@ Then, setup the Python virtual environment:
     $ cd mesh-info
     $ python3 -m venv venv
     $ . ./venv/bin/activate
-    (venv) $ pip install -U pip setuptools wheel
-    (venv) $ pip install -r dev-requirements.txt -r requirements.txt
-    (venv) $ pip install -e .
+    (venv) $ pip install -U pip wheel
+    (venv) $ pip install -r requirements.txt -e .[dev]
     (venv) $ make migrate-db
 
 Create a ``.env`` file in the ``mesh-info`` folder and add:

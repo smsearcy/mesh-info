@@ -45,10 +45,11 @@ Homepage = "https://github.com/smsearcy/mesh-info"
 Documentation = "https://mesh-info-ki7onk.readthedocs.io/"
 
 [project.optional-dependencies]
-# TODO: use recursive dependencies for "docs" and "tests" once they work with pip-tools
-# How: https://hynek.me/articles/python-recursive-optional-dependencies/
-# Bug: https://github.com/jazzband/pip-tools/issues/1685
-dev = [
+docs = [
+  "sphinx",
+  "sphinx-rtd-theme",
+]
+tests = [
   "Faker",
   "WebTest",
   "flake8-bugbear",
@@ -59,8 +60,9 @@ dev = [
   "pytest-mock",
   "pytest-postgresql < 4.0",
   "pytest",
-  "sphinx",
-  "sphinx-rtd-theme",
+]
+dev = [
+  "mesh-info[docs,tests]",
   "pip-tools",
   "pyramid-debugtoolbar",
 ]
