@@ -17,6 +17,8 @@
          href="{{ req.route_path('map') }}">Map</a>
       <a class="navbar-item {% if 'node' in req.matched_route.name %}is-active{% endif %}"
          href="{{ req.route_path('nodes', view='table') }}">Nodes</a>
+      <a class="navbar-item {% if req.matched_route.name == 'iperf-tool' %}is-active{% endif %}"
+         href="{{ req.route_path('iperf-tool') }}">iperf3</a>
       <a class="navbar-item {% if 'about' in req.matched_route.name %}is-active{% endif %}"
          href="{{ req.route_path('about') }}">About</a>
     </div>

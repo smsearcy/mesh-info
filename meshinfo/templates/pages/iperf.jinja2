@@ -1,0 +1,76 @@
+{% extends "layouts/section.jinja2" %}
+
+{% block title %}iperf3 URL Builder{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h1 class="title">iperf3 URL Builder</h1>
+    <div class="block">
+      Generate the URL for running an iperf3 test between two nodes.
+      <a href="https://arednmesh.readthedocs.io/en/latest/arednHow-toGuides/iperf.html" target="_blank">
+        AREDN Documentation
+      </a>
+    </div>
+    <div x-data="iperfTool()">
+      <form @submit.prevent="updateLink()" class="box">
+        <div class="field">
+          <label class="label">Client/Sender Node</label>
+          <div class="control">
+            <input class="input" type="text" placeholder="Start typing node name" list="node-names" required="required" x-model.lazy="client">
+          </div>
+        </div>
+        <div class="field">
+          <label class="label">Server/Receiver Node</label>
+          <div class="control">
+            <input class="input" type="text" placeholder="Start typing node name" list="node-names" required="required" x-model.lazy="server">
+          </div>
+        </div>
+        <div class="field">
+          <label class="label">Protocol</label>
+          <div class="control">
+            <div class="select">
+              <select x-model="protocol">
+                <option value="tcp">TCP</option>
+                <option value="udp">UDP</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="control">
+            <button type="submit" class="button is-primary">Generate URL</button>
+          </div>
+        </div>
+      </form>
+      <div class="box" x-show="iperfLink">
+        <div class="block" x-html="iperfLink"></div>
+        <div class="block"><em>Will open in new window/tab.</em></div>
+      </div>
+    </div>
+  </div>
+  <datalist id="node-names">
+    {%- for node in nodes %}
+    <option value="{{ node.name }}.local.mesh">{{ node.name }}</option>
+    {%- endfor %}
+  </datalist>
+{% endblock %}
+
+{% block javascript %}
+  <script>
+    function iperfTool() {
+      return {
+        client: '',
+        server: '',
+        protocol: 'tcp',
+        iperfLink: '',
+
+        updateLink() {
+          if (!(this.client && this.server))
+            return
+          url = `http://${this.client}/cgi-bin/iperf?server=${this.server}&protocol=${this.protocol}`
+          this.iperfLink = `<a href="${url}" target="_blank">${url}</a>`
+        }
+      }
+    }
+  </script>
+{% endblock %}
