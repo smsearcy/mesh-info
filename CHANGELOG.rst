@@ -30,6 +30,7 @@ Added
 * Toggle to hide the link legend (`#84 <https://github.com/smsearcy/mesh-info/issues/84>`_)
 * Support Python 3.11.
 * Add iperf3 URL builder.  (`#72 <https://github.com/smsearcy/mesh-info/issues/72>`_)
+* Use different Leaflet layers for different types of nodes/links.
 
 Changed
 ^^^^^^^
