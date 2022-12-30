@@ -51,13 +51,13 @@
   let linkLayers = {};
 
   fetch('{{ req.route_url("map-data") }}')
-    .then((response) => {
+    .then(response => {
       if (!response.ok){
-        throw new Error(`Error getting map data!  Status: ${response.status}}`);
+        throw new Error(response.statusText);
       }
       return response.json();
     })
-    .then((mapData) => {
+    .then(mapData => {
       for (const nodeLayer of mapData.nodeLayers) {
         let mapLayer = L.geoJSON(nodeLayer.geoJSON, {
           onEachFeature: nodeFeature,
@@ -88,6 +88,10 @@
         layerControl.addOverlay(mapLayer, linkLayer.description);
         linkLayers[linkLayer.variable] = mapLayer;
       }
+    })
+    .catch(error => {
+      console.error('Failed to load map data!', error);
+      alert('Failed to load map data! ' + error);
     });
 
   let scale = L.control.scale();

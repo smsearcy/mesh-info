@@ -40,6 +40,12 @@ Displays nodes and links on a map.
 Click on the node or link for a popup with more information
 and a hyperlink the the node details page.
 
+*Recent* links
+(which were not available during the last polling of the network)
+are hidden by default,
+but can be enabled on the *layers* menu.
+They will be faded/translucent.
+
 .. note::
 
    As of v0.5.0,
@@ -52,7 +58,8 @@ Node Legend
 * 2GHz - Purple
 * 3GHz - Blue
 * 5GHz - Orange
-* Unknown - Grey
+* No RF - Grey
+* Unknown - Red
 
 Link Legend
 ^^^^^^^^^^^
@@ -61,8 +68,7 @@ Link Legend
 * DTD - Blue
 * Tunnel - Grey
 * Unknown Cost - Maroon
-
-*Recent* links are faded.
+* Infinite Cost (ETX >= 99.99) - Black
 
 
 Nodes
