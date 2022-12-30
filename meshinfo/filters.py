@@ -21,3 +21,11 @@ def in_tz(dt, tz="utc"):
 def local_tz(ctx, dt):
     request = ctx.get("request") or get_current_request()
     return dt.in_tz(request.timezone).format("YYYY-MM-DD HH:mm:ss zz")
+
+
+def unknown(value, places: int = 2):
+    if value is None:
+        return "Unknown"
+    if isinstance(value, float):
+        return f"{value:.{places}f}"
+    return value

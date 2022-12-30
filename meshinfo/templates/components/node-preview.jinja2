@@ -1,38 +1,81 @@
-<h6 class="title is-6">
-<a href="{{ req.route_url("node-details", id=node.id) }}">{{ node.name }}</a>
-</h6>
-<div class="block">{{ node.description }}</div>
-<div class="columns">
-  <div class="column">
-    <div class="mb-2">
-      <div class="heading">Status</div>
-      <div>{{ node.status }}</div>
-    </div>
-    <div class="mb-2">
-      <div class="heading">Last Seen</div>
-      <div>{{ node.last_seen|local_tz }}</div>
-    </div>
-    <div class="mb-2">
-      <div class="heading">Model</div>
-      <div>{{ node.model }}</div>
-    </div>
-    <div class="mb-2">
-      <div class="heading">Firmware</div>
-      <div>{{ node.firmware_version }}</div>
+<div class="title is-6 mb-2">
+  <a href="{{ req.route_url("node-details", id=node.id) }}">{{ node.name }}</a>
+</div>
+<div x-data="{ selected: 'info' }">
+  <div class="tabs is-small mb-3">
+    <ul>
+      <li :class="{ 'is-active': selected === 'info' }">
+        <a @click="selected = 'info'">Info</a>
+      </li>
+      <li :class="{ 'is-active': selected === 'current-links' }">
+        <a @click="selected = 'current-links'">Current Links ({{ current_links|length }})</a>
+      </li>
+      <li :class="{ 'is-active': selected === 'recent-links' }">
+        <a @click="selected = 'recent-links'">Recent Links ({{ recent_links|length }})</a>
+      </li>
+    </ul>
+  </div>
+  <div id="node-info" x-show="selected === 'info'">
+    {% if node.description %}
+      <div class="mb-2">{{ node.description }}</div>
+    {% endif %}
+    <div class="columns">
+      <div class="column">
+        <div class="mb-2">
+          <div class="heading">Status</div>
+          <div>{{ node.status }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Last Seen</div>
+          <div>{{ node.last_seen|local_tz }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Model</div>
+          <div>{{ node.model }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Firmware</div>
+          <div>{{ node.firmware_version }}</div>
+        </div>
+      </div>
+      <div class="column">
+        <div class="mb-2">
+          <div class="heading">SSID</div>
+          <div>{{ node.ssid }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Band</div>
+          <div>{{ node.band }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Channel</div>
+          <div>{{ node.channel }}</div>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="column">
-    <div class="mb-2">
-      <div class="heading">SSID</div>
-      <div>{{ node.ssid }}</div>
+  <div id="current-links" x-show="selected === 'current-links'">
+    <div class="heading">
+      Node | Link Type | Distance (km) | Bearing | Cost
     </div>
-    <div class="mb-2">
-      <div class="heading">Band</div>
-      <div>{{ node.band }}</div>
+    <ul>
+      {% for link in current_links %}
+        <li class="mb-1">
+          {{ link.destination.display_name }} | {{ link.type }} | {{ link.distance|unknown }} | {{ link.bearing|unknown(1) }} | {{ link.olsr_cost|unknown }}
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div id="recent-links" x-show="selected === 'recent-links'">
+    <div class="heading">
+      Node | Link Type | Distance (km) | Bearing | Cost
     </div>
-    <div class="mb-2">
-      <div class="heading">Channel</div>
-      <div>{{ node.channel }}</div>
-    </div>
+    <ul>
+      {% for link in recent_links %}
+        <li class="mb-1">
+          {{ link.destination.display_name }} | {{ link.type }} | {{ link.distance|unknown }} | {{ link.bearing|unknown(1) }} | {{ link.olsr_cost|unknown }}
+        </li>
+      {% endfor %}
+    </ul>
   </div>
 </div>

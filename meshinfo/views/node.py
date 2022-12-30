@@ -1,3 +1,5 @@
+from operator import attrgetter
+
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.request import Request
 from pyramid.response import Response
@@ -36,8 +38,8 @@ def node_detail(request: Request):
             Link.status != LinkStatus.INACTIVE,
         )
     )
-
     links = query.all()
+
     graphs_by_link_type = {
         LinkType.RF: ("cost", "quality", "snr"),
         LinkType.DTD: ("cost", "quality"),
@@ -86,7 +88,34 @@ def node_preview(request: Request):
     if node is None:
         raise HTTPNotFound("Sorry, the specified node could not be found")
 
-    return {"node": node}
+    query = (
+        dbsession.query(Link)
+        .options(joinedload(Link.destination).load_only("display_name"))
+        .filter(
+            Link.source_id == node.id,
+            Link.status == LinkStatus.CURRENT,
+        )
+    )
+    current_links = query.all()
+    query = (
+        dbsession.query(Link)
+        .options(joinedload(Link.destination).load_only("display_name"))
+        .filter(
+            Link.source_id == node.id,
+            Link.status == LinkStatus.RECENT,
+        )
+    )
+    recent_links = query.all()
+
+    return {
+        "node": node,
+        "current_links": sorted(
+            current_links, key=attrgetter("destination.display_name")
+        ),
+        "recent_links": sorted(
+            recent_links, key=attrgetter("destination.display_name")
+        ),
+    }
 
 
 @view_config(route_name="node-graphs", renderer="pages/node-graphs.jinja2")

@@ -31,6 +31,7 @@ Added
 * Support Python 3.11.
 * Add iperf3 URL builder.  (`#72 <https://github.com/smsearcy/mesh-info/issues/72>`_)
 * Use different Leaflet layers for different types of nodes/links.
+* Links tab on the node popup on the map (`#70 <https://github.com/smsearcy/mesh-info/issues/70>`_).
 
 Changed
 ^^^^^^^
