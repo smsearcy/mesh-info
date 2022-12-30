@@ -24,12 +24,6 @@
     maxZoom: {{ max_zoom }},
   }).addTo(map);
 
-  let node_icons = {
-  {% for band, icon_url in node_icons.items() -%}
-    '{{ band.value }}': L.icon({iconUrl: '{{ icon_url }}', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10]}),
-  {% endfor -%}
-  }
-
   function nodeFeature(feature, layer) {
     layer.bindTooltip('<b>' + feature.properties.name + '</b>');
     layer.bindPopup((layer) => {
@@ -51,36 +45,54 @@
     }, {minWidth: 375, maxWidth: 600});
   }
 
-  // TODO: different layers per band (like MeshMap)
-  let nodeLayer = L.geoJSON([], {
-      onEachFeature: nodeFeature,
-      pointToLayer: function (feature, latlng) {
-        return L.marker(latlng, {
-          icon: node_icons[feature.properties.band] ?? node_icons['Unknown']
+  let layerControl = L.control.layers(null, null, {position: 'topleft', collapsed: true}).addTo(map);
+  // these collections aren't necessary, but does it hurt to keep them around?
+  let nodeLayers = {};
+  let linkLayers = {};
+
+  fetch('{{ req.route_url("map-data") }}')
+    .then(response => {
+      if (!response.ok){
+        throw new Error(response.statusText);
+      }
+      return response.json();
+    })
+    .then(mapData => {
+      for (const nodeLayer of mapData.nodeLayers) {
+        let mapLayer = L.geoJSON(nodeLayer.geoJSON, {
+          onEachFeature: nodeFeature,
+          pointToLayer: function (feature, latlng) {
+            return L.marker(latlng, {
+              icon: L.icon({iconUrl: nodeLayer.icon, iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10]}),
+            });
+          }
+        }).addTo(map);
+        layerControl.addOverlay(mapLayer, nodeLayer.description);
+        nodeLayers[nodeLayer.variable] = mapLayer;
+      }
+      for (const linkLayer of mapData.linkLayers) {
+        let mapLayer = L.geoJSON(linkLayer.geoJSON, {
+          onEachFeature: linkFeature,
+          style: function(feature) {
+            return {
+              color: feature.properties.color,
+              offset: feature.properties.offset,
+              weight: feature.properties.weight,
+              opacity: feature.properties.opacity,
+            }
+          }
         });
+        if (linkLayer.active) {
+          mapLayer.addTo(map);
+        }
+        layerControl.addOverlay(mapLayer, linkLayer.description);
+        linkLayers[linkLayer.variable] = mapLayer;
       }
-    }).addTo(map);
-
-  // TODO: different layers per link type (like MeshMap)
-  let linkLayer = L.geoJSON([], {
-    onEachFeature: linkFeature,
-    style: function(feature) {
-      return {
-        color: feature.properties.color,
-        offset: feature.properties.offset,
-        weight: feature.properties.weight,
-        opacity: feature.properties.opacity,
-      }
-    }
-  }).addTo(map);
-
-  async function getGeoJson() {
-    let mapData = await fetch('{{ req.route_url("map-data") }}').then(response => response.json()).then(data => data);
-    nodeLayer.addData(mapData.nodes);
-    linkLayer.addData(mapData.links);
-  }
-
-  getGeoJson();
+    })
+    .catch(error => {
+      console.error('Failed to load map data!', error);
+      alert('Failed to load map data! ' + error);
+    });
 
   let scale = L.control.scale();
   scale.addTo(map);

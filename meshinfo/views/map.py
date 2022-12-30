@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterator
+from collections.abc import Iterator
 
-import attr
+import attrs
 import sqlalchemy as sa
 from pyramid.request import Request
 from pyramid.view import view_config
@@ -12,24 +12,201 @@ from sqlalchemy.orm import Session, aliased
 
 from ..config import AppConfig
 from ..models import Link, Node
-from ..types import Band, LinkStatus, LinkType, NodeStatus
+from ..types import Band, LinkId, LinkStatus, LinkType, NodeStatus
+
+
+@attrs.define
+class NodeLayer:
+    key: str
+    description: str
+    band: Band
+    icon: str
+    features: list[GeoNode] = attrs.field(factory=list, init=False)
+
+    def __json__(self, request: Request) -> dict:
+        return {
+            "key": self.key,
+            "description": self.description,
+            "band": self.band.value,
+            "icon": request.static_url(f"meshinfo:static/img/map/{self.icon}"),
+            "geoJSON": {"type": "FeatureCollection", "features": self.features},
+        }
+
+
+@attrs.define
+class LinkLayer:
+    key: str
+    description: str
+    type: LinkType | LinkStatus
+    active: bool = True
+    features: list[GeoLink] = attrs.field(factory=list, init=False)
+
+    def __json__(self, request: Request) -> dict:
+        return {
+            "key": self.key,
+            "description": self.description,
+            "active": self.active,
+            "geoJSON": {"type": "FeatureCollection", "features": self.features},
+        }
+
 
 # map legend uses the order of the bands here
-NODE_ICONS = [
-    (Band.FIVE_GHZ, "gold-radio-small.png"),
-    (Band.THREE_GHZ, "blue-radio-small.png"),
-    (Band.TWO_GHZ, "purple-radio-small.png"),
-    (Band.NINE_HUNDRED_MHZ, "magenta-radio-small.png"),
-    (Band.OFF, "grey-radio-small.png"),
-]
+_NODE_LAYERS = (
+    NodeLayer("fiveGHzNodes", "5 GHz Nodes", Band.FIVE_GHZ, "gold-radio-small.png"),
+    NodeLayer("threeGHzNodes", "3 GHz Nodes", Band.THREE_GHZ, "blue-radio-small.png"),
+    NodeLayer("twoGHzNodes", "2 GHz Nodes", Band.TWO_GHZ, "purple-radio-small.png"),
+    NodeLayer(
+        "nineHundredMHzNodes",
+        "900 MHz Nodes",
+        Band.NINE_HUNDRED_MHZ,
+        "magenta-radio-small.png",
+    ),
+    NodeLayer("noRFNodes", "No RF Nodes", Band.OFF, "grey-radio-small.png"),
+    # TODO: use a red icon
+    NodeLayer("unknownNodes", "Unknown Nodes", Band.UNKNOWN, "red-radio-small.png"),
+)
+
+_NODE_BAND_LAYER_MAP = {layer.band: layer for layer in _NODE_LAYERS}
+
+_LINK_LAYERS = (
+    LinkLayer("rfLinks", "Radio Links", LinkType.RF),
+    LinkLayer("dtdLinks", "DTD Links", LinkType.DTD),
+    LinkLayer("tunnelLinks", "Tunnel Links", LinkType.TUN),
+    LinkLayer("unknownLinks", "Unknown Links", LinkType.UNKNOWN),
+    LinkLayer("recentLinks", "Recent Links", LinkStatus.RECENT, active=False),
+)
+
+_LINK_TYPE_LAYER_MAP = {layer.type: layer for layer in _LINK_LAYERS}
 
 
-@attr.s(auto_attribs=True, slots=True)
-class LinkProperties:
-    color: str
-    opacity: float = 1.0
-    weight: int = 2
-    offset: int = 2
+@attrs.define
+class GeoNode:
+    """Node data for rendering to GeoJSON."""
+
+    id: int
+    name: str
+    band: Band
+    latitude: float
+    longitude: float
+    layer: NodeLayer
+
+    @classmethod
+    def from_model(cls, node: Node) -> GeoNode:
+        return cls(
+            id=node.id,
+            name=node.name,
+            band=node.band,
+            latitude=node.latitude,
+            longitude=node.longitude,
+            layer=_NODE_BAND_LAYER_MAP[node.band],
+        )
+
+    def __json__(self, request: Request):
+        """Called by Pyramid's JSON renderer to dump the object to JSON."""
+        return {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                # GeoJSON coordinates are "backwards"
+                "coordinates": [self.longitude, self.latitude],
+            },
+            "properties": {
+                "id": str(self.id),
+                "name": self.name,
+                "band": self.band.value,
+                "previewUrl": request.route_url("node-preview", id=self.id),
+            },
+        }
+
+
+@attrs.define
+class GeoLink:
+    """Link data for rendering to GeoJSON."""
+
+    id: LinkId
+    name: str
+    type: LinkType
+    status: LinkStatus
+    cost: float
+    start_latitude: float
+    start_longitude: float
+    end_latitude: float
+    end_longitude: float
+    layer: LinkLayer
+
+    @property
+    def color(self) -> str:
+        if self.type == LinkType.DTD:
+            return "#3388ff"
+        if self.type == LinkType.TUN:
+            return "#707070"
+        if self.cost is not None:
+            if self.cost >= 99.99:
+                # infinite link cost
+                return "#000000"
+            hue = _calc_hue(self.cost, green=1, red=10)
+            return f"hsl({hue}, 100%, 50%)"
+        # unknown link cost
+        return "#8b0000"
+
+    @property
+    def opacity(self) -> float:
+        opacity = 1.0 if self.status == LinkStatus.CURRENT else 0.2
+        return opacity
+
+    @property
+    def offset(self) -> int:
+        if self.type == LinkType.RF:
+            return 2
+        return 0
+
+    @classmethod
+    def from_model(cls, link: Link) -> GeoLink:
+        if link.status == LinkStatus.CURRENT:
+            layer = _LINK_TYPE_LAYER_MAP[link.type]
+        else:
+            layer = _LINK_TYPE_LAYER_MAP[LinkStatus.RECENT]
+        return cls(
+            id=link.id,
+            name=f"{link.source.name} / {link.destination.name} ({link.type})",
+            type=link.type,
+            status=link.status,
+            cost=link.olsr_cost,
+            start_latitude=link.source.latitude,
+            start_longitude=link.source.longitude,
+            end_latitude=link.destination.latitude,
+            end_longitude=link.destination.longitude,
+            layer=layer,
+        )
+
+    def __json__(self, request: Request):
+        """Called by Pyramid's JSON renderer to dump the object to JSON."""
+        return {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                # GeoJSON coordinates are "backwards"
+                "coordinates": [
+                    [self.start_longitude, self.start_latitude],
+                    [self.end_longitude, self.end_latitude],
+                ],
+            },
+            "properties": {
+                "id": self.id.dump(),
+                "name": self.name,
+                "type": self.type.name,
+                "color": self.color,
+                "weight": 2,
+                "offset": self.offset,
+                "opacity": self.opacity,
+                "previewUrl": request.route_url(
+                    "link-preview",
+                    source=self.id.source,
+                    destination=self.id.destination,
+                    type=self.type.name.lower(),
+                ),
+            },
+        }
 
 
 @view_config(route_name="map", renderer="pages/map.jinja2")
@@ -45,8 +222,8 @@ def network_map(request: Request):
     config: AppConfig = request.registry.settings["app_config"]
 
     node_icons = {
-        key: request.static_url(f"meshinfo:static/img/map/{filename}")
-        for key, filename in NODE_ICONS
+        layer.band: request.static_url(f"meshinfo:static/img/map/{layer.icon}")
+        for layer in _NODE_LAYERS
     }
 
     return {
@@ -81,103 +258,23 @@ def map_data(request: Request):
         .filter(Link.status != LinkStatus.INACTIVE)
         .all()
     )
+
+    node_layers = {layer.key: layer for layer in _NODE_LAYERS}
+    link_layers = {layer.key: layer for layer in _LINK_LAYERS}
+    for node in (GeoNode.from_model(node) for node in nodes):
+        node_layers[node.layer.key].features.append(node)
+    for link in (GeoLink.from_model(link) for link in _dedupe_links(links)):
+        link_layers[link.layer.key].features.append(link)
+
+    # return only the layers with features in them
     return {
-        "nodes": {
-            "type": "FeatureCollection",
-            "features": [_node_geo_json(node, request) for node in nodes],
-        },
-        "links": {
-            "type": "FeatureCollection",
-            "features": [
-                _link_geo_json(link, request) for link in _dedupe_links(links)
-            ],
-        },
+        "nodeLayers": [
+            layer for layer in node_layers.values() if len(layer.features) > 0
+        ],
+        "linkLayers": [
+            layer for layer in link_layers.values() if len(layer.features) > 0
+        ],
     }
-
-
-def _node_geo_json(node: Node, request: Request) -> dict:
-    """Convert node to GeoJSON feature."""
-    return {
-        "type": "Feature",
-        "geometry": {
-            "type": "Point",
-            # GeoJSON coordinates are "backwards"
-            "coordinates": [node.longitude, node.latitude],
-        },
-        "properties": {
-            "id": str(node.id),
-            "name": node.name,
-            "band": node.band.value,
-            "previewUrl": request.route_url("node-preview", id=node.id),
-        },
-    }
-
-
-def _link_geo_json(link: Link, request: Request) -> dict:
-    """Convert link to GeoJSON feature."""
-    geo_json: dict[str, Any] = {
-        "type": "Feature",
-        "geometry": {
-            "type": "LineString",
-            # GeoJSON coordinates are "backwards"
-            "coordinates": [
-                [link.source.longitude, link.source.latitude],
-                [link.destination.longitude, link.destination.latitude],
-            ],
-        },
-        "properties": {
-            "id": link.id.dump(),
-            "name": f"{link.source.name} / {link.destination.name} ({link.type})",
-            "type": link.type.name,
-            "previewUrl": request.route_url(
-                "link-preview",
-                source=link.source_id,
-                destination=link.destination_id,
-                type=link.type.name.lower(),
-            ),
-        },
-    }
-    geo_json["properties"].update(attr.asdict(_link_properties(link)))
-    return geo_json
-
-
-def _link_properties(link: Link) -> LinkProperties:
-    """Determine color of link line.
-
-    Use fixed color for known tunnels and DTD links.
-    Otherwise, base the color on the link cost.
-
-    """
-    # py310: match?
-    if link.type == LinkType.DTD:
-        properties = LinkProperties(
-            color="#3388ff",
-            offset=0,
-        )
-    elif link.type == LinkType.TUN:
-        properties = LinkProperties(
-            color="#707070",
-            offset=0,
-        )
-    elif link.olsr_cost is not None:
-        # Base color on OLSR cost, similar to KG6WXC's MeshMap
-        # I think the OLSR cost is 1 / (LQ * NLQ), so this incorporates the
-        # link quality but on a logarithmic scale, rather than linear
-        # (if we used LQ & NLQ for RF links).
-        hue = _calc_hue(link.olsr_cost, green=1, red=10)
-        properties = LinkProperties(
-            color=f"hsl({hue}, 100%, 50%)",
-        )
-    else:
-        properties = LinkProperties(
-            color="#8b0000",
-        )
-
-    if link.status != LinkStatus.CURRENT:
-        # make non-current links mostly transparent
-        properties.opacity = 0.2
-
-    return properties
 
 
 def _calc_hue(value: float, *, red: float, green: float) -> int:
