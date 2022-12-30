@@ -14,6 +14,14 @@ from ..config import AppConfig
 from ..models import Link, Node
 from ..types import Band, LinkId, LinkStatus, LinkType, NodeStatus
 
+LINK_COLORS = {
+    "good": "#006164",
+    "ok": "#57c4ad",
+    "weak": "#edc656",
+    "poor": "#eda247",
+    "bad": "#db4325",
+}
+
 
 @attrs.define
 class NodeLayer:
@@ -140,14 +148,21 @@ class GeoLink:
             return "#3388ff"
         if self.type == LinkType.TUN:
             return "#707070"
-        if self.cost is not None:
-            if self.cost >= 99.99:
-                # infinite link cost
-                return "#000000"
-            hue = _calc_hue(self.cost, green=1, red=10)
-            return f"hsl({hue}, 100%, 50%)"
-        # unknown link cost
-        return "#8b0000"
+        if self.cost is None:
+            # unknown link cost
+            return "#8b0000"
+        if self.cost >= 99.99:
+            # infinite link cost
+            return "#000000"
+        if self.cost > 5:
+            return LINK_COLORS["bad"]
+        if self.cost > 4:
+            return LINK_COLORS["poor"]
+        if self.cost > 3:
+            return LINK_COLORS["weak"]
+        if self.cost > 2:
+            return LINK_COLORS["ok"]
+        return LINK_COLORS["good"]
 
     @property
     def opacity(self) -> float:
@@ -159,6 +174,13 @@ class GeoLink:
         if self.type == LinkType.RF:
             return 2
         return 0
+
+    @property
+    def dash_array(self) -> str | None:
+        if self.cost is not None and self.cost >= 99.99:
+            # infinite link cost
+            return "4"
+        return None
 
     @classmethod
     def from_model(cls, link: Link) -> GeoLink:
@@ -199,6 +221,7 @@ class GeoLink:
                 "weight": 2,
                 "offset": self.offset,
                 "opacity": self.opacity,
+                "dashArray": self.dash_array,
                 "previewUrl": request.route_url(
                     "link-preview",
                     source=self.id.source,
@@ -226,6 +249,14 @@ def network_map(request: Request):
         for layer in _NODE_LAYERS
     }
 
+    link_colors = {
+        "1-2": LINK_COLORS["good"],
+        "2-3": LINK_COLORS["ok"],
+        "3-4": LINK_COLORS["weak"],
+        "4-5": LINK_COLORS["poor"],
+        "5+": LINK_COLORS["bad"],
+    }
+
     return {
         "node_icons": node_icons,
         "latitude": config.map.latitude,
@@ -234,6 +265,7 @@ def network_map(request: Request):
         "max_zoom": config.map.max_zoom,
         "tile_url": config.map.tile_url,
         "tile_attribution": config.map.tile_attribution,
+        "link_colors": link_colors,
     }
 
 
