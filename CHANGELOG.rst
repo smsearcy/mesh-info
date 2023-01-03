@@ -40,6 +40,7 @@ Changed
 Fixed
 ^^^^^
 
+* Bearings are always positive numbers (0 - 359).
 
 0.5.1 - 2022-10-07
 ------------------

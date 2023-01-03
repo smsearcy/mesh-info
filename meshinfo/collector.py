@@ -521,7 +521,8 @@ def bearing(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         math.cos(lat1) * math.sin(lat2)
         - math.sin(lat1) * math.cos(lat2) * math.cos(lon_delta),
     )
-
+    if b < 0:
+        b = 2 * math.pi + b
     return round(math.degrees(b), 1)
 
 
