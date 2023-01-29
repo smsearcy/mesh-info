@@ -153,6 +153,7 @@ def configure(
         "duration": "meshinfo.filters.duration",
         "in_tz": "meshinfo.filters.in_tz",
         "local_tz": "meshinfo.filters.local_tz",
+        "unknown": "meshinfo.filters.unknown",
     }
 
     if app_config.env == Environment.DEV:

@@ -1,4 +1,4 @@
-<h6 class="title is-6">
+<h6 class="title is-6 mb-2">
 <a href="{{ req.route_url("node-details", id=link.source_id, _anchor=link.id.dump()) }}">
   {{ link.source.name }} - {{ link.destination.name }}
 </a>
@@ -25,27 +25,27 @@
     </div>
     <div class="mb-2">
       <div class="heading">Bearing</div>
-      <div>{{ link.bearing }}</div>
+      <div>{{ link.bearing|unknown(1) }}</div>
     </div>
     <div class="mb-2">
       <div class="heading">Cost</div>
-      <div>{{ link.olsr_cost }}</div>
+      <div>{{ link.olsr_cost|unknown }}</div>
     </div>
   </div>
   <div class="column">
     {% if link.type|lower == "radio" %}
       <div class="mb-2">
         <div class="heading"><abbr title="Signal/Noise Ratio">SNR</abbr></div>
-        <div>{{ link.signal_noise_ratio }}</div>
+        <div>{{ link.signal_noise_ratio|unknown(1) }}</div>
       </div>
     {% endif %}
     <div class="mb-2">
       <div class="heading"><abbr title="Link Quality">LQ</abbr></div>
-      <div>{% if link.quality is none %}Unknown{% else %}{{ link.quality }}{% endif %}</div>
+      <div>{{ link.quality|unknown }}</div>
     </div>
     <div class="mb-2">
       <div class="heading"><abbr title="Neighbor Link Quality">NLQ</abbr></div>
-      <div>{% if link.neighbor_quality is none %}Unknown{% else %}{{ link.neighbor_quality }}{% endif %}</div>
+      <div>{{ link.neighbor_quality|unknown }}</div>
     </div>
   </div>
 </div>
