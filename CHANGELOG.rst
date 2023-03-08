@@ -37,6 +37,7 @@ Changed
 ^^^^^^^
 
 * **BREAKING CHANGE:** Dropped support for Python 3.7 and 3.8.
+* Update RF link colors and style of infinite links (`#73 <https://github.com/smsearcy/mesh-info/issues/73>`_).
 
 Fixed
 ^^^^^
