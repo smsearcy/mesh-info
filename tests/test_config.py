@@ -1,5 +1,7 @@
 """Test the configuration module."""
 
+import logging
+
 from meshinfo.config import AppConfig, Environment
 
 
@@ -8,7 +10,7 @@ def test_default_config():
     app_config: AppConfig = AppConfig.from_environ({})
 
     assert app_config.env == Environment.PROD
-    assert app_config.log_level == "SUCCESS"
+    assert app_config.log_level == logging.WARNING
     assert app_config.local_node == "localnode.local.mesh"
 
 
@@ -25,7 +27,7 @@ def test_config():
     )
 
     assert app_config.env == Environment.DEV
-    assert app_config.log_level == "DEBUG"
+    assert app_config.log_level == logging.DEBUG
     assert app_config.db.url == "foobar"
     assert app_config.poller.max_connections == 25
     assert app_config.collector.node_inactive == 25

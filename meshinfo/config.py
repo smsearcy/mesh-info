@@ -4,22 +4,25 @@ from __future__ import annotations
 
 import enum
 import functools
+import logging
 import os
-import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+import attrs
 import environ
 import pendulum
 import platformdirs
+import structlog
 from dotenv import load_dotenv
-from loguru import logger
 from pyramid.config import Configurator
 
 from .aredn import VersionChecker
 from .historical import HistoricalStats
 from .network import reverse_dns_lookup
 from .poller import Poller
+
+logger = structlog.get_logger()
 
 FOLDER_NAME = "mesh-info"
 _DEFAULT_TILE_URL = "//stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg"
@@ -42,6 +45,10 @@ def default_workers():
         return cpu_count * 2 + 1
     else:
         return 1
+
+
+def _get_log_level(level: str) -> int:
+    return getattr(logging, level)
 
 
 @environ.config(prefix="MESH_INFO")
@@ -86,7 +93,7 @@ class AppConfig:
 
     env: Environment = environ.var(default="production", converter=Environment)
     local_node: str = environ.var(default="localnode.local.mesh")
-    log_level: str = environ.var(default="SUCCESS")
+    log_level: int = environ.var(default="WARNING", converter=_get_log_level)
     site_name: str = environ.var(default="Mesh Info")
     data_dir: Path = environ.var(default="")
 
@@ -165,8 +172,9 @@ def configure(
         settings["pyramid.reload_all"] = True
 
     # configure logging
-    logger.remove()
-    logger.add(sys.stderr, level=app_config.log_level)
+    configure_logging(app_config.log_level)
+
+    logger.debug("Application configuration", **attrs.asdict(app_config))
 
     # configure Pyramid application
     config = Configurator(settings=settings)
@@ -187,11 +195,10 @@ def configure(
             try:
                 client_tz = pendulum.timezone(request.cookies["local_tz"])
             except Exception as exc:
-                # TODO: identify client?
                 logger.warning(
-                    "Invalid timezone specified: {} ({!r})",
-                    request.cookies["local_tz"],
-                    exc,
+                    "Invalid timezone specified",
+                    local_tz=request.cookies["local_tz"],
+                    error=repr(exc),
                 )
                 client_tz = server_timezone
             return client_tz.name
@@ -221,7 +228,6 @@ def configure(
     config.register_service(version_checker, VersionChecker)
 
     # Register the `HistoricalStats` singleton
-    logger.info("RRDtool data directory: {}", app_config.rrd_dir)
     config.register_service(
         HistoricalStats(data_path=app_config.rrd_dir), HistoricalStats
     )
@@ -230,3 +236,26 @@ def configure(
 
     config.commit()
     return config
+
+
+def configure_logging(level: int):
+    """Configure structlog with the specified level."""
+    processors: list = [
+        structlog.contextvars.merge_contextvars,
+        structlog.processors.add_log_level,
+        structlog.processors.StackInfoRenderer(),
+        structlog.dev.set_exc_info,
+    ]
+    if "INVOCATION_ID" not in os.environ:
+        # add timestamps when not running in systemd
+        processors.append(structlog.processors.TimeStamper(fmt="iso", utc=False))
+    # TODO: do we need a way to disable colors?  (doesn't work with redirecting output)
+    processors.append(structlog.dev.ConsoleRenderer())
+
+    structlog.configure(
+        processors=processors,
+        wrapper_class=structlog.make_filtering_bound_logger(level),
+        context_class=dict,
+        logger_factory=structlog.PrintLoggerFactory(),
+        cache_logger_on_first_use=False,
+    )

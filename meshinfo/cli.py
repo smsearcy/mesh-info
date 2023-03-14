@@ -6,7 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from loguru import logger
+import structlog
 from pyramid.scripting import prepare
 
 from meshinfo import VERSION, backup, collector, models, purge, report, web
@@ -14,6 +14,8 @@ from meshinfo.aredn import VersionChecker
 from meshinfo.config import AppConfig, configure
 from meshinfo.historical import HistoricalStats
 from meshinfo.poller import Poller
+
+logger = structlog.get_logger()
 
 
 def main(argv: list | None = None):  # noqa: C901
@@ -72,7 +74,7 @@ def main(argv: list | None = None):  # noqa: C901
     try:
         session_factory = models.get_session_factory(models.get_engine(app_config.db))
     except Exception as exc:
-        logger.error(f"Failed to configure database connection: {exc!r}")
+        logger.exception("Failed to configure database connection", error=exc)
         sys.exit("Database configuration failed, review logs for details")
 
     historical_stats: HistoricalStats = request.find_service(HistoricalStats)

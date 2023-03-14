@@ -2,17 +2,16 @@
 from __future__ import annotations
 
 import asyncio
-import sys
+import logging
 import time
 from pathlib import Path
 
-from loguru import logger
-
 from .aredn import LinkInfo, SystemInfo, VersionChecker
+from .config import configure_logging
 from .poller import NetworkInfo, NodeResult, OlsrData, Poller, PollingError
 from .types import Band, LinkType
 
-VERBOSE_TO_LOGGING = {0: "SUCCESS", 1: "INFO", 2: "DEBUG", 3: "TRACE"}
+VERBOSE_TO_LOGGING = {0: "WARNING", 1: "INFO", 2: "DEBUG"}
 
 # Define terminal colors for output
 INFO = "\033[37m"  # white
@@ -45,7 +44,7 @@ def main(
     """Crawls network and prints information about the nodes and links.
 
     Detailed output is not printed until the crawler finishes.
-    Increase amount of logging output by increasing `verbose` from 1 to 3.
+    Increase amount of logging output by increasing `verbose` from 1 to 2.
 
     Does not use or require a database.
 
@@ -55,9 +54,8 @@ def main(
 
     output_path = output_path or Path(".")
 
-    log_level = VERBOSE_TO_LOGGING.get(verbose, "SUCCESS")
-    logger.remove()
-    logger.add(sys.stderr, level=log_level)
+    log_level = VERBOSE_TO_LOGGING.get(verbose, "WARNING")
+    configure_logging(getattr(logging, log_level))
 
     start_time = time.monotonic()
 
