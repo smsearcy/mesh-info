@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import asyncio
 import enum
-import json
 import re
 import time
 from asyncio import Lock, StreamReader, StreamWriter
@@ -23,6 +22,7 @@ from typing import Awaitable, NamedTuple
 import aiohttp
 import attrs
 from loguru import logger
+from orjson import JSONDecodeError, loads
 
 from .aredn import LinkInfo, SystemInfo, load_system_info
 from .types import LinkType
@@ -375,8 +375,8 @@ class Poller:
             )
 
         try:
-            json_data = json.loads(response_text)
-        except json.JSONDecodeError as exc:
+            json_data = loads(response_text)
+        except JSONDecodeError as exc:
             return await self._handle_response_error(
                 ip_address, PollingError.INVALID_RESPONSE, response_text, exc
             )
