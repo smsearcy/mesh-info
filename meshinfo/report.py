@@ -4,11 +4,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from collections.abc import Collection
 from pathlib import Path
 
 from .aredn import LinkInfo, SystemInfo, VersionChecker
 from .config import configure_logging
-from .poller import NetworkInfo, NodeResult, OlsrData, Poller, PollingError
+from .poller import NetworkInfo, NodeResult, Poller, PollingError, topology_from_olsr
 from .types import Band, LinkType
 
 VERBOSE_TO_LOGGING = {0: "WARNING", 1: "INFO", 2: "DEBUG"}
@@ -94,8 +95,8 @@ def main(
 
 async def network_info(node: str, poller: Poller) -> NetworkInfo:
     """Connect to the OLSR daemon on the local node and get the network information."""
-    olsr = await OlsrData.connect(node)
-    return await poller.get_network_info(olsr)
+    topology = await topology_from_olsr(node)
+    return await poller.get_network_info(topology)
 
 
 def pprint_node(node: SystemInfo, checker: VersionChecker):
@@ -201,7 +202,7 @@ def _colorize_load(value: float) -> str:
     return f"{color}{value}{END}"
 
 
-def handle_errors(errors: list[NodeResult], output: Path, *, save: bool):
+def handle_errors(errors: Collection[NodeResult], output: Path, *, save: bool):
     """Report on the nodes that had errors."""
 
     print(f"{BAD}Encountered errors with {len(errors):,d} nodes{END}")

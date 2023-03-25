@@ -1,7 +1,6 @@
 """Test network crawling functionality."""
 
-import sys
-from asyncio import StreamReader, StreamWriter
+from asyncio import StreamReader
 
 import pytest
 
@@ -17,58 +16,28 @@ def olsr_records(filename):
         yield b""
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 @pytest.mark.asyncio
 async def test_olsr_nodes(data_folder, mocker):
     reader = mocker.Mock(spec=StreamReader)
     reader.readline = mocker.AsyncMock(
         side_effect=olsr_records(data_folder / "olsr-dump.txt")
     )
-    writer = mocker.Mock(spec=StreamWriter)
-    olsr_data = poller.OlsrData(reader, writer)
-    nodes = [node async for node in olsr_data.nodes]
+    olsr_data = await poller._process_olsr_data(reader)
+    nodes = sorted(olsr_data.nodes)
 
     assert len(nodes) == 23
-    assert nodes[0] == "10.122.183.8"
-    assert len(set(nodes)) == len(nodes)
+    assert nodes[0] == "10.104.91.20"
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 @pytest.mark.asyncio
 async def test_olsr_links(data_folder, mocker):
     reader = mocker.Mock(spec=StreamReader)
     reader.readline = mocker.AsyncMock(
         side_effect=olsr_records(data_folder / "olsr-dump.txt")
     )
-    writer = mocker.Mock(spec=StreamWriter)
-    olsr_data = poller.OlsrData(reader, writer)
-    links = [link async for link in olsr_data.links]
-
+    olsr_data = await poller._process_olsr_data(reader)
+    assert len(olsr_data.links_by_source) == 23
+    expected = poller.TopoLink("10.22.15.88", "10.98.33.29", 2.986)
+    assert expected in olsr_data.links_by_source["10.22.15.88"]
+    links = list(olsr_data.links)
     assert len(links) == 96
-    assert links[0] == poller.OlsrLink("10.22.15.88", "10.98.33.29", 2.986)
-
-
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
-@pytest.mark.asyncio
-async def test_olsr_async_data(data_folder, mocker):
-    reader = mocker.Mock(spec=StreamReader)
-    reader.readline = mocker.AsyncMock(
-        side_effect=olsr_records(data_folder / "olsr-dump.txt")
-    )
-    writer = mocker.Mock(spec=StreamWriter)
-    olsr_data = poller.OlsrData(reader, writer)
-
-    nodes = []
-    for _ in range(10):
-        nodes.append(await olsr_data.nodes.__anext__())
-
-    links = [link async for link in olsr_data.links]
-    assert len(links) == 96
-
-    for _ in range(13):
-        nodes.append(await olsr_data.nodes.__anext__())
-
-    assert len(nodes) == 23
-
-    with pytest.raises(StopAsyncIteration):
-        await olsr_data.nodes.__anext__()
