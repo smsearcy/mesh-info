@@ -12,7 +12,6 @@ from typing import Any, Dict, List
 
 import attr
 from faker import Faker  # type: ignore
-from loguru import logger
 
 
 @attr.s
@@ -47,7 +46,7 @@ class ScrubJsonSample:
 
     def scrub_scalar(self, key: str, value: Any) -> Any:
         if not key:
-            logger.warning("Cannot scalar value without a key: {!r}", value)
+            print(f"Cannot scalar value without a key: {value!r}", file=sys.stderr)
             return value
 
         new_value = None

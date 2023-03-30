@@ -6,7 +6,6 @@ from typing import Iterator
 
 import attr
 import zope.sqlalchemy
-from loguru import logger
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, configure_mappers, sessionmaker
 
@@ -110,8 +109,6 @@ def includeme(config):
     dbengine = settings.get("dbengine")
     if not dbengine:
         dbengine = get_engine(settings["app_config"].db)
-
-    logger.info("Database: {!s}", dbengine)
 
     session_factory = get_session_factory(dbengine)
     config.registry["dbsession_factory"] = session_factory

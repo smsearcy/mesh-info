@@ -9,13 +9,15 @@ from itertools import zip_longest
 from typing import Any, Dict, List, Optional, Tuple
 
 import attr
-from loguru import logger
+import structlog
 
 from .types import Band, LinkType
 
 if typing.TYPE_CHECKING:
     from .config import AppConfig
 
+
+logger = structlog.get_logger()
 # these are defined as constants at the module level so they are only initialized once
 
 # TODO: calculate the channels similar to how AREDN does it for `rf_channel_map`?
@@ -239,7 +241,7 @@ class LinkInfo:
         try:
             link_type = getattr(LinkType, type_)
         except AttributeError as exc:
-            logger.warning(str(exc))
+            logger.warning("Unknown link type", error=str(exc))
             link_type = LinkType.UNKNOWN
 
         # ensure consistent node names
@@ -328,7 +330,7 @@ class SystemInfo:
                 continue
             return self.interfaces[iface]
         else:
-            logger.warning("{}: failed to identify wireless interface", self.node_name)
+            logger.warning("Unable to identify wireless interface")
             return None
 
     @property
@@ -361,7 +363,7 @@ class SystemInfo:
             return None
         match = re.match(r"^(\d+) days, (\d+):(\d+):(\d+)", self.up_time)
         if match is None:
-            logger.warning("Failed to parse uptime string: %s", self.up_time)
+            logger.warning("Failed to parse uptime string", value=self.up_time)
             return None
 
         days = int(match.group(1))
@@ -397,7 +399,7 @@ class SystemInfo:
         try:
             return tuple(int(value) for value in self.api_version.split("."))
         except ValueError:
-            logger.warning("Invalid version string: {}", self.api_version)
+            logger.warning("Invalid version string", value=self.api_version)
             return 0, 0
 
     def __str__(self):
@@ -537,9 +539,9 @@ def _version_delta(sample: Tuple[int, ...], standard: Tuple[int, ...]) -> int:
         delta = goal - current
         if delta < 0:
             logger.warning(
-                "Current version ({}) out of date?  Checked against {}",
-                ".".join(str(v) for v in standard),
-                ".".join(str(v) for v in sample),
+                "Current version out of date?",
+                current=".".join(str(v) for v in standard),
+                seen=".".join(str(v) for v in sample),
             )
         if delta == 0:
             continue

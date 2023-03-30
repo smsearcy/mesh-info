@@ -12,7 +12,9 @@ from tempfile import TemporaryDirectory
 from typing import Iterator
 
 import rrdtool
-from loguru import logger
+import structlog
+
+logger = structlog.get_logger()
 
 
 def export_data(
@@ -57,7 +59,6 @@ def _list_files(path: Path, destination: Path) -> Iterator[tuple[Path, Path]]:
     Creates the destination directory if it does not exist.
 
     """
-    logger.debug("Temp output: {}", destination)
     if not destination.exists():
         destination.mkdir(parents=True)
     for item in path.iterdir():
@@ -72,11 +73,11 @@ def _export_file(filename: Path, destination: Path) -> str:
     if filename.is_dir():
         raise RuntimeError("Directories should have been walked.")
     if filename.suffix == ".rrd":
-        logger.debug("Dumping {} for export", filename)
+        logger.debug("Dumping for export", filename=filename)
         rrdtool.dump(str(filename), str(destination / f"{filename.stem}.xml"))
         return "rrd"
     else:
-        logger.debug("Exporting {}", filename)
+        logger.debug("Copying for export", filename=filename)
         shutil.copy(filename, destination)
         return "copied"
 
@@ -103,7 +104,7 @@ def import_data(
             with tarfile.open(archive, "r:*") as f:
                 for item in f.getmembers():
                     if not re.match(r"\w", item.name):
-                        logger.warning("Invalid filename in archive: '{}'", item.name)
+                        logger.warning("Invalid filename in archive", name=item.name)
                         continue
                     count["extracted"] += 1
                     f.extract(item, temp_dir, set_attrs=False)
@@ -121,7 +122,7 @@ def import_data(
 def _import_file(filename: Path, destination: Path) -> str:
     """Imports a single file."""
     if filename.suffix == ".xml":
-        logger.debug("Converting {} for import", filename)
+        logger.debug("Converting RRD for import", filename=filename)
         subprocess.run(
             (
                 "rrdtool",
@@ -133,6 +134,6 @@ def _import_file(filename: Path, destination: Path) -> str:
         )
         return "rrd"
     else:
-        logger.debug("Importing {}", filename)
+        logger.debug("Copying for importing", filename=filename)
         shutil.copy(filename, destination)
         return "copied"

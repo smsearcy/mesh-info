@@ -7,7 +7,10 @@ import random
 import struct
 
 import attrs
-from loguru import logger
+import structlog
+from structlog.contextvars import bound_contextvars
+
+logger = structlog.get_logger()
 
 
 @attrs.define
@@ -43,11 +46,9 @@ class _DnsClientProtocol(asyncio.DatagramProtocol):
         self, transport: asyncio.DatagramTransport
     ):
         self.transport = transport
-        logger.trace("Sending: {}", self.message)
         self.transport.sendto(self.message)
 
     def datagram_received(self, data, addr):
-        logger.trace("Received: {}", data)
         self.received = self._parse_response(data)
         self.transport.close()
 
@@ -63,20 +64,17 @@ class _DnsClientProtocol(asyncio.DatagramProtocol):
         response_header = DnsHeader(
             *struct.unpack(">2sBBHHHH", response[: self.header_size])
         )
-        logger.trace("DNS response header: {}", response_header)
         response_code = response_header.flags2 & 0b1111
         if response_code == 3:
-            logger.warning("DNS name error for {}", self.ip_address)
+            logger.warning("DNS name error")
             return ""
         elif response_code > 0:
-            logger.warning(
-                "DNS response code for {}: {}", self.ip_address, response_code
-            )
+            logger.warning("DNS error", repsonse_code=response_code)
             return ""
 
         if len(self.message) == len(response):
             # this error should have been caught above
-            logger.warning("DNS response too short for {}", self.ip_address)
+            logger.warning("DNS response too short")
             return ""
 
         record = struct.unpack(
@@ -109,20 +107,21 @@ async def reverse_dns_lookup(
     cannot assume that the system running MeshInfo has DNS setup for that.
 
     """
-    loop = asyncio.get_running_loop()
-    on_con_lost = loop.create_future()
-    transport, protocol = await loop.create_datagram_endpoint(
-        lambda: _DnsClientProtocol(ip_address, on_con_lost),
-        remote_addr=(dns_server, 53),
-    )
+    with bound_contextvars(ip_address=ip_address):
+        loop = asyncio.get_running_loop()
+        on_con_lost = loop.create_future()
+        transport, protocol = await loop.create_datagram_endpoint(
+            lambda: _DnsClientProtocol(ip_address, on_con_lost),
+            remote_addr=(dns_server, 53),
+        )
 
-    try:
-        response = await on_con_lost
-    except Exception as exc:
-        logger.exception("Error querying DNS server: {!r}", exc)
-        return ""
-    finally:
-        transport.close()
+        try:
+            response = await on_con_lost
+        except Exception as exc:
+            logger.exception("Error querying DNS server", error=exc)
+            return ""
+        finally:
+            transport.close()
 
     if fqdn:
         return response

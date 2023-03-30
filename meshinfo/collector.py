@@ -9,8 +9,9 @@ from collections import defaultdict
 from operator import attrgetter
 
 import pendulum
-from loguru import logger
+import structlog
 from sqlalchemy.orm import Session
+from structlog.contextvars import bound_contextvars
 
 from . import models
 from .aredn import LinkInfo, SystemInfo
@@ -19,6 +20,8 @@ from .historical import HistoricalStats
 from .models import CollectorStat, Link, Node, NodeError
 from .poller import OlsrData, Poller
 from .types import LinkStatus, NodeStatus
+
+logger = structlog.get_logger()
 
 # TODO: align names so that this can just be a list
 MODEL_TO_SYSINFO_ATTRS = {
@@ -75,7 +78,15 @@ def main(
 
     if run_once:
         # collect once then quit
-        asyncio.run(collection())
+        try:
+            asyncio.run(collection())
+        except Exception as exc:
+            logger.exception("Error!", exc=exc)
+            return str(exc)
+        except KeyboardInterrupt as exc:
+            logger.exception("Aborted!", exc=exc)
+            return str(exc)
+
         return
 
     try:
@@ -88,8 +99,9 @@ def main(
         )
     except ServiceError as exc:
         return str(exc)
-    except KeyboardInterrupt:
-        pass
+    except KeyboardInterrupt as exc:
+        logger.exception("Aborted!", exc=exc)
+        return str(exc)
     return
 
 
@@ -110,7 +122,7 @@ async def service(collect, *, polling_period: int, max_retries: int = 5):
             await collect()
         except ConnectionError as exc:
             connection_failures += 1
-            logger.error(f"{exc!s} (tries: {connection_failures})")
+            logger.exception("Connection error", error=exc, tries=connection_failures)
             if connection_failures >= max_retries:
                 raise ServiceError(
                     f"{exc!s} {connection_failures} times in a row.  Aborting."
@@ -124,9 +136,7 @@ async def service(collect, *, polling_period: int, max_retries: int = 5):
         total_elapsed = time.monotonic() - start_time
 
         remaining_time = run_period_seconds - (total_elapsed % run_period_seconds)
-        logger.debug(
-            "Sleeping {:.2f}s until next querying network again", remaining_time
-        )
+        logger.debug("Sleeping until next period start", sleep_time=remaining_time)
         await asyncio.sleep(remaining_time)
 
     return
@@ -166,11 +176,7 @@ async def collector(
 
     poller_finished = time.monotonic()
     poller_elapsed = poller_finished - start_time
-    logger.info(
-        "Network polling took {:.2f}s ({:.2f}m)",
-        poller_elapsed,
-        poller_elapsed / 60,
-    )
+    logger.info("Network polling complete", seconds=poller_elapsed)
 
     summary: defaultdict[str, int] = defaultdict(int)
     with models.session_scope(session_factory) as dbsession:
@@ -189,22 +195,14 @@ async def collector(
         updates_finished = time.monotonic()
         updates_elapsed = updates_finished - poller_finished
 
-        logger.info(
-            "Database updates took {:.2f}s ({:.2f}m)",
-            updates_elapsed,
-            updates_elapsed / 60,
-        )
+        logger.info("Database updates complete", seconds=updates_elapsed)
 
         await save_historical_data(node_models, link_models, historical_stats)
 
         history_finished = time.monotonic()
         history_elapsed = history_finished - updates_finished
 
-        logger.info(
-            "Saving historical data took {:.2f}s ({:.2f}m)",
-            history_elapsed,
-            history_elapsed / 60,
-        )
+        logger.info("Saving historical data complete", seconds=history_elapsed)
 
         total_duration = time.monotonic() - start_time
 
@@ -232,7 +230,9 @@ async def collector(
         dbsession.add(stats)
 
     total_elapsed = time.monotonic() - start_time
-    logger.info("Total time: {:.2f}s ({:.2f}m)", total_elapsed, total_elapsed / 60)
+    logger.info(
+        "Network collection complete", seconds=total_elapsed, minutes=total_elapsed / 60
+    )
     historical_stats.update_network_stats(
         node_count=len(nodes),
         link_count=len(links),
@@ -275,9 +275,9 @@ def expire_data(
         .update({Link.status: LinkStatus.INACTIVE})
     )
     logger.info(
-        "Marked {:,d} links inactive that have not been seen since {}",
-        count["expired: links"],
-        inactive_cutoff,
+        "Marked inactive links",
+        count=count["expired: links"],
+        cutoff=inactive_cutoff,
     )
 
     inactive_cutoff = timestamp.subtract(days=nodes_expire)
@@ -290,9 +290,9 @@ def expire_data(
         .update({Node.status: NodeStatus.INACTIVE})
     )
     logger.info(
-        "Marked {:,d} nodes inactive that have not been seen since {}",
-        count["expired: nodes"],
-        inactive_cutoff,
+        "Marked inactive nodes",
+        count=count["expired: nodes"],
+        cutoff=inactive_cutoff,
     )
     return
 
@@ -315,27 +315,28 @@ def save_nodes(
         count["nodes: total"] += 1
         # check to see if node exists in database by name and WLAN MAC address
 
-        model = get_db_model(dbsession, node)
+        with bound_contextvars(node=node.node_name):
+            model = get_db_model(dbsession, node)
 
-        if model is None:
-            # create new database model
-            logger.debug("Saving {} to database", node)
-            count["nodes: added"] += 1
-            model = Node()
-            dbsession.add(model)
-        else:
-            # update database model
-            logger.debug("Updating {} in database with {}", model, node)
-            count["nodes: updated"] += 1
-        node_models.append(model)
+            if model is None:
+                # create new database model
+                count["nodes: added"] += 1
+                logger.debug("Added node to database")
+                model = Node()
+                dbsession.add(model)
+            else:
+                # update database model
+                count["nodes: updated"] += 1
+                logger.debug("Updated node in database", model=model)
+            node_models.append(model)
 
-        model.last_seen = pendulum.now()
-        model.status = NodeStatus.ACTIVE
+            model.last_seen = pendulum.now()
+            model.status = NodeStatus.ACTIVE
 
-        for model_attr, node_attr in MODEL_TO_SYSINFO_ATTRS.items():
-            setattr(model, model_attr, getattr(node, node_attr))
+            for model_attr, node_attr in MODEL_TO_SYSINFO_ATTRS.items():
+                setattr(model, model_attr, getattr(node, node_attr))
 
-    logger.success("Nodes written to database: {}", dict(count))
+    logger.info("Nodes saved to database", summary=dict(count))
     return node_models
 
 
@@ -378,7 +379,7 @@ def _get_most_recent(results: list[Node]) -> Node | None:
     results = sorted(results, key=attrgetter("last_seen"), reverse=True)
     for model in results[1:]:
         if model.status == NodeStatus.ACTIVE:
-            logger.debug("Marking older match inactive: {}", model)
+            logger.debug("Marking older match inactive", model=model)
             model.status = NodeStatus.INACTIVE
 
     return results[0]
@@ -416,9 +417,9 @@ def save_links(
         destination = active_nodes.get(link.destination)
         if source is None or destination is None:
             logger.warning(
-                "Failed to save link {} -> {}, node missing from database",
-                link.source,
-                link.destination,
+                "Failed to save link due to missing node",
+                source=link.source,
+                destination=link.destination,
             )
             count["links: errors"] += 1
             continue
@@ -480,7 +481,7 @@ def save_links(
                 destination.longitude,
             )
 
-    logger.success("Links written to database: {}", dict(count))
+    logger.info("Links written to database", summary=dict(count))
     return link_models
 
 
@@ -539,8 +540,19 @@ async def save_historical_data(
     # TODO: Use thread pool to run these asynchronously?
     # (assuming there is need/benefit)
 
+    count: defaultdict[str, int] = defaultdict(int)
     for node in nodes:
-        stats.update_node_stats(node)
+        with bound_contextvars(node=node):
+            if stats.update_node_stats(node):
+                count["Node RRD updates succeeded"] += 1
+            else:
+                count["Node RRD updates failed"] += 1
 
     for link in links:
-        stats.update_link_stats(link)
+        with bound_contextvars(link=link):
+            if stats.update_link_stats(link):
+                count["Link RRD updates succeeded"] += 1
+            else:
+                count["Link RRD updates failed"] += 1
+
+    logger.info("Historical updates completed", summary=dict(count))

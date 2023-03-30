@@ -22,10 +22,13 @@ from typing import Awaitable, NamedTuple
 
 import aiohttp
 import attrs
-from loguru import logger
+import structlog
+from structlog import contextvars
 
 from .aredn import LinkInfo, SystemInfo, load_system_info
 from .types import LinkType
+
+logger = structlog.get_logger()
 
 
 class OlsrData:
@@ -88,18 +91,19 @@ class OlsrData:
             timeout: Connection timeout in seconds
 
         """
-        logger.trace("Connecting to OLSR daemon {}:{}", host_name, port)
-        try:
-            reader, writer = await asyncio.wait_for(
-                asyncio.open_connection(host_name, port), timeout
-            )
-        except asyncio.TimeoutError:
-            logger.error("Timeout attempting to connect to {}:{}", host_name, port)
-            raise RuntimeError("Timeout connecting to OLSR daemon")
-        except OSError as e:
-            # Connection errors subclass `OSError`
-            logger.error("Failed to connect to {}:{} ({!s})", host_name, port, e)
-            raise RuntimeError("Failed to connect to OLSR daemon")
+        with contextvars.bound_contextvars(host=host_name, port=port):
+            logger.debug("Connecting to OLSR daemon", host=host_name, port=port)
+            try:
+                reader, writer = await asyncio.wait_for(
+                    asyncio.open_connection(host_name, port), timeout
+                )
+            except asyncio.TimeoutError:
+                logger.error("OLSR timeout")
+                raise RuntimeError("Timeout connecting to OLSR daemon")
+            except OSError as exc:
+                # Connection errors subclass `OSError`
+                logger.error("OLSR connection error", error=exc)
+                raise RuntimeError("Failed to connect to OLSR daemon")
 
         return cls(reader, writer)
 
@@ -116,23 +120,22 @@ class OlsrData:
             self.writer.close()
             await self.writer.wait_closed()
 
-            logger.info("OLSR Data Statistics: {}", dict(self.stats))
+            logger.info("Finished reading OLSR data", summary=dict(self.stats))
             if self.stats["nodes returned"] == 0:
                 logger.warning(
-                    "Failed to find any nodes in {:,d} lines of OLSR data.",
-                    self.stats["lines processed"],
+                    "Failed to find any nodes in OLSR data.",
+                    line_count=self.stats["lines processed"],
                 )
             if self.stats["links returned"] == 0:
                 logger.warning(
-                    "Failed to find any links in {:,d} lines of OLSR data.",
-                    self.stats["lines processed"],
+                    "Failed to find any links in OLSR data.",
+                    line_count=self.stats["lines processed"],
                 )
             return
 
         # TODO: filter until a useful line is present?
         self.stats["lines processed"] += 1
         line_str = line_bytes.decode("utf-8").rstrip()
-        logger.trace("OLSR data: {}", line_str)
 
         if node_address := self._get_address(line_str):
             self.nodes.queue.append(node_address)
@@ -227,7 +230,7 @@ class Poller:
         node_task = asyncio.create_task(self._poll_nodes(olsr_data.nodes))
         # while that's going, process OLSR links
         olsr_links = [link async for link in olsr_data.links]
-        logger.info("OLSR link count: {}", len(olsr_links))
+        logger.info("Loaded OLSR link data", count=len(olsr_links))
         # wait for the nodes to finish processing
         node_results: list[NodeResult] = await node_task
 
@@ -260,7 +263,7 @@ class Poller:
 
             sys_info = node.system_info
             if sys_info is None:
-                logger.error("Node does not have response or error: {}", node)
+                logger.error("Node does not have response or error", node=node)
                 continue
             nodes.append(sys_info)
             if len(sys_info.links) > 0:
@@ -284,14 +287,17 @@ class Poller:
                 node_olsr_links = olsr_links_by_ip[node.ip_address]
             except KeyError:
                 logger.warning(
-                    "Failed to find OLSR links for {} ({})", sys_info, node.ip_address
+                    "Failed to find OLSR link(s)",
+                    system_info=sys_info,
+                    ip_address=node.ip_address,
                 )
                 continue
             for link in node_olsr_links:
                 sys_info.link_count += 1
                 if link.destination not in ip_name_map:
                     logger.warning(
-                        "OLSR IP not found in node information, skipping: {}", link
+                        "OLSR IP not found in node information, skipping",
+                        link=link,
                     )
                     continue
                 links.append(
@@ -305,7 +311,7 @@ class Poller:
                     )
                 )
 
-        logger.info("Network Info Summary: {}", dict(count))
+        logger.info("Finished loading network data", summary=dict(count))
 
         return NetworkInfo(nodes, links, node_errors)
 
@@ -319,20 +325,26 @@ class Poller:
             timeout=self.timeout, connector=connector
         ) as session:
             async for address in addresses:
-                logger.debug("Creating task to poll {}", address)
-                task = asyncio.create_task(self._poll_node(address, session=session))
-                tasks.append(task)
+                with contextvars.bound_contextvars(ip=address):
+                    task = asyncio.create_task(
+                        self._poll_node(address, session=session)
+                    )
+                    # Since aiohttp is handling limits,
+                    # these all get created at the beginning,
+                    # not close to when they are actually processed.
+                    # logger.debug("Created polling task")
+                    tasks.append(task)
 
             # collect all the results in a single list, dropping any exceptions
             node_results = []
             for result in await asyncio.gather(*tasks, return_exceptions=True):
                 if isinstance(result, Exception):
-                    logger.error("Unexpected exception polling nodes: {!r}", result)
+                    logger.error("Unexpected exception polling nodes", error=result)
                     continue
                 node_results.append(result)
 
         crawler_finished = time.monotonic()
-        logger.info("Querying nodes took {:.2f} seconds", crawler_finished - start_time)
+        logger.info("Querying nodes finished", elapsed=crawler_finished - start_time)
         return node_results
 
     async def _poll_node(
@@ -352,14 +364,13 @@ class Poller:
 
         """
 
-        logger.debug("{} begin polling...", ip_address)
-
         params = {"services_local": 1, "link_info": 1}
 
         try:
             async with session.get(
                 f"http://{ip_address}:8080/cgi-bin/sysinfo.json", params=params
             ) as resp:
+                logger.debug("HTTP response received")
                 status = resp.status
                 response = await resp.read()
                 # copy and pasting Unicode seems to create an invalid description
@@ -388,7 +399,7 @@ class Poller:
                 ip_address, PollingError.PARSE_ERROR, response_text, exc
             )
 
-        logger.success("Finished polling {}", node_info)
+        logger.debug("Finished polling", name=node_info.node_name)
         return NodeResult(
             ip_address=ip_address,
             name=node_info.node_name,
@@ -402,17 +413,18 @@ class Poller:
             ip_address=ip_address,
             name=await self.lookup_name(ip_address),
         )
+        contextvars.bind_contextvars(node=result.name)
 
         # py3.10 - use match operator?
         if isinstance(exc, asyncio.TimeoutError):
             # catch this first, because some exceptions use multiple inheritance
-            logger.error("{}: {}", result.label, exc)
+            logger.warning("Connection timeout", exc=exc)
             result.error = NodeError(PollingError.TIMEOUT_ERROR, "Timeout error")
         elif isinstance(exc, aiohttp.ClientError):
-            logger.error("{}: {}", result.label, exc)
+            logger.warning("Connection error", exc=exc)
             result.error = NodeError(PollingError.CONNECTION_ERROR, str(exc))
         else:
-            logger.error("{}: Unknown error connecting: {!r}", result.label, exc)
+            logger.warning("Unknown error", exc=exc)
             result.error = NodeError(PollingError.CONNECTION_ERROR, str(exc))
 
         return result
@@ -424,20 +436,19 @@ class Poller:
         response: str,
         exc: Exception | None = None,
     ) -> NodeResult:
-        result = NodeResult(
-            ip_address=ip_address,
-            name=await self.lookup_name(ip_address),
-        )
+        node_name = await self.lookup_name(ip_address)
+        result = NodeResult(ip_address=ip_address, name=node_name)
+        contextvars.bind_contextvars(node=node_name)
 
         # py3.10 - use match operator?
         if error == PollingError.HTTP_ERROR:
-            logger.error("{}: HTTP error {}", result.label, response)
+            logger.warning("HTTP error", response=response)
             result.error = NodeError(PollingError.HTTP_ERROR, response)
         elif error == PollingError.INVALID_RESPONSE:
-            logger.error("{}: Invalid JSON response: {}", result.label, exc)
+            logger.warning("Invalid JSON response", exc=exc)
             result.error = NodeError(PollingError.INVALID_RESPONSE, response)
         elif error == PollingError.PARSE_ERROR:
-            logger.error("{}: Parsing node information failed: {}", result.label, exc)
+            logger.warning("Parsing node information failed", exc=exc)
             result.error = NodeError(PollingError.PARSE_ERROR, response)
 
         return result
@@ -446,7 +457,7 @@ class Poller:
 def _populate_cost_from_olsr(links: list[LinkInfo], olsr_links: list[OlsrLink]):
     """Populate the link cost from the OLSR data."""
     if len(olsr_links) == 0:
-        logger.warning("No OLSR link data found for {}", links[0].source)
+        logger.warning("No OLSR link data found", source=links[0].source)
         return
     cost_by_destination = {link.destination: link.cost for link in olsr_links}
     for link in links:
