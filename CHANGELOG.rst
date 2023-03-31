@@ -32,6 +32,7 @@ Added
 * Add iperf3 URL builder.  (`#72 <https://github.com/smsearcy/mesh-info/issues/72>`_)
 * Use different Leaflet layers for different types of nodes/links.
 * Links tab on the node popup on the map (`#70 <https://github.com/smsearcy/mesh-info/issues/70>`_).
+* Tabs on link popup for cost and quality graphs (`#109 <https://github.com/smsearcy/mesh-info/pull/109>`_)
 
 Changed
 ^^^^^^^
