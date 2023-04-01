@@ -6,6 +6,7 @@ import functools
 import math
 import time
 from collections import defaultdict
+from collections.abc import Iterable
 from operator import attrgetter
 
 import pendulum
@@ -18,7 +19,7 @@ from .aredn import LinkInfo, SystemInfo
 from .config import AppConfig
 from .historical import HistoricalStats
 from .models import CollectorStat, Link, Node, NodeError
-from .poller import OlsrData, Poller
+from .poller import Poller, topology_from_olsr
 from .types import LinkStatus, NodeStatus
 
 logger = structlog.get_logger()
@@ -166,13 +167,13 @@ async def collector(
     start_time = time.monotonic()
 
     try:
-        olsr_data = await OlsrData.connect(local_node)
+        topology = await topology_from_olsr(local_node)
     except RuntimeError:
         raise ConnectionError(
             f"Failed to connect to OLSR daemon on {local_node} for network data"
         )
 
-    nodes, links, errors = await poller.get_network_info(olsr_data)
+    nodes, links, errors = await poller.get_network_info(topology)
 
     poller_finished = time.monotonic()
     poller_elapsed = poller_finished - start_time
@@ -298,7 +299,7 @@ def expire_data(
 
 
 def save_nodes(
-    nodes: list[SystemInfo],
+    nodes: Iterable[SystemInfo],
     dbsession: Session,
     *,
     count: defaultdict[str, int] | None = None,
@@ -386,7 +387,7 @@ def _get_most_recent(results: list[Node]) -> Node | None:
 
 
 def save_links(
-    links: list[LinkInfo],
+    links: Iterable[LinkInfo],
     dbsession: Session,
     *,
     count: defaultdict[str, int] | None = None,
