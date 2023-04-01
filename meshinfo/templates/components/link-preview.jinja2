@@ -1,51 +1,80 @@
-<h6 class="title is-6 mb-2">
+<div class="title is-6 mb-2">
 <a href="{{ req.route_url("node-details", id=link.source_id, _anchor=link.id.dump()) }}">
   {{ link.source.name }} - {{ link.destination.name }}
 </a>
-</h6>
-<div class="columns">
-  <div class="column">
-    <div class="mb-2">
-      <div class="heading">Type</div>
-      <div>{{ link.type }}</div>
-    </div>
-    <div class="mb-2">
-      <div class="heading">Status</div>
-      <div>{{ link.status }}</div>
-    </div>
-    <div class="mb-2">
-      <div class="heading">Last Seen</div>
-      <div>{{ link.last_seen|local_tz }}</div>
-    </div>
+</div>
+<div x-data="{ selected: 'info' }">
+  <div class="tabs is-small mb-3">
+    <ul>
+      <li :class="{ 'is-active': selected === 'info' }">
+        <a @click="selected = 'info'">Info</a>
+      </li>
+      <li :class="{ 'is-active': selected === 'cost' }">
+        <a @click="selected = 'cost'">Cost Graph</a>
+      </li>
+      <li :class="{ 'is-active': selected === 'quality' }">
+        <a @click="selected = 'quality'">Quality Graph</a>
+      </li>
+    </ul>
   </div>
-  <div class="column">
-    <div class="mb-2">
-      <div class="heading">Distance</div>
-      <div>{{ link.distance }}km</div>
-    </div>
-    <div class="mb-2">
-      <div class="heading">Bearing</div>
-      <div>{{ link.bearing|unknown(1) }}</div>
-    </div>
-    <div class="mb-2">
-      <div class="heading">Cost</div>
-      <div>{{ link.olsr_cost|unknown }}</div>
-    </div>
-  </div>
-  <div class="column">
-    {% if link.type|lower == "radio" %}
-      <div class="mb-2">
-        <div class="heading"><abbr title="Signal/Noise Ratio">SNR</abbr></div>
-        <div>{{ link.signal_noise_ratio|unknown(1) }}</div>
+  <div id="link-info" x-show="selected === 'info'">
+    <div class="columns">
+      <div class="column">
+        <div class="mb-2">
+          <div class="heading">Type</div>
+          <div>{{ link.type }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Status</div>
+          <div>{{ link.status }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Last Seen</div>
+          <div>{{ link.last_seen|local_tz }}</div>
+        </div>
       </div>
-    {% endif %}
-    <div class="mb-2">
-      <div class="heading"><abbr title="Link Quality">LQ</abbr></div>
-      <div>{{ link.quality|unknown }}</div>
+      <div class="column">
+        <div class="mb-2">
+          <div class="heading">Distance</div>
+          <div>{{ link.distance }}km</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Bearing</div>
+          <div>{{ link.bearing|unknown(1) }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading">Cost</div>
+          <div>{{ link.olsr_cost|unknown }}</div>
+        </div>
+      </div>
+      <div class="column">
+        {% if link.type|lower == "radio" %}
+          <div class="mb-2">
+            <div class="heading"><abbr title="Signal/Noise Ratio">SNR</abbr></div>
+            <div>{{ link.signal_noise_ratio|unknown(1) }}</div>
+          </div>
+        {% endif %}
+        <div class="mb-2">
+          <div class="heading"><abbr title="Link Quality">LQ</abbr></div>
+          <div>{{ link.quality|unknown }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="heading"><abbr title="Neighbor Link Quality">NLQ</abbr></div>
+          <div>{{ link.neighbor_quality|unknown }}</div>
+        </div>
+      </div>
     </div>
-    <div class="mb-2">
-      <div class="heading"><abbr title="Neighbor Link Quality">NLQ</abbr></div>
-      <div>{{ link.neighbor_quality|unknown }}</div>
+  </div>
+  <div id="cost-graph" x-show="selected === 'cost'">
+    <div class="">
+      <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, type=link.type.name.lower(), name='cost', _query={'period': 'day'}) }}"
+           alt="cost graph (day)">
+    </div>
+  </div>
+  <div id="quality-graph" x-show="selected === 'quality'">
+    <div class="">
+      <img src="{{ req.route_path('link-graph', source=link.source_id, destination=link.destination_id, type=link.type.name.lower(), name='quality', _query={"period": 'day'}) }}"
+           alt="quality graph (day)">
     </div>
   </div>
 </div>
