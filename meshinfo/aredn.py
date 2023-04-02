@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import re
 import typing
+from functools import cached_property
 from itertools import zip_longest
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -265,7 +266,7 @@ class LinkInfo:
         )
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(auto_attribs=True)
 class SystemInfo:
     """Data class to represent the node data from 'sysinfo.json'.
 
@@ -310,6 +311,7 @@ class SystemInfo:
     load_averages: Optional[List[float]] = None
     links: List[LinkInfo] = attr.Factory(list)
     link_count: Optional[int] = None
+    connection_ip: str = ""
 
     @property
     def lan_ip_address(self) -> str:
@@ -320,10 +322,12 @@ class SystemInfo:
             return self.interfaces[iface].ip_address or ""
         return ""
 
-    @property
+    @cached_property
     def primary_interface(self) -> Optional[Interface]:
         """Get the active wireless interface."""
-        # is it worth using cached_property?
+        # FIXME: should this just be done once as part of parsing?
+        # (that might simplify the `ip_address` property as well,
+        # don't need `connection_ip` in this class)
         iface_names = ("wlan0", "wlan1", "eth0.3975", "eth1.3975", "br-nomesh")
         for iface in iface_names:
             if iface not in self.interfaces or not self.interfaces[iface].ip_address:
@@ -335,7 +339,7 @@ class SystemInfo:
 
     @property
     def ip_address(self) -> str:
-        return getattr(self.primary_interface, "ip_address", "")
+        return getattr(self.primary_interface, "ip_address", self.connection_ip)
 
     @property
     def mac_address(self) -> str:
@@ -408,7 +412,7 @@ class SystemInfo:
         return f"{self.node_name} ({self.ip_address})"
 
 
-def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
+def load_system_info(json_data: dict[str, Any], *, ip_address: str = "") -> SystemInfo:
     """Convert data from `sysinfo.json` into a dataclass.
 
     Any exceptions due to parsing errors are passed to the caller.
@@ -429,6 +433,7 @@ def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
     # create a dictionary with all the parameters due to the number
     # and variance between API versions
     data = {
+        "connection_ip": ip_address,
         "node_name": json_data["node"].lower(),
         "display_name": json_data["node"],
         "api_version": json_data["api_version"],

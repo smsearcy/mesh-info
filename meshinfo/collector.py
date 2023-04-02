@@ -354,7 +354,9 @@ def get_db_model(dbsession: Session, node: SystemInfo) -> Node | None:
 
     # Find active node with same hardware
     query = dbsession.query(Node).filter(
-        Node.mac_address == node.mac_address, Node.status == NodeStatus.ACTIVE
+        Node.mac_address == node.mac_address,
+        Node.status == NodeStatus.ACTIVE,
+        Node.mac_address != "",
     )
     model = _get_most_recent(query.all())
     if model:
