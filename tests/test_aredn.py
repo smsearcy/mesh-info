@@ -22,7 +22,7 @@ def test_parse_all_sysinfo_examples(filename):
     assert system_info is not None
 
     # Make sure we identified the wireless IP address
-    assert system_info.wlan_ip_address
+    assert system_info.ip_address
 
 
 def test_api_version_1_0(data_folder):
@@ -98,7 +98,7 @@ def test_api_version_1_6(data_folder):
     assert system_info.up_time_seconds == 22_042_803
     assert system_info.active_tunnel_count == 0
     assert len(system_info.services) == 1
-    assert system_info.wlan_ip_address == "10.159.123.176"
+    assert system_info.ip_address == "10.159.123.176"
     assert system_info.band == Band.TWO_GHZ
 
 
@@ -126,7 +126,7 @@ def test_api_version_1_7(data_folder):
     assert system_info.up_time == "3 days, 19:44:05"
     assert system_info.up_time_seconds == 330_245
     assert system_info.active_tunnel_count == 0
-    assert system_info.wlan_ip_address == "10.106.204.11"
+    assert system_info.ip_address == "10.106.204.11"
     assert system_info.band == Band.FIVE_GHZ
 
 
@@ -154,7 +154,7 @@ def test_api_version_1_9(data_folder):
     assert system_info.up_time == "7 days, 14:51:22"
     assert system_info.up_time_seconds == 658282
     assert system_info.active_tunnel_count == 0
-    assert system_info.wlan_ip_address == "10.10.115.143"
+    assert system_info.ip_address == "10.10.115.143"
     assert system_info.band == Band.TWO_GHZ
     assert len(system_info.links) == 1
 
@@ -193,7 +193,7 @@ def test_tunnel_only_1_6(data_folder):
     assert system_info.api_version == "1.6"
     assert len(system_info.load_averages) == 3
     assert system_info.active_tunnel_count == 11
-    assert system_info.wlan_ip_address == "10.154.255.82"
+    assert system_info.ip_address == "10.154.255.82"
     assert system_info.lan_ip_address == "10.215.250.145"
 
 
@@ -214,7 +214,7 @@ def test_with_tunnel_1_7(data_folder):
     assert system_info.api_version == "1.7"
     assert len(system_info.load_averages) == 3
     assert system_info.active_tunnel_count == 0
-    assert system_info.wlan_ip_address == "10.1.2.3"
+    assert system_info.ip_address == "10.1.2.3"
     assert system_info.lan_ip_address == "10.3.2.1"
 
 
@@ -235,10 +235,10 @@ def test_wlan_mac_address_standardization(data_folder):
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
-    wlan_interface = system_info.wlan_interface
-    assert wlan_interface.mac_address != system_info.wlan_mac_address
-    assert ":" not in system_info.wlan_mac_address
-    assert system_info.wlan_mac_address == system_info.wlan_mac_address.lower()
+    wlan_interface = system_info.primary_interface
+    assert wlan_interface.mac_address != system_info.mac_address
+    assert ":" not in system_info.mac_address
+    assert system_info.mac_address == system_info.mac_address.lower()
 
 
 def test_radio_link_info_parsing(data_folder):

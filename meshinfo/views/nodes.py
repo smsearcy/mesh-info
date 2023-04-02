@@ -32,7 +32,7 @@ class NodeListViews:
         csv_out.writerow(
             (
                 "Name",
-                "WLAN IP",
+                "IP Address",
                 "Status",
                 "Band",
                 "Channel",
@@ -48,7 +48,7 @@ class NodeListViews:
             csv_out.writerow(
                 (
                     node.name,
-                    node.wlan_ip,
+                    node.ip_address,
                     node.status,
                     node.band,
                     node.channel,

@@ -313,7 +313,7 @@ class Poller:
             )
 
         try:
-            node_info = load_system_info(json_data)
+            node_info = load_system_info(json_data, ip_address=ip_address)
         except Exception as exc:
             return await self._handle_response_error(
                 ip_address, PollingError.PARSE_ERROR, response_text, exc

@@ -30,7 +30,7 @@
           name: 'Name',
           formatter: (cell, row) => gridjs.html(`<a href='${row.cells[0].data}'>${cell}</a>`)
         },
-        'WLAN IP',
+        'IP Address',
         'Status',
         'SSID',
         'Band',
@@ -79,7 +79,7 @@
           [
             '{{ req.route_url("node-details", id=node.id) }}',
             '{{ node.display_name }}',
-            '{{ node.wlan_ip }}',
+            '{{ node.ip_address }}',
             '{{ node.status }}',
             '{{ node.ssid }}',
             '{{ node.band }}',
