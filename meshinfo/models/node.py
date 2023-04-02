@@ -26,12 +26,12 @@ class Node(Base):
     status = Column(Enum(NodeStatus, native_enum=False), nullable=False)
     display_name = Column(String(70), nullable=False)
 
-    # TODO: handle multiple IP addresses? (RF(s), DTD, tunnel)
-    wlan_ip = Column(String(15), nullable=False)
+    # store the wireless/primary IP address
+    ip_address = Column("wlan_ip", String(15), nullable=False)
     description = Column(Unicode(1024), nullable=False)
 
-    # store MAC addresses without colons
-    wlan_mac_address = Column(String(12), nullable=False)
+    # store the MAC address (without colons) corresponding the primary interface
+    mac_address = Column("wlan_mac_address", String(12), nullable=False)
 
     last_seen = Column(PDateTime(), nullable=False)
 
@@ -81,7 +81,7 @@ class Node(Base):
     links = relationship("Link", foreign_keys="Link.source_id", back_populates="source")
 
     # Is this premature optimization?
-    Index("idx_mac_name", wlan_mac_address, name)
+    Index("idx_mac_name", mac_address, name)
 
     @property
     def location(self) -> str:
@@ -96,4 +96,4 @@ class Node(Base):
         return f"<models.Node(id={self.id!r}, name={self.name!r})>"
 
     def __str__(self):
-        return f"{self.name} ({self.wlan_ip})"
+        return f"{self.name} ({self.ip_address})"

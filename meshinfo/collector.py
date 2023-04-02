@@ -28,9 +28,9 @@ logger = structlog.get_logger()
 MODEL_TO_SYSINFO_ATTRS = {
     "name": "node_name",
     "display_name": "display_name",
-    "wlan_ip": "wlan_ip_address",
+    "ip_address": "ip_address",
     "description": "description",
-    "wlan_mac_address": "wlan_mac_address",
+    "mac_address": "mac_address",
     "up_time": "up_time",
     "up_time_seconds": "up_time_seconds",
     "load_averages": "load_averages",
@@ -345,7 +345,7 @@ def get_db_model(dbsession: Session, node: SystemInfo) -> Node | None:
     """Get the best match database record for this node."""
     # Find the most recently seen node that matches both name and MAC address
     query = dbsession.query(Node).filter(
-        Node.wlan_mac_address == node.wlan_mac_address,
+        Node.mac_address == node.mac_address,
         Node.name == node.node_name,
     )
     model = _get_most_recent(query.all())
@@ -354,7 +354,7 @@ def get_db_model(dbsession: Session, node: SystemInfo) -> Node | None:
 
     # Find active node with same hardware
     query = dbsession.query(Node).filter(
-        Node.wlan_mac_address == node.wlan_mac_address, Node.status == NodeStatus.ACTIVE
+        Node.mac_address == node.mac_address, Node.status == NodeStatus.ACTIVE
     )
     model = _get_most_recent(query.all())
     if model:

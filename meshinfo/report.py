@@ -102,7 +102,7 @@ async def network_info(node: str, poller: Poller) -> NetworkInfo:
 def pprint_node(node: SystemInfo, checker: VersionChecker):
     """Pretty print information about an AREDN node."""
     print(f"Name: {INFO}{node.node_name}{END}")
-    print(f"WLAN IP: {INFO}{node.wlan_ip_address}{END}\tMAC: {node.wlan_mac_address}")
+    print(f"IP: {INFO}{node.ip_address}{END}\tMAC: {node.mac_address}")
     print(f"Model: {node.model}")
 
     firmware_color = VERSION_COLOR.get(checker.firmware(node.firmware_version), WARN)

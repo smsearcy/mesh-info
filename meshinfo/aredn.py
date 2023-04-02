@@ -321,10 +321,10 @@ class SystemInfo:
         return ""
 
     @property
-    def wlan_interface(self) -> Optional[Interface]:
+    def primary_interface(self) -> Optional[Interface]:
         """Get the active wireless interface."""
         # is it worth using cached_property?
-        iface_names = ("wlan0", "wlan1", "eth0.3975", "eth1.3975")
+        iface_names = ("wlan0", "wlan1", "eth0.3975", "eth1.3975", "br-nomesh")
         for iface in iface_names:
             if iface not in self.interfaces or not self.interfaces[iface].ip_address:
                 continue
@@ -334,12 +334,14 @@ class SystemInfo:
             return None
 
     @property
-    def wlan_ip_address(self) -> str:
-        return getattr(self.wlan_interface, "ip_address", "")
+    def ip_address(self) -> str:
+        return getattr(self.primary_interface, "ip_address", "")
 
     @property
-    def wlan_mac_address(self) -> str:
-        return getattr(self.wlan_interface, "mac_address", "").replace(":", "").lower()
+    def mac_address(self) -> str:
+        return (
+            getattr(self.primary_interface, "mac_address", "").replace(":", "").lower()
+        )
 
     @property
     def band(self) -> Band:
@@ -403,7 +405,7 @@ class SystemInfo:
             return 0, 0
 
     def __str__(self):
-        return f"{self.node_name} ({self.wlan_ip_address})"
+        return f"{self.node_name} ({self.ip_address})"
 
 
 def load_system_info(json_data: Dict[str, Any]) -> SystemInfo:
