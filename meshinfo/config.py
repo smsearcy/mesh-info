@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import enum
-import functools
 import logging
 import os
 from pathlib import Path
@@ -19,8 +18,6 @@ from pyramid.config import Configurator
 
 from .aredn import VersionChecker
 from .historical import HistoricalStats
-from .network import reverse_dns_lookup
-from .poller import Poller
 
 logger = structlog.get_logger()
 
@@ -60,6 +57,8 @@ class AppConfig:
 
     @environ.config
     class Collector:
+        workers: int = environ.var(default=50, converter=int)
+        timeout: int = environ.var(default=30, converter=int)
         node_inactive: int = environ.var(default=7, converter=int)
         link_inactive: int = environ.var(default=1, converter=int)
         period: int = environ.var(default=5, converter=int)
@@ -80,12 +79,6 @@ class AppConfig:
         tile_attribution: str = environ.var(default=_DEFAULT_TILE_ATTRIBUTION)
 
     @environ.config
-    class Poller:
-        max_connections: int = environ.var(default=50, converter=int)
-        connect_timeout: int = environ.var(default=10, converter=int)
-        read_timeout: int = environ.var(default=15, converter=int)
-
-    @environ.config
     class Web:
         bind: str = environ.var(default="0.0.0.0:8000")
         workers: int = environ.var(default=default_workers(), converter=int)
@@ -101,7 +94,6 @@ class AppConfig:
     collector: Collector = environ.group(Collector)
     db: DB = environ.group(DB)
     map: Map = environ.group(Map)
-    poller: Poller = environ.group(Poller)
     web: Web = environ.group(Web)
 
     def __attrs_post_init__(self):
@@ -208,20 +200,6 @@ def configure(
     config.add_request_method(lambda r: client_timezone(r), "timezone", reify=True)
 
     # Register services with `pyramid-services`
-
-    # Register the `Poller` singleton
-    # create reverse DNS lookup partial
-    lookup_node_name = functools.partial(
-        reverse_dns_lookup,
-        dns_server=app_config.local_node,
-    )
-    poller = Poller.create(
-        lookup_name=lookup_node_name,
-        max_connections=app_config.poller.max_connections,
-        connect_timeout=app_config.poller.connect_timeout,
-        read_timeout=app_config.poller.read_timeout,
-    )
-    config.register_service(poller, Poller)
 
     # Register the `VersionChecker` singleton
     version_checker = VersionChecker.from_config(app_config.aredn)

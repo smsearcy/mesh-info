@@ -39,7 +39,11 @@ Changed
 
 * **BREAKING CHANGE:** Dropped support for Python 3.7 and 3.8.
 * Update RF link colors and style of infinite links (`#73 <https://github.com/smsearcy/mesh-info/issues/73>`_).
-* Reduce logging output (`#107 <https://github.com/smsearcy/mesh-info/issues/107>`_).
+* **BREAKING CHANGE:** Logging levels ``TRACE`` and ``SUCCESS`` have been removed, ``WARNING`` is the new default (`#107 <https://github.com/smsearcy/mesh-info/issues/107>`_).
+* **BREAKING CHANGE:** Renamed configuration variables for count of network pollers and polling timeout. (`#113 <https://github.com/smsearcy/mesh-info/issues/113>`_).
+
+  * ``MESH_INFO_COLLECTOR_WORKERS`` replaces ``MESH_INFO_POLLER_MAX_CONNECTIONS``.
+  * ``MESH_INFO_COLLECTOR_TIMEOUT`` replaces ``MESH_INFO_POLLER_CONNECT_TIMEOUT`` and ``MESH_INFO_POLLER_READ_TIMEOUT`` with a single, total timeout.
 
 Fixed
 ^^^^^
