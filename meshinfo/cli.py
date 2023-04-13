@@ -13,7 +13,6 @@ from meshinfo import VERSION, backup, collector, models, purge, report, web
 from meshinfo.aredn import VersionChecker
 from meshinfo.config import AppConfig, configure
 from meshinfo.historical import HistoricalStats
-from meshinfo.poller import Poller
 
 logger = structlog.get_logger()
 
@@ -44,7 +43,6 @@ def main(argv: list | None = None):  # noqa: C901
     env = prepare(registry=config.registry)
     request = env["request"]
 
-    poller = request.find_service(Poller)
     version_checker: VersionChecker = request.find_service(VersionChecker)
 
     # Check the report command first since it doesn't require database or storage
@@ -55,11 +53,12 @@ def main(argv: list | None = None):  # noqa: C901
         sys.exit(
             report.main(
                 args.hostname,
-                poller,
                 version_checker,
-                verbose=args.verbose,
-                save_errors=args.save_errors,
                 output_path=args.path,
+                save_errors=args.save_errors,
+                timeout=args.timeout,
+                verbose=args.verbose,
+                workers=args.workers,
             )
         )
 
@@ -83,7 +82,6 @@ def main(argv: list | None = None):  # noqa: C901
             collector.main(
                 app_config.local_node,
                 session_factory,
-                poller,
                 historical_stats,
                 config=app_config.collector,
                 run_once=args.run_once,
@@ -129,7 +127,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--save-errors", action="store_true", help="save responses that cause error"
     )
     report_parser.add_argument(
-        "--path", type=Path, default=".", help="path to save files to"
+        "--path",
+        type=Path,
+        default=".",
+        help="path to save files to (defaults to current directory)",
+    )
+    report_parser.add_argument(
+        "--workers",
+        type=int,
+        default=50,
+        help="number of simultaneous worker tasks for network polling (defaults to 50)",
+    )
+    report_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=30,
+        help="timeout in seconds for polling nodes (defaults to 30)",
     )
 
     # Network Collector

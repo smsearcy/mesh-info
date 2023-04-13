@@ -19,7 +19,7 @@ from .aredn import LinkInfo, SystemInfo
 from .config import AppConfig
 from .historical import HistoricalStats
 from .models import CollectorStat, Link, Node, NodeError
-from .poller import Poller, topology_from_olsr
+from .poller import poll_network
 from .types import LinkStatus, NodeStatus
 
 logger = structlog.get_logger()
@@ -59,7 +59,6 @@ MODEL_TO_SYSINFO_ATTRS = {
 def main(
     local_node: str,
     dbsession_factory,
-    poller: Poller,
     historical_stats: HistoricalStats,
     *,
     config: AppConfig.Collector,
@@ -70,9 +69,10 @@ def main(
     collection = functools.partial(
         collector,
         local_node,
-        poller,
         dbsession_factory,
         historical_stats,
+        workers=config.workers,
+        timeout=config.timeout,
         nodes_expire=config.node_inactive,
         links_expire=config.link_inactive,
     )
@@ -145,10 +145,11 @@ async def service(collect, *, polling_period: int, max_retries: int = 5):
 
 async def collector(
     local_node: str,
-    poller: Poller,
     session_factory,
     historical_stats: HistoricalStats,
     *,
+    workers: int,
+    timeout: int,
     nodes_expire: int,
     links_expire: int,
 ):
@@ -167,13 +168,13 @@ async def collector(
     start_time = time.monotonic()
 
     try:
-        topology = await topology_from_olsr(local_node)
+        nodes, links, errors = await poll_network(
+            start_node=local_node, timeout=timeout, workers=workers
+        )
     except RuntimeError:
         raise ConnectionError(
             f"Failed to connect to OLSR daemon on {local_node} for network data"
         )
-
-    nodes, links, errors = await poller.get_network_info(topology)
 
     poller_finished = time.monotonic()
     poller_elapsed = poller_finished - start_time
@@ -216,16 +217,13 @@ async def collector(
             total_duration=total_duration,
             other_stats=dict(summary),
         )
-        for result in errors:
-            if not result.error:
-                # shouldn't happen, appeasing mypy
-                continue
+        for error in errors:
             stats.node_errors.append(
                 NodeError(
-                    ip_address=result.ip_address,
-                    dns_name=result.name,
-                    error_type=result.error.error,
-                    details=result.error.response,
+                    ip_address=error.ip_address,
+                    dns_name=error.name,
+                    error_type=error.error,
+                    details=error.response,
                 )
             )
         dbsession.add(stats)

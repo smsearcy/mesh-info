@@ -64,7 +64,7 @@ jobs:
       - name: Run flake8
         run: flake8 meshinfo tests
       - name: Run mypy
-        run: mypy meshinfo
+        run: mypy meshinfo tests
       - name: Run pytest
         run: pytest --cov=meshinfo
         env:

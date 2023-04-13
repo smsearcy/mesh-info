@@ -21,13 +21,13 @@ def test_config():
             "MESH_INFO_ENV": "development",
             "MESH_INFO_LOG_LEVEL": "DEBUG",
             "MESH_INFO_DB_URL": "foobar",
-            "MESH_INFO_POLLER_MAX_CONNECTIONS": "25",
+            "MESH_INFO_COLLECTOR_WORKERS": "25",
             "MESH_INFO_COLLECTOR_NODE_INACTIVE": "25",
         }
     )
 
+    assert app_config.collector.node_inactive == 25
+    assert app_config.collector.workers == 25
+    assert app_config.db.url == "foobar"
     assert app_config.env == Environment.DEV
     assert app_config.log_level == logging.DEBUG
-    assert app_config.db.url == "foobar"
-    assert app_config.poller.max_connections == 25
-    assert app_config.collector.node_inactive == 25

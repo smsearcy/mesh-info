@@ -7,7 +7,7 @@ lint:
 	flake8 meshinfo tests
 
 mypy:
-	mypy meshinfo
+	mypy meshinfo tests
 
 tests:
 	pytest --cov=meshinfo --cov-report html --cov-report term

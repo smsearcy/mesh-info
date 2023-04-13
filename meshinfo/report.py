@@ -9,7 +9,7 @@ from pathlib import Path
 
 from .aredn import LinkInfo, SystemInfo, VersionChecker
 from .config import configure_logging
-from .poller import NetworkInfo, NodeResult, Poller, PollingError, topology_from_olsr
+from .poller import NodeError, PollingError, poll_network
 from .types import Band, LinkType
 
 VERBOSE_TO_LOGGING = {0: "WARNING", 1: "INFO", 2: "DEBUG"}
@@ -35,12 +35,13 @@ VERSION_COLOR = {
 
 def main(
     local_node: str,
-    poller: Poller,
     version_checker: VersionChecker,
     *,
-    verbose: int = 0,
-    save_errors: bool = False,
     output_path: Path | None = None,
+    save_errors: bool = False,
+    timeout: int = 30,
+    verbose: int = 0,
+    workers: int = 50,
 ):
     """Crawls network and prints information about the nodes and links.
 
@@ -63,7 +64,12 @@ def main(
     async_debug = log_level == "DEBUG"
     try:
         nodes, links, errors = asyncio.run(
-            network_info(local_node, poller), debug=async_debug
+            poll_network(
+                start_node=local_node,
+                timeout=timeout,
+                workers=workers,
+            ),
+            debug=async_debug,
         )
     except RuntimeError as exc:
         return str(exc)
@@ -91,12 +97,6 @@ def main(
 
     total_time = time.monotonic() - start_time
     print(f"{NOTE}Network report took {total_time:.2f} seconds{END}")
-
-
-async def network_info(node: str, poller: Poller) -> NetworkInfo:
-    """Connect to the OLSR daemon on the local node and get the network information."""
-    topology = await topology_from_olsr(node)
-    return await poller.get_network_info(topology)
 
 
 def pprint_node(node: SystemInfo, checker: VersionChecker):
@@ -202,7 +202,7 @@ def _colorize_load(value: float) -> str:
     return f"{color}{value}{END}"
 
 
-def handle_errors(errors: Collection[NodeResult], output: Path, *, save: bool):
+def handle_errors(errors: Collection[NodeError], output: Path, *, save: bool):
     """Report on the nodes that had errors."""
 
     print(f"{BAD}Encountered errors with {len(errors):,d} nodes{END}")
@@ -210,20 +210,16 @@ def handle_errors(errors: Collection[NodeResult], output: Path, *, save: bool):
         print("Saving responses for nodes with errors")
     else:
         print("Use the --save-errors option to save responses from nodes with errors")
-    for result in errors:
-        if not result.error:
-            # this shouldn't happen, mainly here to appease mypy
-            continue
-        error = result.error.error
-        print(f"{WARN}{result.label}: {error!s}{END}")
+    for error in errors:
+        print(f"{WARN}{error.label}: {error!s}{END}")
         if save:
             if error == PollingError.PARSE_ERROR:
-                filename = f"sysinfo-{result.ip_address}-error.json"
+                filename = f"sysinfo-{error.ip_address}-error.json"
             elif error in (
                 PollingError.HTTP_ERROR,
                 PollingError.INVALID_RESPONSE,
             ):
-                filename = f"{result.ip_address}-response.txt"
+                filename = f"{error.ip_address}-response.txt"
             else:
-                filename = f"{result.ip_address}-error.txt"
-            open(output / filename, "w").write(result.error.response)
+                filename = f"{error.ip_address}-error.txt"
+            open(output / filename, "w").write(error.response)
