@@ -20,7 +20,7 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
-0.6.0 - Unreleased
+0.6.0 - 2023-04-13
 ------------------
 
 Added
