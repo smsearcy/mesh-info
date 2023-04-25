@@ -80,7 +80,7 @@ def main(argv: list | None = None):  # noqa: C901
     if args.command == "collector":
         sys.exit(
             collector.main(
-                app_config.local_node,
+                app_config.local_nodes,
                 session_factory,
                 historical_stats,
                 config=app_config.collector,

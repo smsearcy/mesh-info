@@ -11,7 +11,7 @@ def test_default_config():
 
     assert app_config.env == Environment.PROD
     assert app_config.log_level == logging.WARNING
-    assert app_config.local_node == "localnode.local.mesh"
+    assert app_config.local_nodes == ["localnode.local.mesh"]
 
 
 def test_config():

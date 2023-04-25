@@ -15,6 +15,7 @@ import platformdirs
 import structlog
 from dotenv import load_dotenv
 from pyramid.config import Configurator
+from pyramid.settings import aslist
 
 from .aredn import VersionChecker
 from .historical import HistoricalStats
@@ -85,7 +86,9 @@ class AppConfig:
         # debug_hosts
 
     env: Environment = environ.var(default="production", converter=Environment)
-    local_node: str = environ.var(default="localnode.local.mesh")
+    local_nodes: list[str] = environ.var(
+        default="localnode.local.mesh", converter=aslist
+    )
     log_level: int = environ.var(default="WARNING", converter=_get_log_level)
     site_name: str = environ.var(default="Mesh Info")
     data_dir: Path = environ.var(default="")

@@ -6,7 +6,8 @@ import functools
 import math
 import time
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Iterator
+from itertools import cycle
 from operator import attrgetter
 
 import pendulum
@@ -57,7 +58,7 @@ MODEL_TO_SYSINFO_ATTRS = {
 
 
 def main(
-    local_node: str,
+    local_nodes: list[str],
     dbsession_factory,
     historical_stats: HistoricalStats,
     *,
@@ -68,9 +69,8 @@ def main(
 
     collection = functools.partial(
         collector,
-        local_node,
-        dbsession_factory,
-        historical_stats,
+        session_factory=dbsession_factory,
+        historical_stats=historical_stats,
         workers=config.workers,
         timeout=config.timeout,
         nodes_expire=config.node_inactive,
@@ -80,7 +80,7 @@ def main(
     if run_once:
         # collect once then quit
         try:
-            asyncio.run(collection())
+            asyncio.run(collection(local_node=local_nodes[0]))
         except Exception as exc:
             logger.exception("Error!", exc=exc)
             return str(exc)
@@ -93,6 +93,7 @@ def main(
     try:
         asyncio.run(
             service(
+                cycle(local_nodes),
                 collection,
                 polling_period=config.period,
                 max_retries=config.max_retries,
@@ -112,16 +113,24 @@ class ServiceError(Exception):
     pass
 
 
-async def service(collect, *, polling_period: int, max_retries: int = 5):
+async def service(
+    local_nodes: Iterator[str],
+    collect: Callable,
+    *,
+    polling_period: int,
+    max_retries: int = 5,
+):
 
     run_period_seconds = polling_period * 60
     connection_failures = 0
+    local_node = next(local_nodes)
     while True:
         start_time = time.monotonic()
 
         try:
-            await collect()
+            await collect(local_node=local_node)
         except ConnectionError as exc:
+            local_node = next(local_nodes)
             connection_failures += 1
             logger.exception("Connection error", error=exc, tries=connection_failures)
             if connection_failures >= max_retries:
@@ -144,10 +153,10 @@ async def service(collect, *, polling_period: int, max_retries: int = 5):
 
 
 async def collector(
+    *,
     local_node: str,
     session_factory,
     historical_stats: HistoricalStats,
-    *,
     workers: int,
     timeout: int,
     nodes_expire: int,
@@ -157,8 +166,10 @@ async def collector(
 
     Args:
         local_node: Name of the local node to connect to
-        poller: Poller for getting information from the AREDN network
         session_factory: SQLAlchemy session factory
+        historical_stats: Object for interacting with historical data
+        workers: Count of asynchronous worker tasks
+        timeout: Total number of seconds when connecting to a node before timing out
         nodes_expire: Number of days before absent nodes are marked inactive
         links_expire: Number of days before absent links are marked inactive
 
