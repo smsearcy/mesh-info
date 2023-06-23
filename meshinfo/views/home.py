@@ -14,7 +14,6 @@ from ..types import LinkStatus, NodeStatus
 
 @view_config(route_name="home", renderer="pages/home.jinja2")
 def overview(request: Request):
-
     dbsession: Session = request.dbsession
 
     node_count = (

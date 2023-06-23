@@ -37,7 +37,7 @@ dependencies = [
   "structlog ~= 22.3",
   "sqlalchemy ~= 1.4",
   "transaction ~= 3.0",
-  "zope.sqlalchemy ~= 1.6",
+  "zope.sqlalchemy ~= 3.0",
 ]
 dynamic = ["version"]
 

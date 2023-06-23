@@ -22,7 +22,7 @@ migrate-db:
 	alembic upgrade head
 
 requirements:
-	pip-compile -o requirements.txt pyproject.toml
+	pip-compile --resolver backtracking -o requirements.txt pyproject.toml
 
 update-deps:
 	pre-commit autoupdate
