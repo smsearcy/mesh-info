@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pendulum
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.schema import MetaData
 from sqlalchemy.types import TIMESTAMP, TypeDecorator
 
