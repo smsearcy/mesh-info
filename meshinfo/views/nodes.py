@@ -3,6 +3,7 @@ import io
 from operator import attrgetter
 from typing import List
 
+import attrs
 from pyramid.request import Request, Response
 from pyramid.view import view_config, view_defaults
 from sqlalchemy.orm import Session
@@ -11,19 +12,44 @@ from ..models import Node
 from ..types import NodeStatus
 
 
+@attrs.define
+class Page:
+    number: int
+    url: str
+    classes: list[str] = attrs.Factory(list)
+
+
 @view_defaults(route_name="nodes")
 class NodeListViews:
     def __init__(self, request: Request):
-        dbsession: Session = request.dbsession
-
-        # TODO: parameters to determine which nodes to return
-        query = dbsession.query(Node).filter(Node.status != NodeStatus.INACTIVE)
-        self.nodes: List[Node] = sorted(query.all(), key=attrgetter("name"))
+        self.dbsession: Session = request.dbsession
         self.request = request
 
     @view_config(match_param="view=table", renderer="pages/nodes.jinja2")
     def table(self):
-        return {"nodes": self.nodes}
+        current_page = int(self.request.GET.get("page", 1))
+        per_page = int(self.request.GET.get("per_page", 25))
+
+        # TODO: add search/sort parameters
+
+        query = self.dbsession.query(Node).filter(Node.status != NodeStatus.INACTIVE)
+        nodes: List[Node] = sorted(query.all(), key=attrgetter("name"))
+
+        page_count = (len(nodes) // per_page) + 1
+        pages = []
+        for page_nbr in range(1, page_count + 1):
+            page = Page(
+                number=page_nbr,
+                url=self.request.route_url(
+                    "nodes", view="table", _query={"page": page_nbr}
+                ),
+            )
+            if page_nbr == current_page:
+                page.classes.append("is-current")
+            pages.append(page)
+
+        nodes = nodes[(current_page - 1) * per_page : current_page * per_page]
+        return {"nodes": nodes, "pages": pages}
 
     @view_config(match_param="view=csv")
     def csv(self) -> Response:
@@ -44,7 +70,8 @@ class NodeListViews:
                 "Last Seen",
             )
         )
-        for node in self.nodes:
+        query = self.dbsession.query(Node).filter(Node.status != NodeStatus.INACTIVE)
+        for node in sorted(query.all(), key=attrgetter("name")):
             csv_out.writerow(
                 (
                     node.name,
