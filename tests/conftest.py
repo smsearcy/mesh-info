@@ -43,7 +43,6 @@ def app_config():
 
 @pytest.fixture(params=("sqlite", "postgres"))
 def dbengine(request, tmp_path):
-
     if request.param == "sqlite":
         sqlite_file = tmp_path / "testing.sqlite"
         db_url = f"sqlite:///{sqlite_file!s}"

@@ -10,7 +10,6 @@ from ..types import NodeStatus
 
 @view_config(route_name="iperf-tool", renderer="pages/iperf.jinja2")
 def overview(request: Request):
-
     dbsession: Session = request.dbsession
 
     nodes = dbsession.query(Node).filter(Node.status != NodeStatus.INACTIVE).all()
