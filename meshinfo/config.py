@@ -166,7 +166,9 @@ def configure(
     # configure logging
     configure_logging(app_config.log_level)
 
-    logger.debug("Application configuration", **attrs.asdict(app_config))
+    logger.debug(
+        "Application configuration", **attrs.asdict(app_config)  # type: ignore
+    )
 
     # configure Pyramid application
     config = Configurator(settings=settings)

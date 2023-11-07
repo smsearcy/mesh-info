@@ -113,7 +113,6 @@ class ServiceError(Exception):
 
 
 async def service(collect, *, polling_period: int, max_retries: int = 5):
-
     run_period_seconds = polling_period * 60
     connection_failures = 0
     while True:
