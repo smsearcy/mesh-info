@@ -22,13 +22,6 @@ from .historical import HistoricalStats
 logger = structlog.get_logger()
 
 FOLDER_NAME = "mesh-info"
-_DEFAULT_TILE_URL = "//stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg"
-_DEFAULT_TILE_ATTRIBUTION = (
-    "Map tiles by <a href='http://stamen.com'>Stamen Design</a>, "
-    "under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. "
-    "Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, "
-    "under <a href='http://www.openstreetmap.org/copyright'>ODbL</a>."
-)
 
 
 class Environment(enum.Enum):
@@ -75,8 +68,8 @@ class AppConfig:
         longitude: float = environ.var(default=-1.58, converter=float)
         zoom: int = environ.var(default=3, converter=int)
         max_zoom: int = environ.var(default=18, converter=int)
-        tile_url: str = environ.var(default=_DEFAULT_TILE_URL)
-        tile_attribution: str = environ.var(default=_DEFAULT_TILE_ATTRIBUTION)
+        tile_url: str = environ.var(default="")
+        tile_attribution: str = environ.var(default="")
 
     @environ.config
     class Web:
