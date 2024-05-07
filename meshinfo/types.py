@@ -57,15 +57,18 @@ class LinkType(enum.IntEnum):
 
     """
 
-    DTD = 1
-    TUN = 2
-    RF = 3
-    UNKNOWN = 99
+    DTD = enum.auto()
+    WIREGUARD = enum.auto()
+    TUN = enum.auto()
+    RF = enum.auto()
+    UNKNOWN = enum.auto()
 
     def __str__(self):
         # using if...else since it's not a straight-forward `.title()`
         if self == LinkType.RF:
             return "Radio"
+        elif self == LinkType.WIREGUARD:
+            return "Wireguard"
         elif self == LinkType.TUN:
             return "Tunnel"
         elif self == LinkType.DTD:

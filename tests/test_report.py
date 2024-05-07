@@ -15,8 +15,8 @@ SAMPLE_NODES = [
         display_name="node1",
         api_version="1.7",
         grid_square="",
-        latitude=fake.latitude(),
-        longitude=fake.longitude(),
+        latitude=float(fake.latitude()),
+        longitude=float(fake.longitude()),
         interfaces={
             "wlan0": Interface("wlan0", fake.mac_address(), fake.ipv4_private()),
             "eth0": Interface("eth0", fake.mac_address(), fake.ipv4_private()),
@@ -42,8 +42,8 @@ SAMPLE_NODES = [
         display_name="node2",
         api_version="1.7",
         grid_square="",
-        latitude=fake.latitude(),
-        longitude=fake.longitude(),
+        latitude=float(fake.latitude()),
+        longitude=float(fake.longitude()),
         interfaces={
             "wlan0": Interface("wlan0", fake.mac_address(), fake.ipv4_private()),
             "eth0": Interface("eth0", fake.mac_address(), fake.ipv4_private()),
@@ -69,8 +69,8 @@ SAMPLE_NODES = [
         display_name="node3",
         api_version="1.5",
         grid_square="",
-        latitude=fake.latitude(),
-        longitude=fake.longitude(),
+        latitude=float(fake.latitude()),
+        longitude=float(fake.longitude()),
         interfaces={
             "wlan0": Interface("wlan0", fake.mac_address(), fake.ipv4_private()),
             "eth0": Interface("eth0", fake.mac_address(), fake.ipv4_private()),
@@ -96,8 +96,8 @@ SAMPLE_NODES = [
         display_name="node4",
         api_version="1.1",
         grid_square="",
-        latitude=fake.latitude(),
-        longitude=fake.longitude(),
+        latitude=float(fake.latitude()),
+        longitude=float(fake.longitude()),
         interfaces={
             "wlan0": Interface("wlan0", fake.mac_address(), fake.ipv4_private()),
             "eth0": Interface("eth0", fake.mac_address(), fake.ipv4_private()),

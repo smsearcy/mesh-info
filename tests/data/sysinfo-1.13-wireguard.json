@@ -1,0 +1,157 @@
+{
+  "meshrf": {
+    "status": "off"
+  },
+  "sysinfo": {
+    "uptime": "11 days, 9:10:24",
+    "loads": [
+      0.33,
+      0.32,
+      0.28
+    ]
+  },
+  "interfaces": [
+    {
+      "name": "wlan1",
+      "mac": "02:AB:43:5A:3A:D9"
+    },
+    {
+      "name": "wgs0",
+      "ip": "172.31.229.247"
+    },
+    {
+      "name": "wlan0",
+      "mac": "58:08:87:3E:C0:E9"
+    },
+    {
+      "mac": "3D:E7:1C:53:D6:21",
+      "name": "br-dtdlink",
+      "ip": "10.72.210.91"
+    },
+    {
+      "name": "br0.1",
+      "mac": "AF:09:36:FB:22:29"
+    },
+    {
+      "mac": "32:F0:D9:72:34:42",
+      "name": "br-nomesh",
+      "ip": "10.72.210.95"
+    },
+    {
+      "mac": "A3:84:D7:15:AA:F1",
+      "name": "br-wan",
+      "ip": "192.168.5.57"
+    },
+    {
+      "name": "br0.2",
+      "mac": "AF:09:36:FB:22:29"
+    },
+    {
+      "mac": "68:09:D5:03:31:88",
+      "name": "br-lan",
+      "ip": "10.141.37.241"
+    },
+    {
+      "name": "br0",
+      "mac": "AF:09:36:FB:22:29"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "br0.4",
+      "mac": "AF:09:36:FB:22:29"
+    },
+    {
+      "name": "eth0",
+      "mac": "AF:09:36:FB:22:29"
+    },
+    {
+      "name": "eth1",
+      "mac": "27:B5:AE:8C:9F:46"
+    }
+  ],
+  "node_details": {
+    "description": "MikroTik hAP ac lite.",
+    "model": "MikroTik RouterBOARD 952Ui-5ac2nD (hAP ac lite)",
+    "mesh_gateway": "0",
+    "board_id": "0x0000",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "3.24.4.0"
+  },
+  "lat": "8.211379",
+  "services_local": [
+    {
+      "protocol": "tcp",
+      "name": "ADS-B Flight Tracker",
+      "link": "http://N0CALL-adsb:8080/"
+    },
+    {
+      "protocol": "tcp",
+      "name": "City Weather with cam",
+      "link": "http://N0CALL-www:80/weewx/B/"
+    },
+    {
+      "protocol": "tcp",
+      "name": "NE City Cam",
+      "link": "http://N0CALL-www:80/weewx/B/ipcam.jpg"
+    }
+  ],
+  "lon": "153.515971",
+  "link_info": {
+    "10.177.113.154": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 1,
+      "vtime": 20000,
+      "linkCost": 0.099609,
+      "linkType": "DTD",
+      "hostname": "N0CALL-LHG5-ac-QTH",
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "neighborLinkQuality": 1,
+      "symmetryTime": 19348,
+      "seqnoValid": false,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "lossMultiplier": 65536,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 5348,
+      "validityTime": 39162,
+      "olsrInterface": "br-dtdlink",
+      "lastHelloTime": 0,
+      "asymmetryTime": 172221
+    },
+    "10.214.77.97": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 1,
+      "vtime": 20000,
+      "linkCost": 1,
+      "linkType": "WIREGUARD",
+      "hostname": "N0CALL-X86",
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "neighborLinkQuality": 1,
+      "symmetryTime": 18047,
+      "seqnoValid": false,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "lossMultiplier": 65536,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 4047,
+      "validityTime": 37667,
+      "olsrInterface": "wgs0",
+      "lastHelloTime": 0,
+      "asymmetryTime": 170920
+    }
+  },
+  "tunnels": {
+    "active_tunnel_count": "0"
+  },
+  "node": "N0CALL-hAP-QTH",
+  "api_version": "1.13"
+}
