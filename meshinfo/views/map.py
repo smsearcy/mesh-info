@@ -79,6 +79,7 @@ _NODE_BAND_LAYER_MAP = {layer.band: layer for layer in _NODE_LAYERS}
 _LINK_LAYERS = (
     LinkLayer("rfLinks", "Radio Links", LinkType.RF),
     LinkLayer("dtdLinks", "DTD Links", LinkType.DTD),
+    LinkLayer("wireguardLinks", "Wireguard Links", LinkType.WIREGUARD),
     LinkLayer("tunnelLinks", "Tunnel Links", LinkType.TUN),
     LinkLayer("unknownLinks", "Unknown Links", LinkType.UNKNOWN),
     LinkLayer("recentLinks", "Recent Links", LinkStatus.RECENT, active=False),
@@ -146,7 +147,7 @@ class GeoLink:
     def color(self) -> str:
         if self.type == LinkType.DTD:
             return "#3388ff"
-        if self.type == LinkType.TUN:
+        if self.type in {LinkType.TUN, LinkType.WIREGUARD}:
             return "#707070"
         if self.cost is None:
             # unknown link cost
@@ -326,9 +327,10 @@ def _dedupe_links(links: list[Link]) -> Iterator[Link]:
     # while it is unlikely that two nodes are connected by both types, this is safer
     seen_tunnels = set()
     seen_dtd = set()
+    seen_wireguard = set()
 
     for link in links:
-        if link.type not in {LinkType.DTD, LinkType.TUN}:
+        if link.type not in {LinkType.DTD, LinkType.TUN, LinkType.WIREGUARD}:
             yield link
             continue
         # reverse the nodes to see if the mirror version was returned
@@ -338,4 +340,7 @@ def _dedupe_links(links: list[Link]) -> Iterator[Link]:
             yield link
         elif link.type == LinkType.TUN and link_nodes not in seen_tunnels:
             seen_tunnels.add((link.source_id, link.destination_id))
+            yield link
+        elif link.type == LinkType.WIREGUARD and link_nodes not in seen_wireguard:
+            seen_wireguard.add((link.source_id, link.destination_id))
             yield link

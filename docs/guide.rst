@@ -66,7 +66,7 @@ Link Legend
 
 * Radio - Green to Red gradiant, based on link cost
 * DTD - Blue
-* Tunnel - Grey
+* Tunnel (Legacy & Wireguard) - Grey
 * Unknown Cost - Maroon
 * Infinite Cost (ETX >= 99.99) - Black
 
