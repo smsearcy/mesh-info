@@ -1,3 +1,4 @@
+#!/bin/env python
 """Scrub JSON system info for inclusion in test data."""
 
 from __future__ import annotations
