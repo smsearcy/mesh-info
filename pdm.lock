@@ -4,8 +4,8 @@
 [metadata]
 groups = ["default", "dev", "testing", "docs", "ruff", "mypy"]
 strategy = ["cross_platform", "inherit_metadata"]
-lock_version = "4.4.1"
-content_hash = "sha256:f4c52288407fc9947cf4ca54804c9115e09e5da7f94cf177544eca83f17a232a"
+lock_version = "4.4.2"
+content_hash = "sha256:324981210e91ae300258b863db247334dcaa39faed114bb9606674c9f3883eb6"
 
 [[package]]
 name = "aiohttp"

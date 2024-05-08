@@ -61,7 +61,6 @@ module = [
     "hupper.*",
     "pyramid.*",
     "rrdtool.*",
-    "sqlalchemy.*",
     "transaction.*",
     "zope.*",
 ]
