@@ -95,8 +95,8 @@ class GeoNode:
     id: int
     name: str
     band: Band
-    latitude: float
-    longitude: float
+    latitude: float | None
+    longitude: float | None
     layer: NodeLayer
 
     @classmethod
@@ -137,10 +137,10 @@ class GeoLink:
     type: LinkType
     status: LinkStatus
     cost: float
-    start_latitude: float
-    start_longitude: float
-    end_latitude: float
-    end_longitude: float
+    start_latitude: float | None
+    start_longitude: float | None
+    end_latitude: float | None
+    end_longitude: float | None
     layer: LinkLayer
 
     @property
