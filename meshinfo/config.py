@@ -55,7 +55,6 @@ class AppConfig:
         node_inactive: int = environ.var(default=7, converter=int)
         link_inactive: int = environ.var(default=1, converter=int)
         period: int = environ.var(default=5, converter=int)
-        max_retries: int = environ.var(default=5, converter=int)
 
     @environ.config
     class DB:

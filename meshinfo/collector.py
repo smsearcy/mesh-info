@@ -91,28 +91,14 @@ def main(
         return
 
     try:
-        asyncio.run(
-            service(
-                collection,
-                polling_period=config.period,
-                max_retries=config.max_retries,
-            )
-        )
-    except ServiceError as exc:
-        return str(exc)
+        asyncio.run(service(collection, polling_period=config.period))
     except KeyboardInterrupt as exc:
         logger.exception("Aborted!", exc=exc)
         return str(exc)
     return
 
 
-class ServiceError(Exception):
-    """Custom exception for known issues to report on the command line."""
-
-    pass
-
-
-async def service(collect, *, polling_period: int, max_retries: int = 5):
+async def service(collect, *, polling_period: int):
     run_period_seconds = polling_period * 60
     connection_failures = 0
     while True:
@@ -123,10 +109,6 @@ async def service(collect, *, polling_period: int, max_retries: int = 5):
         except ConnectionError as exc:
             connection_failures += 1
             logger.exception("Connection error", error=exc, tries=connection_failures)
-            if connection_failures >= max_retries:
-                raise ServiceError(
-                    f"{exc!s} {connection_failures} times in a row.  Aborting."
-                )
             await asyncio.sleep(run_period_seconds)
             continue
         else:
