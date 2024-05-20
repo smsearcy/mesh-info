@@ -5,10 +5,16 @@ from __future__ import annotations
 import asyncio
 import random
 import struct
+import sys
 
 import attrs
 import structlog
 from structlog.contextvars import bound_contextvars
+
+if sys.version_info >= (3, 11):
+    import asyncio as async_timeout
+else:
+    import async_timeout
 
 logger = structlog.get_logger()
 
@@ -108,15 +114,20 @@ async def reverse_dns_lookup(
 
     """
     with bound_contextvars(ip_address=ip_address):
+        logger.debug("Reverse DNS lookup", dns_server=dns_server)
         loop = asyncio.get_running_loop()
         on_con_lost = loop.create_future()
-        transport, protocol = await loop.create_datagram_endpoint(
+        transport, _protocol = await loop.create_datagram_endpoint(
             lambda: _DnsClientProtocol(ip_address, on_con_lost),
             remote_addr=(dns_server, 53),
         )
 
         try:
-            response = await on_con_lost
+            # There was weird issues with the poller hanging, so I addd a timeout here
+            # in case that was the issue.  I think a simultaneous upgrade to aiohttp
+            # might have fixed the issue, but I'm leaving this in for good measure.
+            async with async_timeout.timeout(5):
+                response = await on_con_lost
         except Exception as exc:
             logger.exception("Error querying DNS server", error=exc)
             return ""

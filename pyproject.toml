@@ -18,8 +18,9 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-  "aiohttp ~= 3.8",
+  "aiohttp ~= 3.9.5",
   "alembic ~= 1.8",
+  "async-timeout ; python_version < '3.11'",
   "attrs ~= 23.1",
   "environ-config ~= 23.2",
   "gunicorn ~= 22.0",
