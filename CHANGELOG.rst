@@ -26,7 +26,7 @@ so breaking changes are possible but will be highlighted here.
 Changed
 ^^^^^^^
 
-* Bump pinned version of Gunicorn due to vulnerability (`#121 <https://github.com/smsearcy/mesh-info/pull/121>`_)
+* Bump pinned versions of several packages due to security vulnerabilities.
 * Updated documentation and defaults for map tiles due to Stamen Tiles no longer being available (`#119 <https://github.com/smsearcy/mesh-info/pull/119>`_)
 
 Fixed
