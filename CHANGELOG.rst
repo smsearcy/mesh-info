@@ -20,9 +20,20 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
-0.7.0 - Unreleased
+0.7.0 - 2024-05-20
 ------------------
 
+Changed
+^^^^^^^
+
+* Bump pinned version of Gunicorn due to vulnerability (`#121 <https://github.com/smsearcy/mesh-info/pull/121>`_)
+* Updated documentation and defaults for map tiles due to Stamen Tiles no longer being available (`#119 <https://github.com/smsearcy/mesh-info/pull/119>`_)
+
+Fixed
+^^^^^
+
+* Fix issue with collector service hanging and not updating (`#124 <https://github.com/smsearcy/mesh-info/pull/124>`_)
+* Updates for new version of AREDN firmware (`#123 <https://github.com/smsearcy/mesh-info/pull/123>`_)
 
 0.6.0 - 2023-04-13
 ------------------
