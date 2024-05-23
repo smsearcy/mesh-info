@@ -8,23 +8,11 @@ import transaction
 import webtest
 from pyramid.scripting import prepare
 from pyramid.testing import DummyRequest, testConfig
-from pytest_postgresql import factories
 from sqlalchemy import create_engine
 
 from meshinfo import models
 from meshinfo.config import AppConfig, configure
 from meshinfo.models.meta import Base
-
-if os.environ.get("CI"):
-    postgresql_ci = factories.postgresql_noproc(
-        # needs to match service in .gitlab-ci.yml
-        host=os.environ.get("POSTGRES_HOST", "postgres"),
-        user=os.environ.get("POSTGRES_USER", "postgres"),
-        password=os.environ.get("POSTGRES_PASSWORD", ""),
-        dbname=os.environ.get("POSTGRES_DB", "postgres"),
-    )
-else:
-    postgresql_local = factories.postgresql("postgresql_proc")
 
 
 @pytest.fixture(scope="module")
@@ -41,25 +29,10 @@ def app_config():
     return AppConfig.from_environ(env)
 
 
-@pytest.fixture(params=("sqlite", "postgres"))
+@pytest.fixture
 def dbengine(request, tmp_path):
-    if request.param == "sqlite":
-        sqlite_file = tmp_path / "testing.sqlite"
-        db_url = f"sqlite:///{sqlite_file!s}"
-    elif request.param == "postgres":
-        if os.environ.get("CI"):
-            dbinfo = request.getfixturevalue("postgresql_ci")
-        else:
-            postgresql = request.getfixturevalue("postgresql_local")
-            dbinfo = postgresql.info
-        user = dbinfo.user
-        password = dbinfo.password
-        host = dbinfo.host
-        port = dbinfo.port
-        dbname = dbinfo.dbname
-        db_url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
-    else:
-        raise ValueError(f"Unknown param: {request.param!r}")
+    sqlite_file = tmp_path / "testing.sqlite"
+    db_url = f"sqlite:///{sqlite_file!s}"
 
     alembic_cfg = alembic.config.Config("alembic.ini")
     engine = create_engine(db_url)

@@ -1,8 +1,7 @@
 Installation
 ============
 
-Mesh Info requires Python 3.9+, RRDtool, and PostgreSQL libraries
-(although it defaults to using SQLite).
+Mesh Info requires Python 3.9+ and RRDtool libraries.
 The following instructions include installing those dependencies.
 
 Installation instructions for Raspberry Pi OS
@@ -20,7 +19,7 @@ and create ``/var/lib/mesh-info`` for storing the application data.
 .. code-block:: console
 
     sudo apt update
-    sudo apt install -y git libpq-dev librrd-dev python3 python3-dev python3-pip python3-venv rrdtool
+    sudo apt install -y git librrd-dev python3 python3-dev python3-pip python3-venv rrdtool
     sudo useradd meshinfo
     sudo mkdir /opt/mesh-info /var/lib/mesh-info
     sudo chown meshinfo: /opt/mesh-info /var/lib/mesh-info

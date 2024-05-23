@@ -20,6 +20,20 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
+0.8.0 - Unreleased
+------------------
+
+Changed
+^^^^^^^
+
+* Use updated RRDtool Python bindings package
+* Switched development tooling to use PDM and Ruff
+
+Removed
+^^^^^^^
+
+* **BREAKING CHANGE:** Removed support for PostgreSQL.
+
 0.7.0 - 2024-05-20
 ------------------
 

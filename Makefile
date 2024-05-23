@@ -1,39 +1,25 @@
-all: pre-commit lint mypy tests docs
+all: lint pre-commit mypy tests docs
 
 pre-commit:
-	pre-commit run --all-files
+	pdm run pre-commit run --all-files
 
 lint:
-	flake8 meshinfo tests
+	pdm run ruff check . --fix
+	pdm run ruff format .
 
 mypy:
-	mypy meshinfo tests
+	pdm run mypy meshinfo
 
 tests:
-	pytest --cov=meshinfo --cov-report html --cov-report term
+	pdm run pytest --cov=meshinfo --cov-report html --cov-report term
 
 docs:
-	sphinx-build -W --keep-going -b html docs docs/_build/html
+	pdm run sphinx-build -W --keep-going -b html docs docs/_build/html
 
 make-migration:
-	alembic revision --autogenerate
+	pdm run alembic revision --autogenerate
 
 migrate-db:
-	alembic upgrade head
+	pdm run alembic upgrade head
 
-requirements:
-	pip-compile -o requirements.txt pyproject.toml
-
-update-deps:
-	pre-commit autoupdate
-	pip install --upgrade pip-tools pip wheel
-	pip-compile --upgrade --resolver backtracking -o requirements.txt pyproject.toml
-
-init:
-	pip install --upgrade pip wheel
-	pip install --upgrade -r requirements.txt -e .[dev]
-	pip check
-
-update: update-deps init
-
-.PHONY: all docs pre-commit lint make-migration migrate-db mypy requirements tests update-deps init update
+.PHONY: all docs pre-commit lint make-migration migrate-db mypy tests

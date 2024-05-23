@@ -1,4 +1,5 @@
 """Functionality for exporting and importing application data."""
+
 from __future__ import annotations
 
 import re
@@ -6,10 +7,10 @@ import shutil
 import subprocess
 import tarfile
 from collections import Counter
+from collections.abc import Iterator
 from multiprocessing.pool import Pool
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Iterator
 
 import rrdtool
 import structlog

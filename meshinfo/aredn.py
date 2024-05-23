@@ -7,7 +7,7 @@ import re
 import typing
 from functools import cached_property
 from itertools import zip_longest
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import attr
 import structlog
@@ -173,10 +173,10 @@ class Interface:
 
     name: str
     mac_address: str
-    ip_address: Optional[str] = None
+    ip_address: str | None = None
 
     @classmethod
-    def from_json(cls, raw_data: Dict[str, str]) -> Interface:
+    def from_json(cls, raw_data: dict[str, str]) -> Interface:
         return cls(
             name=raw_data["name"],
             # some tunnel interfaces lack a MAC address
@@ -194,7 +194,7 @@ class Service:
     link: str
 
     @classmethod
-    def from_json(cls, raw_data: Dict[str, str]) -> Service:
+    def from_json(cls, raw_data: dict[str, str]) -> Service:
         return cls(
             name=raw_data["name"], protocol=raw_data["protocol"], link=raw_data["link"]
         )
@@ -213,17 +213,17 @@ class LinkInfo:
     destination_ip: str
     type: LinkType
     interface: str
-    quality: Optional[float] = None
-    neighbor_quality: Optional[float] = None
-    signal: Optional[int] = None
-    noise: Optional[int] = None
-    tx_rate: Optional[float] = None
-    rx_rate: Optional[float] = None
-    olsr_cost: Optional[float] = None
+    quality: float | None = None
+    neighbor_quality: float | None = None
+    signal: int | None = None
+    noise: int | None = None
+    tx_rate: float | None = None
+    rx_rate: float | None = None
+    olsr_cost: float | None = None
 
     @classmethod
     def from_json(
-        cls, raw_data: Dict[str, Any], *, source: str, ip_address: str
+        cls, raw_data: dict[str, Any], *, source: str, ip_address: str
     ) -> LinkInfo:
         """Construct the `Link` dataclass from the AREDN JSON information.
 
@@ -290,9 +290,9 @@ class SystemInfo:
     display_name: str
     api_version: str
     grid_square: str
-    latitude: Optional[float]
-    longitude: Optional[float]
-    interfaces: Dict[str, Interface]
+    latitude: float | None
+    longitude: float | None
+    interfaces: dict[str, Interface]
     ssid: str
     channel: str
     channel_bandwidth: str
@@ -301,16 +301,16 @@ class SystemInfo:
     firmware_version: str
     firmware_manufacturer: str
     active_tunnel_count: int
-    services: List[Service]
-    services_json: List[Dict]
+    services: list[Service]
+    services_json: list[dict]
     status: str
-    source_json: Dict
+    source_json: dict
     description: str = ""
     frequency: str = ""
     up_time: str = ""
-    load_averages: Optional[List[float]] = None
-    links: List[LinkInfo] = attr.Factory(list)
-    link_count: Optional[int] = None
+    load_averages: list[float] | None = None
+    links: list[LinkInfo] = attr.Factory(list)
+    link_count: int | None = None
     connection_ip: str = ""
 
     @property
@@ -323,7 +323,7 @@ class SystemInfo:
         return ""
 
     @cached_property
-    def primary_interface(self) -> Optional[Interface]:
+    def primary_interface(self) -> Interface | None:
         """Get the active wireless interface."""
         # FIXME: should this just be done once as part of parsing?
         # (that might simplify the `ip_address` property as well,
@@ -333,9 +333,8 @@ class SystemInfo:
             if iface not in self.interfaces or not self.interfaces[iface].ip_address:
                 continue
             return self.interfaces[iface]
-        else:
-            logger.warning("Unable to identify wireless interface")
-            return None
+        logger.warning("Unable to identify wireless interface")
+        return None
 
     @property
     def ip_address(self) -> str:
@@ -363,7 +362,7 @@ class SystemInfo:
             return Band.UNKNOWN
 
     @property
-    def up_time_seconds(self) -> Optional[int]:
+    def up_time_seconds(self) -> int | None:
         """Convert uptime string to seconds."""
         if self.up_time == "":
             return None
@@ -380,14 +379,14 @@ class SystemInfo:
         return 86_400 * days + 3_600 * hours + 60 * minutes + seconds
 
     @property
-    def radio_link_count(self) -> Optional[int]:
+    def radio_link_count(self) -> int | None:
         if not self.links:
             # the absence of the data presumably means an older API and thus unknown
             return None
         return sum(1 for link in self.links if link.type == LinkType.RF)
 
     @property
-    def dtd_link_count(self) -> Optional[int]:
+    def dtd_link_count(self) -> int | None:
         if not self.links:
             # the absence of the data presumably means an older API and thus unknown
             return None
@@ -401,7 +400,7 @@ class SystemInfo:
         return sum(1 for link in self.links if link.type == LinkType.TUN)
 
     @property
-    def api_version_tuple(self) -> Tuple[int, ...]:
+    def api_version_tuple(self) -> tuple[int, ...]:
         try:
             return tuple(int(value) for value in self.api_version.split("."))
         except ValueError:
@@ -509,8 +508,8 @@ class VersionChecker:
 
     """
 
-    _firmware: Tuple[int, ...]
-    _api: Tuple[int, ...]
+    _firmware: tuple[int, ...]
+    _api: tuple[int, ...]
 
     @classmethod
     def from_config(cls, config: AppConfig.Aredn) -> VersionChecker:
@@ -537,7 +536,7 @@ class VersionChecker:
         return _version_delta(current, self._api)
 
 
-def _version_delta(sample: Tuple[int, ...], standard: Tuple[int, ...]) -> int:
+def _version_delta(sample: tuple[int, ...], standard: tuple[int, ...]) -> int:
     """Weight the difference between two versions on a scale of 0 to 3."""
     length = max(len(standard), len(sample))
     for position, (current, goal) in enumerate(

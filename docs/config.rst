@@ -20,7 +20,6 @@ Example
    MESH_INFO_LOG_LEVEL=INFO
    MESH_INFO_MAP_TILE_URL="https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png"
    MESH_INFO_MAP_TILE_ATTRIBUTION='&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> <a href="https://stamen.com/" target="_blank">&copy; Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
-   MESH_INFO_DB_URL="postgresql+psycopg2://postgres:password@localhost:5432/postgres"
 
 
 Options
@@ -47,8 +46,7 @@ MESH_INFO_COLLECTOR_WORKERS
    Default is 50.
 
 MESH_INFO_DB_URL
-   Override the default SQLite database by pointing to a PostgreSQL server
-   (or changing the default location).
+   Change location of the SQLite database.
    Default is SQLite database ``mesh-info.db`` in the data directory.
 
 MESH_INFO_ENVIRONMENT

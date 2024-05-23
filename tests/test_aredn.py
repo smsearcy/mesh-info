@@ -16,7 +16,7 @@ from meshinfo.types import Band, LinkType
 )
 def test_parse_all_sysinfo_examples(filename):
     """Simply validate that all sample 'sysinfo.json' files parse without errors."""
-    with open(filename, "r") as f:
+    with open(filename) as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
     assert system_info is not None
@@ -28,7 +28,7 @@ def test_parse_all_sysinfo_examples(filename):
 def test_api_version_1_0(data_folder):
     """Test parsing API version 1.0"""
 
-    with open(data_folder / "sysinfo-1.0-sample.json", "r") as f:
+    with open(data_folder / "sysinfo-1.0-sample.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -49,7 +49,7 @@ def test_api_version_1_0(data_folder):
 def test_api_version_1_5(data_folder):
     """Test parsing API version 1.5"""
 
-    with open(data_folder / "sysinfo-1.5-sample.json", "r") as f:
+    with open(data_folder / "sysinfo-1.5-sample.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -75,7 +75,7 @@ def test_api_version_1_5(data_folder):
 def test_api_version_1_6(data_folder):
     """Test parsing API version 1.6"""
 
-    with open(data_folder / "sysinfo-1.6-services.json", "r") as f:
+    with open(data_folder / "sysinfo-1.6-services.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -105,7 +105,7 @@ def test_api_version_1_6(data_folder):
 def test_api_version_1_7(data_folder):
     """Test parsing API version 1.7"""
 
-    with open(data_folder / "sysinfo-1.7-link_info.json", "r") as f:
+    with open(data_folder / "sysinfo-1.7-link_info.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -133,7 +133,7 @@ def test_api_version_1_7(data_folder):
 def test_api_version_1_9(data_folder):
     """Test parsing API version 1.9"""
 
-    with open(data_folder / "sysinfo-1.9-basic.json", "r") as f:
+    with open(data_folder / "sysinfo-1.9-basic.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -179,7 +179,7 @@ def test_api_version_1_9(data_folder):
 def test_tunnel_only_1_6(data_folder):
     """Load information from a "tunnel" node, no WiFi and mulitple tunnels."""
 
-    with open(data_folder / "sysinfo-1.6-tunnel-only.json", "r") as f:
+    with open(data_folder / "sysinfo-1.6-tunnel-only.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -200,7 +200,7 @@ def test_tunnel_only_1_6(data_folder):
 def test_with_tunnel_1_7(data_folder):
     """Load information from a "tunnel" node"""
 
-    with open(data_folder / "sysinfo-1.7-tunnel-installed.json", "r") as f:
+    with open(data_folder / "sysinfo-1.7-tunnel-installed.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -221,7 +221,7 @@ def test_with_tunnel_1_7(data_folder):
 def test_lan_interface_eth0_0(data_folder):
     """Validate that eth0.0 is recognized as a LAN IP address."""
 
-    with open(data_folder / "sysinfo-1.5-no-location.json", "r") as f:
+    with open(data_folder / "sysinfo-1.5-no-location.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -231,7 +231,7 @@ def test_lan_interface_eth0_0(data_folder):
 def test_wlan_mac_address_standardization(data_folder):
     """Confirm that MAC addresses are being standardized."""
 
-    with open(data_folder / "sysinfo-1.7-link_info.json", "r") as f:
+    with open(data_folder / "sysinfo-1.7-link_info.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -244,7 +244,7 @@ def test_wlan_mac_address_standardization(data_folder):
 def test_radio_link_info_parsing(data_folder):
     """Confirm that radio link information is parsing correctly."""
 
-    with open(data_folder / "sysinfo-1.7-link_info2.json", "r") as f:
+    with open(data_folder / "sysinfo-1.7-link_info2.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -270,7 +270,7 @@ def test_radio_link_info_parsing(data_folder):
 def test_dtd_link_info_parsing(data_folder):
     """Confirm that DTD link information is parsing correctly."""
 
-    with open(data_folder / "sysinfo-1.7-link_info.json", "r") as f:
+    with open(data_folder / "sysinfo-1.7-link_info.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -292,7 +292,7 @@ def test_dtd_link_info_parsing(data_folder):
 def test_dtd_link_info_no_type(data_folder):
     """Confirm that DTD link information is parsing correctly."""
 
-    with open(data_folder / "sysinfo-1.7-dtdlink-info.json", "r") as f:
+    with open(data_folder / "sysinfo-1.7-dtdlink-info.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -313,7 +313,7 @@ def test_dtd_link_info_no_type(data_folder):
 
 def test_link_name_with_leading_period(data_folder):
     """Confirm that fix for extra period in names is working."""
-    with open(data_folder / "sysinfo-1.7-invalid-link-name.json", "r") as f:
+    with open(data_folder / "sysinfo-1.7-invalid-link-name.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
@@ -322,7 +322,7 @@ def test_link_name_with_leading_period(data_folder):
 
 def test_empty_link_info(data_folder):
     """Empty `link_info` data returns empty list instead of empty dictionary."""
-    with open(data_folder / "sysinfo-1.11-no-links.json", "r") as f:
+    with open(data_folder / "sysinfo-1.11-no-links.json") as f:
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 

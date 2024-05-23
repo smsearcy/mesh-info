@@ -10,9 +10,7 @@ from meshinfo import poller
 def olsr_records(filename):
     """Simulate OLSR data from a file."""
     with open(filename, "rb") as f:
-        for line in f:
-            yield line
-
+        yield from f
         yield b""
 
 

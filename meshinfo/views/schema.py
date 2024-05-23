@@ -14,8 +14,8 @@ def graph_params(params: dict) -> GraphParams:
 
     try:
         period = getattr(Period, params["period"].upper())
-    except KeyError:
-        raise HTTPBadRequest("Invalid period for graph")
+    except KeyError as err:
+        raise HTTPBadRequest("Invalid period for graph") from err
     title = f"past {params['period'].lower()}"
 
     return GraphParams(

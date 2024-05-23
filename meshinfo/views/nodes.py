@@ -1,7 +1,6 @@
 import csv
 import io
 from operator import attrgetter
-from typing import List
 
 from pyramid.request import Request, Response
 from pyramid.view import view_config, view_defaults
@@ -18,7 +17,7 @@ class NodeListViews:
 
         # TODO: parameters to determine which nodes to return
         query = dbsession.query(Node).filter(Node.status != NodeStatus.INACTIVE)
-        self.nodes: List[Node] = sorted(query.all(), key=attrgetter("name"))
+        self.nodes: list[Node] = sorted(query.all(), key=attrgetter("name"))
         self.request = request
 
     @view_config(match_param="view=table", renderer="pages/nodes.jinja2")

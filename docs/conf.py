@@ -20,11 +20,11 @@ import meshinfo
 # -- Project information -----------------------------------------------------
 
 project = "Mesh Info"
-copyright = "2022, Scott Searcy"
+copyright = "Scott Searcy"  # noqa: A001
 author = "Scott Searcy"
 
 # The full version, including alpha/beta/rc tags
-release = meshinfo.VERSION
+release = meshinfo.__version__
 
 
 # -- General configuration ---------------------------------------------------

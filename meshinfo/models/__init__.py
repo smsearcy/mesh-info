@@ -1,8 +1,9 @@
 """Configuration of SQLAlchemy database, copied from Pyramid Cookiecutter."""
+
 from __future__ import annotations
 
 import contextlib
-from typing import Iterator
+from collections.abc import Iterator
 
 import attr
 import zope.sqlalchemy
@@ -75,7 +76,7 @@ def get_tm_session(session_factory, transaction_manager, request=None):
     "info" dict.  The "info" dict is the official namespace for developers to
     stash session-specific information.  For more information, please see the
     SQLAlchemy docs:
-    https://docs.sqlalchemy.org/en/stable/orm/session_api.html#sqlalchemy.orm.session.Session.params.info  # noqa
+    https://docs.sqlalchemy.org/en/stable/orm/session_api.html#sqlalchemy.orm.session.Session.params.info
 
     By placing the active ``request`` in the "info" dict, developers will be
     able to access the active Pyramid request from an instance of an SQLAlchemy

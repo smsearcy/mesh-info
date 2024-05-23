@@ -59,7 +59,7 @@ class _DnsClientProtocol(asyncio.DatagramProtocol):
         self.transport.close()
 
     def error_received(self, exc):
-        logger.warning("Error received: {!r}", exc)
+        logger.warning("Error received", error=exc)
 
     def connection_lost(self, exc):
         self.on_con_lost.set_result(self.received)
