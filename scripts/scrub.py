@@ -9,7 +9,7 @@ import random
 import re
 import string
 import sys
-from typing import Any, Dict, List
+from typing import Any
 
 import attr
 from faker import Faker  # type: ignore
@@ -24,10 +24,10 @@ class ScrubJsonSample:
 
     """
 
-    mapped_values: Dict = attr.ib(factory=dict, init=False)
+    mapped_values: dict = attr.ib(factory=dict, init=False)
     fake: Faker = attr.ib(factory=Faker, init=False)
 
-    def scrub_dict(self, values: Dict[str, Any]) -> Dict:
+    def scrub_dict(self, values: dict[str, Any]) -> dict:
         scrubbed_dict = {
             key: self.scrub_unknown(key, value) for key, value in values.items()
         }
@@ -41,7 +41,7 @@ class ScrubJsonSample:
         else:
             return self.scrub_scalar(key, value)
 
-    def scrub_list(self, key: str, values: List) -> List:
+    def scrub_list(self, key: str, values: list) -> list:
         scrubbed_list = [self.scrub_unknown(key, value) for value in values]
         return scrubbed_list
 

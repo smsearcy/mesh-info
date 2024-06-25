@@ -1,4 +1,5 @@
 """Repeatedly collects data about the network and stores it to the database."""
+
 from __future__ import annotations
 
 import asyncio
@@ -155,7 +156,7 @@ async def collector(
     except RuntimeError:
         raise ConnectionError(
             f"Failed to connect to OLSR daemon on {local_node} for network data"
-        )
+        ) from None
 
     poller_finished = time.monotonic()
     poller_elapsed = poller_finished - start_time

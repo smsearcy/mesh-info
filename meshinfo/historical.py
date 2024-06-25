@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import enum
+from collections.abc import Iterable
 from itertools import cycle
 from pathlib import Path
-from typing import Any, Iterable, List, Optional
+from typing import Any
 
 import attr
 import pendulum
@@ -56,9 +57,9 @@ class Period(enum.Enum):
 
 @attr.s(auto_attribs=True, slots=True)
 class GraphParams:
-    period: Optional[Period] = None
-    start: Optional[pendulum.DateTime] = None
-    end: Optional[pendulum.DateTime] = None
+    period: Period | None = None
+    start: pendulum.DateTime | None = None
+    end: pendulum.DateTime | None = None
     title: str = ""
 
     def as_dict(self):
@@ -551,12 +552,12 @@ class Graph:
     end: str = ""
     title: str = ""
     vertical_label: str = ""
-    lower_bound: Optional[float] = None
-    options: List[str] = attr.Factory(list)
-    data_definitions: List[str] = attr.Factory(list)
-    data_calculations: List[str] = attr.Factory(list)
-    variable_definitions: List[str] = attr.Factory(list)
-    elements: List[str] = attr.Factory(list)
+    lower_bound: float | None = None
+    options: list[str] = attr.Factory(list)
+    data_definitions: list[str] = attr.Factory(list)
+    data_calculations: list[str] = attr.Factory(list)
+    variable_definitions: list[str] = attr.Factory(list)
+    elements: list[str] = attr.Factory(list)
 
     _common_stats = {
         "lst": "LAST",
@@ -572,7 +573,7 @@ class Graph:
         color: str,
         style: str,
         definition: str = "",
-        definitions: Optional[Iterable[str]] = None,
+        definitions: Iterable[str] | None = None,
         calculation: str = "",
         legend: str = "",
         fmt: str = "%10.2lf",

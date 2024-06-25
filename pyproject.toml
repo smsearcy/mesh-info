@@ -1,44 +1,43 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [project]
 name = "mesh-info"
 description = "Collect and display information about an AREDN mesh network."
 readme = "README.rst"
-authors = [{name = "Scott Seary", email = "ki7onk@outlook.com"}]
+authors = [{ name = "Scott Seary", email = "ki7onk@outlook.com" }]
 requires-python = ">=3.9"
-license = {text = "GNU General Public License v3 (GPLv3)"}
+license = { text = "GNU General Public License v3 (GPLv3)" }
 keywords = ["aredn", "mesh"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-  "aiohttp ~= 3.9.5",
-  "alembic ~= 1.8",
-  "async-timeout ; python_version < '3.11'",
-  "attrs ~= 23.1",
-  "environ-config ~= 23.2",
-  "gunicorn ~= 22.0",
-  "pendulum ~= 2.1",
-  "platformdirs ~= 2.0",
-  "psycopg2 ~= 2.9",
-  "pyramid ~= 2.0",
-  "pyramid-jinja2 ~= 2.10",
-  "pyramid-retry ~= 2.1",
-  "pyramid-services ~= 2.2",
-  "pyramid-tm ~= 2.5",
-  "python-dotenv ~= 0.20",
-  "rich ~= 13.3",
-  "rrdtool",
-  "structlog ~= 23.2",
-  "sqlalchemy ~= 1.4",
-  "transaction ~= 3.0",
-  "zope.sqlalchemy ~= 1.6",
+    "aiohttp ~= 3.9.5",
+    "alembic ~= 1.8",
+    "async-timeout ; python_version < '3.11'",
+    "attrs ~= 23.1",
+    "environ-config ~= 23.2",
+    "gunicorn ~= 22.0",
+    "pendulum ~= 2.1",
+    "platformdirs ~= 2.0",
+    "pyramid ~= 2.0",
+    "pyramid-jinja2 ~= 2.10",
+    "pyramid-retry ~= 2.1",
+    "pyramid-services ~= 2.2",
+    "pyramid-tm ~= 2.5",
+    "python-dotenv ~= 0.20",
+    "rich ~= 13.3",
+    "structlog ~= 23.2",
+    "sqlalchemy ~= 1.4",
+    "transaction ~= 3.0",
+    "zope.sqlalchemy ~= 1.6",
+    "rrdtool-bindings>=0.2.0",
 ]
 dynamic = ["version"]
 
@@ -46,38 +45,86 @@ dynamic = ["version"]
 Homepage = "https://github.com/smsearcy/mesh-info"
 Documentation = "https://mesh-info-ki7onk.readthedocs.io/"
 
-[project.optional-dependencies]
-docs = [
-  "sphinx",
-  "sphinx-rtd-theme",
-]
-tests = [
-  "Faker",
-  "WebTest",
-  "flake8-bugbear",
-  "flake8",
-  "mypy ~= 1.5.1",
-  "pytest-asyncio",
-  "pytest-cov",
-  "pytest-mock",
-  "pytest-postgresql < 4.0",
-  "pytest",
-]
-dev = [
-  "mesh-info[docs,tests]",
-  "pip-tools",
-  "pyramid-debugtoolbar",
-]
-
 [project.scripts]
 meshinfo = "meshinfo.cli:main"
 
-[tool.isort]
-profile = "black"
-known_third_party = "alembic"
 
-[tool.setuptools]
-packages = ["meshinfo"]
+[tool.mypy]
+# postponing enabling this for another day
+# disallow_untyped_defs = true
+warn_unused_configs = true
 
-[tool.setuptools.dynamic]
-version = {attr = "meshinfo.VERSION"}
+[[tool.mypy.overrides]]
+ignore_missing_imports = true
+module = [
+    "appdirs.*",
+    "hupper.*",
+    "pyramid.*",
+    "rrdtool.*",
+    "sqlalchemy.*",
+    "transaction.*",
+    "zope.*",
+]
+
+[tool.pdm.version]
+source = "file"
+path = "meshinfo/__init__.py"
+
+[tool.pdm.dev-dependencies]
+testing = [
+    "Faker>=25.3.0",
+    "WebTest>=3.0.0",
+    "pytest-asyncio>=0.23.7",
+    "pytest-cov>=5.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest>=8.2.1",
+]
+dev = [
+    "pyramid-debugtoolbar>=4.12.1",
+    "pre-commit>=3.7.1",
+]
+docs = [
+    "sphinx>=7.3.7",
+    "sphinx-rtd-theme>=2.0.0",
+]
+ruff = [
+    "ruff>=0.4.6",
+]
+mypy = [
+    "mypy>=1.10.0",
+]
+
+
+[tool.ruff]
+target-version = "py39"
+
+[tool.ruff.format]
+exclude = ["alembic/versions/*.py"]
+
+[tool.ruff.lint]
+select = [
+    "A", # flake8-builtins
+    "B", # flake8-bugbear"
+    "C4", # flake8-comprehensions
+    "C90", # mccabe
+    "E", "W", # pycodestyle
+    "F", # pyflakes
+    "I", # isort
+    "N", # pep8-naming
+    "PLC", "PLE", "PLW", # pylint
+    "UP", # pyupgrade
+    "YTT", # flake8-2020
+    # Saving these for another day
+    # "D",  # pydocstyle
+    # "RET",  # flake8-return
+    # "SIM",  # flake8-simplify
+]
+ignore = [
+    "C416", # unnecessary `dict` comprehension
+]
+
+[tool.ruff.lint.isort]
+known-third-party = ["alembic"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12

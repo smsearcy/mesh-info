@@ -5,7 +5,7 @@ from pathlib import Path
 from pyramid.config import Configurator
 from pyramid.static import QueryStringCacheBuster
 
-from meshinfo import VERSION
+from meshinfo import __version__
 
 
 class CacheBuster(QueryStringCacheBuster):
@@ -29,7 +29,7 @@ class CacheBuster(QueryStringCacheBuster):
         except OSError:
             # hash the current version of the application
             hash_ = hashlib.md5()
-            hash_.update(VERSION.encode())
+            hash_.update(__version__.encode())
             self.sha1 = hash_.hexdigest()[:12]
 
     def tokenize(self, request, pathspec, kw):

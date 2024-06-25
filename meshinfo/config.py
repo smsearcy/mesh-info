@@ -6,7 +6,7 @@ import enum
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import attrs
 import environ
@@ -121,7 +121,7 @@ def from_env() -> AppConfig:
 
 
 def configure(
-    settings: Optional[Dict[str, Any]] = None, *, app_config: Optional[AppConfig] = None
+    settings: dict[str, Any] | None = None, *, app_config: AppConfig | None = None
 ) -> Configurator:
     """Configure the Pyramid application."""
 
@@ -159,7 +159,8 @@ def configure(
     configure_logging(app_config.log_level)
 
     logger.debug(
-        "Application configuration", **attrs.asdict(app_config)  # type: ignore
+        "Application configuration",
+        **attrs.asdict(app_config),  # type: ignore
     )
 
     # configure Pyramid application

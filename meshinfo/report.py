@@ -1,4 +1,5 @@
 """This process polls the network and displays the results to the user."""
+
 from __future__ import annotations
 
 import asyncio

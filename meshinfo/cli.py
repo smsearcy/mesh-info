@@ -9,7 +9,7 @@ from pathlib import Path
 import structlog
 from pyramid.scripting import prepare
 
-from meshinfo import VERSION, backup, collector, models, purge, report, web
+from meshinfo import __version__, backup, collector, models, purge, report, web
 from meshinfo.aredn import VersionChecker
 from meshinfo.config import AppConfig, configure
 from meshinfo.historical import HistoricalStats
@@ -24,7 +24,7 @@ def main(argv: list | None = None):  # noqa: C901
 
     args = parser.parse_args(argv)
     if args.version:
-        print(f"meshinfo version {VERSION}")
+        print(f"meshinfo version {__version__}")
         return
 
     config = configure()

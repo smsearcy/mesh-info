@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import enum
-from typing import Optional
 
 import attr
 
@@ -18,7 +17,7 @@ class LinkId:
     type: LinkType
 
     @classmethod
-    def from_url(cls, params: dict) -> Optional[LinkId]:
+    def from_url(cls, params: dict) -> LinkId | None:
         """Create `LinkId` object from path parameters."""
 
         try:

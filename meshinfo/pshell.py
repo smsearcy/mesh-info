@@ -1,4 +1,5 @@
 """Configuration for Pyramid's interactive pshell."""
+
 from . import models
 
 

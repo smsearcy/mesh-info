@@ -22,19 +22,16 @@ For starters, you will need:
 
 * Python 3.9 or greater, with the "dev" or "devel" libraries
 * RRDtool libraries (``librrd-dev`` on Debian/Ubuntu or ``rrdtool-devel`` on Fedora).
-* PostgreSQL libraries (``libpq-dev`` on Debian/Ubuntu or ``libpq-devel`` on Fedora).
-* Fork/clone the Git repository using your preferred tool.
+* `PDM <https://pdm-project.org/en/stable/>`_ to manage the Python environment.
+* Fork/clone the Git repository using your preferred tool and ``cd`` to the repository.
 
-Then, setup the Python virtual environment:
+Then, setup the Python virtual environment and activate it:
 
 .. code-block:: console
 
-    $ cd mesh-info
-    $ python3 -m venv venv
-    $ . ./venv/bin/activate
-    (venv) $ pip install -U pip wheel
-    (venv) $ pip install -r requirements.txt -e .[dev]
-    (venv) $ make migrate-db
+    pdm install
+    make migrate-db
+    . ./venv/bin/activate
 
 Create a ``.env`` file in the ``mesh-info`` folder and add:
 
@@ -51,14 +48,14 @@ Create a ``.env`` file in the ``mesh-info`` folder and add:
     Setting the environment to ``development`` enables the Pyramid web framework's debug toolbar
     and puts the data directories in the current user's home folder.
 
-To get data, either run ``meshinfo collector``
-or use ``meshinfo import`` to import data.
+To get data, either run ``pdm run meshinfo collector``
+or use ``pdm run meshinfo import`` to import data.
 
 Run the development web server via:
 
 .. code-block:: console
 
-   (venv) $ ./dev-web.sh
+   pdm run meshinfo web
 
 Connect to the server at http://localhost:8000.
 
@@ -73,7 +70,7 @@ make pre-commit
    Runs `pre-commit <https://pre-commit.com/>`_ to check/format files.
 
 make lint
-   Runs `Flake8 <https://flake8.pycqa.org/en/latest/index.html>`_ to do static linting.
+   Runs `Ruff <https://docs.astral.sh/ruff/>`_ to do static linting.
 
 make mypy
    Run `mypy <http://mypy-lang.org/>`_ static type checker.
@@ -93,9 +90,6 @@ make make-migration
 
 make migrate-db
    Apply `Alembic <https://alembic.sqlalchemy.org/>`_ database migrations.
-
-make requirements
-   Generate requirements files via `pip-tools <https://pypi.org/project/pip-tools/>`_.
 
 
 Architecture
