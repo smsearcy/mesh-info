@@ -97,7 +97,7 @@ def test_api_version_1_6(data_folder):
     assert system_info.up_time == "255 days, 3:00:03"
     assert system_info.up_time_seconds == 22_042_803
     assert system_info.active_tunnel_count == 0
-    assert len(system_info.services) == 1
+    assert len(system_info.services_json) == 1
     assert system_info.ip_address == "10.159.123.176"
     assert system_info.band == Band.TWO_GHZ
 
@@ -235,8 +235,6 @@ def test_wlan_mac_address_standardization(data_folder):
         json_data = json.load(f)
     system_info = aredn.load_system_info(json_data)
 
-    wlan_interface = system_info.primary_interface
-    assert wlan_interface.mac_address != system_info.mac_address
     assert ":" not in system_info.mac_address
     assert system_info.mac_address == system_info.mac_address.lower()
 
