@@ -69,7 +69,7 @@ class Node(Base):
         default=pendulum.now, onupdate=pendulum.now
     )
 
-    links: Mapped["Link"] = relationship(
+    links: Mapped[list["Link"]] = relationship(
         foreign_keys="Link.source_id", back_populates="source"
     )
 
