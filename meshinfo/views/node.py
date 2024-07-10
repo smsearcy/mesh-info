@@ -86,24 +86,22 @@ def node_preview(request: Request):
     if not (node := dbsession.get(Node, node_id)):
         raise HTTPNotFound("Sorry, the specified node could not be found")
 
-    query = (
-        dbsession.query(Link)
+    current_links = dbsession.scalars(
+        sql.select(Link)
         .options(joinedload(Link.destination).load_only(Node.display_name))
-        .filter(
+        .where(
             Link.source_id == node.id,
             Link.status == LinkStatus.CURRENT,
         )
-    )
-    current_links = query.all()
-    query = (
-        dbsession.query(Link)
+    ).all()
+    recent_links = dbsession.scalars(
+        sql.select(Link)
         .options(joinedload(Link.destination).load_only(Node.display_name))
-        .filter(
+        .where(
             Link.source_id == node.id,
             Link.status == LinkStatus.RECENT,
         )
-    )
-    recent_links = query.all()
+    ).all()
 
     return {
         "node": node,
