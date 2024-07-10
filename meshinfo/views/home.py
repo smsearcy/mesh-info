@@ -16,11 +16,15 @@ from ..types import LinkStatus, NodeStatus
 def overview(request: Request):
     dbsession: Session = request.dbsession
 
-    node_count = (
-        dbsession.query(Node).filter(Node.status != NodeStatus.INACTIVE).count()
+    node_count = dbsession.scalar(
+        sql.select(sql.func.count())
+        .select_from(Node)
+        .where(Node.status != NodeStatus.INACTIVE)
     )
-    link_count = (
-        dbsession.query(Link).filter(Link.status != LinkStatus.INACTIVE).count()
+    link_count = dbsession.scalar(
+        sql.select(sql.func.count())
+        .select_from(Node)
+        .where(Link.status != LinkStatus.INACTIVE)
     )
 
     # Get node counts by firmware version
@@ -56,16 +60,16 @@ def overview(request: Request):
     )
     band_stats = {band: count for band, count in band_results}
 
-    last_run = dbsession.execute(
+    last_run = dbsession.scalars(
         sql.select(CollectorStat).order_by(sql.desc(CollectorStat.started_at)).limit(1)
-    ).scalar()
+    ).first()
 
     node_errors_by_type: dict[str, list[NodeError]] = {}
     if last_run:
-        errors = dbsession.execute(
+        errors = dbsession.scalars(
             sql.select(NodeError).where(NodeError.timestamp == last_run.started_at)
         )
-        for error in errors.scalars():
+        for error in errors:
             node_errors_by_type.setdefault(str(error.error_type), []).append(error)
 
     return {
