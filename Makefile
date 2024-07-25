@@ -4,8 +4,8 @@ pre-commit:
 	pdm run pre-commit run --all-files
 
 lint:
-	pdm run ruff check . --fix
 	pdm run ruff format .
+	pdm run ruff check . --fix
 
 mypy:
 	pdm run mypy meshinfo

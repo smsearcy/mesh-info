@@ -5,12 +5,12 @@ from __future__ import annotations
 import html
 import re
 import typing
-from functools import cached_property
 from itertools import zip_longest
 from typing import Any
 
-import attr
+import attrs
 import structlog
+from attrs.converters import optional
 
 from .types import Band, LinkType
 
@@ -19,6 +19,18 @@ if typing.TYPE_CHECKING:
 
 
 logger = structlog.get_logger()
+
+
+def _load_mac_address(value: str) -> str:
+    return value.replace(":", "").lower()
+
+
+def _load_float(value: str | None) -> float | None:
+    if not value:
+        return None
+    return float(value)
+
+
 # these are defined as constants at the module level so they are only initialized once
 
 # TODO: calculate the channels similar to how AREDN does it for `rf_channel_map`?
@@ -167,40 +179,20 @@ FIVE_GHZ_CHANNELS = {
 }
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attrs.define
 class Interface:
     """Data class to represent the individual interfaces on a node."""
 
     name: str
-    mac_address: str
+    mac_address: str = attrs.field(converter=optional(_load_mac_address))
     ip_address: str | None = None
 
-    @classmethod
-    def from_json(cls, raw_data: dict[str, str]) -> Interface:
-        return cls(
-            name=raw_data["name"],
-            # some tunnel interfaces lack a MAC address
-            mac_address=raw_data.get("mac", ""),
-            ip_address=raw_data.get("ip") if raw_data.get("ip") != "none" else None,
-        )
+    def __attrs_post_init__(self):
+        if self.ip_address == "none":
+            self.ip_address = None
 
 
-@attr.s(auto_attribs=True, slots=True)
-class Service:
-    """Data class to represent the individual services on a node."""
-
-    name: str
-    protocol: str
-    link: str
-
-    @classmethod
-    def from_json(cls, raw_data: dict[str, str]) -> Service:
-        return cls(
-            name=raw_data["name"], protocol=raw_data["protocol"], link=raw_data["link"]
-        )
-
-
-@attr.s(auto_attribs=True, slots=True)
+@attrs.define
 class LinkInfo:
     """Data class to represent the link information available from AREDN.
 
@@ -208,7 +200,7 @@ class LinkInfo:
 
     """
 
-    source: str
+    source: str = attrs.field(converter=lambda val: val.lower())
     destination: str
     destination_ip: str
     type: LinkType
@@ -221,58 +213,14 @@ class LinkInfo:
     rx_rate: float | None = None
     olsr_cost: float | None = None
 
-    @classmethod
-    def from_json(
-        cls, raw_data: dict[str, Any], *, source: str, ip_address: str
-    ) -> LinkInfo:
-        """Construct the `Link` dataclass from the AREDN JSON information.
 
-        Needs the name of the source node passed in as well.
-
-        Args:
-            source: Hostname of source node (lowercase, no domain)
-            ip_address: IP address of link destination
-
-        """
-        # fix example of a DTD link that wasn't properly identified as such
-        missing_dtd = (
-            raw_data["linkType"] == "" and raw_data["olsrInterface"] == "br-dtdlink"
-        )
-        type_ = "DTD" if missing_dtd else raw_data["linkType"]
-        try:
-            link_type = getattr(LinkType, type_)
-        except AttributeError as exc:
-            logger.warning("Unknown link type", error=str(exc))
-            link_type = LinkType.UNKNOWN
-
-        # ensure consistent node names
-        node_name = raw_data["hostname"].replace(".local.mesh", "").lstrip(".").lower()
-        if (link_cost := raw_data.get("linkCost")) is not None and link_cost > 99.99:
-            link_cost = 99.99
-
-        return LinkInfo(
-            source=source,
-            destination=node_name,
-            destination_ip=ip_address,
-            type=link_type,
-            interface=raw_data["olsrInterface"],
-            quality=raw_data["linkQuality"],
-            neighbor_quality=raw_data["neighborLinkQuality"],
-            signal=raw_data.get("signal"),
-            noise=raw_data.get("noise"),
-            tx_rate=raw_data.get("tx_rate"),
-            rx_rate=raw_data.get("rx_rate"),
-            olsr_cost=link_cost,
-        )
-
-
-@attr.s(auto_attribs=True)
+@attrs.define(kw_only=True)
 class SystemInfo:
     """Data class to represent the node data from 'sysinfo.json'.
 
     Data that is directly retrieved from the node is stored in this class
     and "derived" data is then determined at runtime via property attributes
-    (e.g. the wireless adaptor and band information).
+    (e.g. band information).
 
     The network interfaces are represented by a dictionary,
     indexed by the interface name.
@@ -281,17 +229,17 @@ class SystemInfo:
     particularly if an empty string would not be a valid value (e.g. SSID).
     If there is a situation in which missing/unknown values need to be distinguished
     from empty strings then `None` would be appropriate.
-    In a case like node description it is an optional value
+    In a case like node description it is an optional value,
     so I see no need for "Unknown"/`None`.
 
     """
 
-    node_name: str
+    node_name: str = attrs.field(converter=lambda val: val.lower())
     display_name: str
     api_version: str
     grid_square: str
-    latitude: float | None
-    longitude: float | None
+    latitude: float | None = attrs.field(converter=_load_float, default=None)
+    longitude: float | None = attrs.field(converter=_load_float, default=None)
     interfaces: dict[str, Interface]
     ssid: str
     channel: str
@@ -301,50 +249,43 @@ class SystemInfo:
     firmware_version: str
     firmware_manufacturer: str
     active_tunnel_count: int
-    services: list[Service]
-    services_json: list[dict]
+    services_json: list[dict] = attrs.field(factory=list)
     status: str
     source_json: dict
     description: str = ""
     frequency: str = ""
     up_time: str = ""
     load_averages: list[float] | None = None
-    links: list[LinkInfo] = attr.Factory(list)
+    links: list[LinkInfo] = attrs.field(factory=list)
     link_count: int | None = None
-    connection_ip: str = ""
+
+    # these are convenience attributes
+    primary_interface: Interface | None = attrs.field(init=False)
+    ip_address: str = attrs.field(init=False, default="")
+    mac_address: str = attrs.field(init=False, default="")
+
+    def __attrs_post_init__(self) -> None:
+        for iface_name in ("wlan0", "wlan1", "eth0.3975", "eth1.3975", "br-nomesh"):
+            if not (iface := self.interfaces.get(iface_name)):
+                continue
+            if iface.ip_address:
+                self.primary_interface = iface
+                self.ip_address = iface.ip_address
+                self.mac_address = iface.mac_address
+                break
+        else:
+            logger.warning(
+                "Unable to identify wireless interface", interfaces=self.interfaces
+            )
 
     @property
     def lan_ip_address(self) -> str:
-        iface_names = ("br-lan", "eth0", "eth0.0")
-        for iface in iface_names:
-            if iface not in self.interfaces or not self.interfaces[iface].ip_address:
+        for iface_name in ("br-lan", "eth0", "eth0.0"):
+            if not (iface := self.interfaces.get(iface_name)):
                 continue
-            return self.interfaces[iface].ip_address or ""
+            if iface.ip_address:
+                return iface.ip_address
         return ""
-
-    @cached_property
-    def primary_interface(self) -> Interface | None:
-        """Get the active wireless interface."""
-        # FIXME: should this just be done once as part of parsing?
-        # (that might simplify the `ip_address` property as well,
-        # don't need `connection_ip` in this class)
-        iface_names = ("wlan0", "wlan1", "eth0.3975", "eth1.3975", "br-nomesh")
-        for iface in iface_names:
-            if iface not in self.interfaces or not self.interfaces[iface].ip_address:
-                continue
-            return self.interfaces[iface]
-        logger.warning("Unable to identify wireless interface")
-        return None
-
-    @property
-    def ip_address(self) -> str:
-        return getattr(self.primary_interface, "ip_address", self.connection_ip)
-
-    @property
-    def mac_address(self) -> str:
-        return (
-            getattr(self.primary_interface, "mac_address", "").replace(":", "").lower()
-        )
 
     @property
     def band(self) -> Band:
@@ -352,22 +293,20 @@ class SystemInfo:
             return Band.OFF
         if self.board_id in NINE_HUNDRED_MHZ_BOARDS:
             return Band.NINE_HUNDRED_MHZ
-        elif self.channel in TWO_GHZ_CHANNELS:
+        if self.channel in TWO_GHZ_CHANNELS:
             return Band.TWO_GHZ
-        elif self.channel in THREE_GHZ_CHANNELS:
+        if self.channel in THREE_GHZ_CHANNELS:
             return Band.THREE_GHZ
-        elif self.channel in FIVE_GHZ_CHANNELS:
+        if self.channel in FIVE_GHZ_CHANNELS:
             return Band.FIVE_GHZ
-        else:
-            return Band.UNKNOWN
+        return Band.UNKNOWN
 
     @property
     def up_time_seconds(self) -> int | None:
         """Convert uptime string to seconds."""
         if self.up_time == "":
             return None
-        match = re.match(r"^(\d+) days, (\d+):(\d+):(\d+)", self.up_time)
-        if match is None:
+        if not (match := re.match(r"^(\d+) days, (\d+):(\d+):(\d+)", self.up_time)):
             logger.warning("Failed to parse uptime string", value=self.up_time)
             return None
 
@@ -419,87 +358,95 @@ def load_system_info(json_data: dict[str, Any], *, ip_address: str = "") -> Syst
 
     Args:
         json_data: Python dictionary loaded from the JSON data.
+        ip_address: IP address used to connect to this node
+            (used in case we cannot identify the primary interface).
 
     Returns:
         Data class with information about the node.
 
     """
+    # The vast majority of nodes at this time are on the newer API
+    # (and some "custom" software doesn't report its API version correctly),
+    # so we're just going to try the "modern" parser, falling back in case of errors.
+    try:
+        node_info = _load_system_info(json_data)
+    except Exception as exc:
+        logger.warning("JSON parse error, falling back to legacy version", exc=exc)
+        node_info = _load_legacy_system_info(json_data)
 
-    interfaces = [
-        Interface.from_json(iface_data) for iface_data in json_data["interfaces"]
-    ]
+    # handle issue of failing to identify the main wireless interface
+    if not node_info.ip_address:
+        node_info.ip_address = ip_address
+    return node_info
 
-    # create a dictionary with all the parameters due to the number
-    # and variance between API versions
-    data = {
-        "connection_ip": ip_address,
-        "node_name": json_data["node"].lower(),
-        "display_name": json_data["node"],
-        "api_version": json_data["api_version"],
-        "grid_square": json_data.get("grid_square", ""),
-        "latitude": float(json_data["lat"]) if json_data.get("lat") else None,
-        "longitude": float(json_data["lon"]) if json_data.get("lon") else None,
-        "interfaces": {iface.name: iface for iface in interfaces},
-        "services": [
-            Service.from_json(service_data)
-            for service_data in json_data.get("services_local", [])
-        ],
-        "services_json": json_data.get("services_local", []),
-        "source_json": json_data,
-    }
 
-    # generally newer versions add data in nested dictionaries
-    # sometimes that data was present at the root level in older versions
+def _load_system_info(json_data: dict[str, Any]) -> SystemInfo:
+    """Load "modern" `sysinfo.json` (aka API >= 1.5)."""
+    rf_info = json_data["meshrf"]
+    details = json_data["node_details"]
+    link_info = json_data.get("link_info") or {}
 
-    if "sysinfo" in json_data:
-        data["up_time"] = json_data["sysinfo"]["uptime"]
-        data["load_averages"] = [float(load) for load in json_data["sysinfo"]["loads"]]
-
-    if "meshrf" in json_data:
-        meshrf = json_data["meshrf"]
-        data["status"] = meshrf.get("status", "on")
-        #
-        data["ssid"] = meshrf.get("ssid", "")
-        data["channel"] = meshrf.get("channel", "")
-        data["channel_bandwidth"] = meshrf.get("chanbw", "")
-        data["frequency"] = meshrf.get("freq", "")
-    else:
-        data["ssid"] = json_data["ssid"]
-        data["channel"] = json_data["channel"]
-        data["channel_bandwidth"] = json_data["chanbw"]
-        data["status"] = "on"
-
-    if "node_details" in json_data:
-        details = json_data["node_details"]
-        data["description"] = html.unescape(details.get("description", ""))
-        data["firmware_version"] = details["firmware_version"]
-        data["firmware_manufacturer"] = details["firmware_mfg"]
-        data["model"] = details["model"]
-        data["board_id"] = details["board_id"]
-    else:
-        data["firmware_version"] = json_data["firmware_version"]
-        data["firmware_manufacturer"] = json_data["firmware_mfg"]
-        data["model"] = json_data["model"]
-        data["board_id"] = json_data["board_id"]
-
-    if "tunnels" in json_data:
-        tunnels = json_data["tunnels"]
-        data["active_tunnel_count"] = int(tunnels["active_tunnel_count"])
-    else:
-        data["active_tunnel_count"] = int(json_data["active_tunnel_count"])
-
-    if link_info := json_data.get("link_info"):
-        data["links"] = [
-            LinkInfo.from_json(
-                link_info, source=data["node_name"].lower(), ip_address=ip_address
+    node_info = SystemInfo(
+        node_name=json_data["node"],
+        display_name=json_data["node"],
+        api_version=json_data["api_version"],
+        grid_square=json_data.get("grid_square", ""),
+        latitude=json_data.get("lat"),
+        longitude=json_data.get("lon"),
+        interfaces=_load_interfaces(json_data["interfaces"]),
+        services_json=json_data.get("services_local", []),
+        up_time=json_data["sysinfo"]["uptime"],
+        load_averages=[float(load) for load in json_data["sysinfo"]["loads"]],
+        status=rf_info.get("status", "on"),
+        ssid=rf_info.get("ssid", ""),
+        channel=rf_info.get("channel", ""),
+        channel_bandwidth=rf_info.get("chanbw", ""),
+        frequency=rf_info.get("freq", ""),
+        description=html.unescape(details.get("description", "")),
+        firmware_version=details["firmware_version"],
+        firmware_manufacturer=details["firmware_mfg"],
+        model=details["model"],
+        board_id=details["board_id"],
+        active_tunnel_count=int(json_data["tunnels"]["active_tunnel_count"]),
+        links=[
+            _load_link_info(
+                link_info, source=json_data["node"], destination_ip=ip_address
             )
             for ip_address, link_info in link_info.items()
-        ]
+        ],
+        source_json=json_data,
+    )
+    return node_info
 
-    return SystemInfo(**data)
+
+def _load_legacy_system_info(json_data: dict[str, Any]) -> SystemInfo:
+    """Load `sysinfo.json` in older format (API version < 1.5)."""
+    node_info = SystemInfo(
+        node_name=json_data["node"],
+        display_name=json_data["node"],
+        api_version=json_data["api_version"],
+        grid_square=json_data.get("grid_square", ""),
+        latitude=json_data.get("lat"),
+        longitude=json_data.get("lon"),
+        interfaces=_load_interfaces(json_data["interfaces"]),
+        ssid=json_data["ssid"],
+        channel=json_data["channel"],
+        channel_bandwidth=json_data["chanbw"],
+        status="on",
+        source_json=json_data,
+        firmware_version=json_data["firmware_version"],
+        firmware_manufacturer=json_data["firmware_mfg"],
+        model=json_data["model"],
+        board_id=json_data["board_id"],
+        active_tunnel_count=int(json_data["active_tunnel_count"]),
+    )
+    if sys_info := json_data.get("sysinfo"):
+        node_info.up_time = sys_info["uptime"]
+        node_info.load_averages = [float(load) for load in sys_info["loads"]]
+    return node_info
 
 
-@attr.s(auto_attribs=True)
+@attrs.define
 class VersionChecker:
     """Compares versions to the configured most recent version.
 
@@ -566,3 +513,59 @@ def _version_delta(sample: tuple[int, ...], standard: tuple[int, ...]) -> int:
             return 2 if delta < 2 else 3
 
     return 0
+
+
+def _load_interfaces(values: list[dict]) -> dict[str, Interface]:
+    """Load list of JSON interfaces into dictionary of data classes."""
+    interfaces = (
+        Interface(
+            name=obj["name"], mac_address=obj.get("mac", ""), ip_address=obj.get("ip")
+        )
+        for obj in values
+    )
+    return {iface.name: iface for iface in interfaces}
+
+
+def _load_link_info(
+    json_data: dict[str, Any], *, source: str, destination_ip: str
+) -> LinkInfo:
+    """Construct the `LinkInfo` dataclass from the AREDN JSON information.
+
+    Needs the name of the source node and I passed in as well.
+
+    Args:
+        json_data: JSON link information from `sysinfo.json`
+        source: Hostname of source node (no domain)
+        destination_ip: IP address of link destination
+
+    """
+    # fix example of a DTD link that wasn't properly identified as such
+    missing_dtd = (
+        json_data["linkType"] == "" and json_data["olsrInterface"] == "br-dtdlink"
+    )
+    type_ = "DTD" if missing_dtd else json_data["linkType"]
+    try:
+        link_type = getattr(LinkType, type_)
+    except AttributeError as exc:
+        logger.warning("Unknown link type", error=str(exc))
+        link_type = LinkType.UNKNOWN
+
+    # ensure consistent node names
+    node_name = json_data["hostname"].replace(".local.mesh", "").lstrip(".").lower()
+    if (link_cost := json_data.get("linkCost")) is not None and link_cost > 99.99:
+        link_cost = 99.99
+
+    return LinkInfo(
+        source=source,
+        destination=node_name,
+        destination_ip=destination_ip,
+        type=link_type,
+        interface=json_data["olsrInterface"],
+        quality=json_data["linkQuality"],
+        neighbor_quality=json_data["neighborLinkQuality"],
+        signal=json_data.get("signal"),
+        noise=json_data.get("noise"),
+        tx_rate=json_data.get("tx_rate"),
+        rx_rate=json_data.get("rx_rate"),
+        olsr_cost=link_cost,
+    )
