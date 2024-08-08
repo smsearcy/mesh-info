@@ -270,7 +270,7 @@ def network_map(request: Request):
     }
 
 
-@view_config(route_name="map-data", renderer="json")
+@view_config(route_name="map-data", http_cache=0, renderer="json")
 def map_data(request: Request):
     """Generate node and link data as GeoJSON to be loaded into Leaflet."""
     dbsession: Session = request.dbsession
