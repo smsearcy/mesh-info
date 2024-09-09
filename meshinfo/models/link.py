@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Optional
 
 import pendulum
-from sqlalchemy import ForeignKey
+from sqlalchemy import Enum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..types import LinkId, LinkStatus, LinkType
@@ -22,7 +22,9 @@ class Link(Base):
     destination_id: Mapped[int] = mapped_column(
         ForeignKey("node.node_id"), primary_key=True
     )
-    type: Mapped[LinkType] = mapped_column(primary_key=True)
+    type: Mapped[LinkType] = mapped_column(
+        Enum(LinkType, native_enum=False), primary_key=True
+    )
     status: Mapped[LinkStatus]
     last_seen: Mapped[pendulum.DateTime] = mapped_column(default=pendulum.now)
 
