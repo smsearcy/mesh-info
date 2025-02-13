@@ -45,7 +45,7 @@ def _get_log_level(level: str) -> int:
 class AppConfig:
     @environ.config
     class Aredn:
-        current_firmware: str = environ.var(default="3.24.6.0")
+        current_firmware: str = environ.var(default="3.25.2.0")
         current_api: str = environ.var(default="1.13")
 
     @environ.config
