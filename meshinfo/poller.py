@@ -181,7 +181,11 @@ async def poll_network(
         and errors encountered contacting/parsing node data.
 
     """
-    topology = await topology_from_olsr(start_node)
+    try:
+        topology = await _get_network_hosts(start_node)
+    except Exception as exc:
+        logger.warning("Error getting node list from `sysinfo.json`", error=exc)
+        topology = await topology_from_olsr(start_node)
 
     dns_server = dns_server or start_node
 
@@ -256,6 +260,33 @@ async def poll_network(
 
     logger.info("Finished loading network data", summary=dict(count))
     return results
+
+
+async def _get_network_hosts(host_name: str) -> Topology:
+    """Load the list of hosts from AREDN API.
+
+    This does not provide link information (unlike OLSR),
+    but the API provides all that data now, so this is the future,
+    especially since we can no longer access OLSR directly.
+
+    """
+    # TODO: drop all OLSR dependency and use this to
+    #  return IP addresses *and* host names (#131)
+    with contextvars.bound_contextvars(host=host_name):
+        logger.debug("Fetching network host information from AREDN API")
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"http://{host_name}/cgi-bin/sysinfo.json", params={"topology": 1}
+            ) as response:
+                results = await response.json()
+
+        # Using `topology` instead of `hosts` because that includes non-AREDN nodes
+        # (which cause extra connection/parsing issues).
+        topology = Topology(
+            nodes={entry["destinationIP"] for entry in results["topology"]}
+        )
+
+    return topology
 
 
 async def _node_polling_worker(

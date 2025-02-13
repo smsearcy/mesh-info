@@ -28,11 +28,17 @@ Changed
 
 * Use updated RRDtool Python bindings package
 * Switched development tooling to use PDM and Ruff
+* Updated latest AREDN version to 3.25.2.0
 
 Removed
 ^^^^^^^
 
 * **BREAKING CHANGE:** Removed support for PostgreSQL.
+
+Fixed
+^^^^^
+
+* Support AREDN 3.25.2.0 by using OLSR topology information as a fallback.
 
 0.7.0 - 2024-05-20
 ------------------
