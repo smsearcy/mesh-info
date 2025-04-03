@@ -20,7 +20,7 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
-0.8.0 - Unreleased
+0.8.0 - 2025-04-02
 ------------------
 
 Changed
