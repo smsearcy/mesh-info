@@ -23,7 +23,7 @@ dependencies = [
     "async-timeout ; python_version < '3.11'",
     "attrs ~= 23.1",
     "environ-config ~= 23.2",
-    "gunicorn ~= 22.0",
+    "gunicorn >= 22.0",
     "pendulum ~= 2.1",
     "platformdirs ~= 2.0",
     "pyramid ~= 2.0",
@@ -79,20 +79,10 @@ testing = [
     "pytest-mock>=3.14.0",
     "pytest>=8.2.1",
 ]
-dev = [
-    "pyramid-debugtoolbar>=4.12.1",
-    "pre-commit>=3.7.1",
-]
-docs = [
-    "sphinx>=7.3.7",
-    "sphinx-rtd-theme>=2.0.0",
-]
-ruff = [
-    "ruff>=0.4.6",
-]
-mypy = [
-    "mypy>=1.10.0",
-]
+dev = ["pyramid-debugtoolbar>=4.12.1", "pre-commit>=3.7.1"]
+docs = ["sphinx>=7.3.7", "sphinx-rtd-theme>=2.0.0"]
+ruff = ["ruff>=0.4.6"]
+mypy = ["mypy>=1.10.0"]
 
 
 [tool.ruff]
@@ -103,16 +93,19 @@ exclude = ["alembic/versions/*.py"]
 
 [tool.ruff.lint]
 select = [
-    "A", # flake8-builtins
-    "B", # flake8-bugbear"
-    "C4", # flake8-comprehensions
+    "A",   # flake8-builtins
+    "B",   # flake8-bugbear"
+    "C4",  # flake8-comprehensions
     "C90", # mccabe
-    "E", "W", # pycodestyle
-    "F", # pyflakes
-    "I", # isort
-    "N", # pep8-naming
-    "PLC", "PLE", "PLW", # pylint
-    "UP", # pyupgrade
+    "E",
+    "W",   # pycodestyle
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "PLC",
+    "PLE",
+    "PLW", # pylint
+    "UP",  # pyupgrade
     "YTT", # flake8-2020
     # Saving these for another day
     # "D",  # pydocstyle

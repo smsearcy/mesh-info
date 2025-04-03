@@ -9,7 +9,7 @@ attrs==23.2.0
 environ-config==23.2.0
 frozenlist==1.4.1
 greenlet==3.0.3; (platform_machine == "win32" or platform_machine == "WIN32" or platform_machine == "AMD64" or platform_machine == "amd64" or platform_machine == "x86_64" or platform_machine == "ppc64le" or platform_machine == "aarch64") and python_version >= "3"
-gunicorn==22.0.0
+gunicorn==23.0.0
 hupper==1.12.1
 idna==3.7
 jinja2==3.1.4

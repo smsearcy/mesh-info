@@ -29,6 +29,7 @@ Changed
 * Use updated RRDtool Python bindings package
 * Switched development tooling to use PDM and Ruff
 * Updated latest AREDN version to 3.25.2.0
+* Updated pinned version of Gunicorn to 23.0.0 due to vulnerability
 
 Removed
 ^^^^^^^
