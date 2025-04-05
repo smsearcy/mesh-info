@@ -25,20 +25,20 @@ def overview(request: Request):
 
     # Get node counts by firmware version
     query = (
-        dbsession.query(
-            Node.firmware_manufacturer, Node.firmware_version, sa.func.count(Node.id)
-        )
+        dbsession.query(Node.firmware_version, sa.func.count(Node.id))
         .filter(Node.status == NodeStatus.ACTIVE)
-        .group_by(Node.firmware_manufacturer, Node.firmware_version)
+        .group_by(Node.firmware_version)
     )
     firmware_stats: defaultdict[str, int] = defaultdict(int)
-    for manufacturer, version, count in query.all():
-        if manufacturer.lower() != "aredn":
-            firmware_stats["Non-AREDN"] += 1
-        elif re.match(r"\d+\.\d+\.\d+\.\d+", version):
+    for version, count in query.all():
+        if re.match(r"\d+\.\d+\.\d+\.\d+", version):
+            # match typical AREDN version (e.g. 3.25.2.0)
             firmware_stats[version] = count
-        else:
+        elif re.match(r"\d{8}-[0-9A-Fa-f]+", version):
+            # match AREDN nightly version of date and hexadecimal (as of April 2025)
             firmware_stats["Nightly"] += count
+        else:
+            firmware_stats["Unknown"] += count
     # Get node counts by API version
     query = (
         dbsession.query(Node.api_version, sa.func.count(Node.id))
@@ -46,6 +46,7 @@ def overview(request: Request):
         .group_by(Node.api_version)
     )
     api_version_stats = {version: count for version, count in query.all()}
+
     # Get node counts by band
     query = (
         dbsession.query(Node.band, sa.func.count(Node.id))

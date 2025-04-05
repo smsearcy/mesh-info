@@ -20,6 +20,14 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
+0.8.1 - Unreleased
+------------------
+
+Fixed
+^^^^^
+
+* Fix bug in firmware statistics on home page (`#135 <https://github.com/smsearcy/mesh-info/issues/135>`_)
+
 0.8.0 - 2025-04-02
 ------------------
 
