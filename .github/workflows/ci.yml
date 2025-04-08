@@ -1,39 +1,76 @@
-name: ci
+name: CI
 
 on: [push]
-
-env:
-  PYTHON_VERSION: '3.9'
 
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - name: Run pre-commit
-        uses: pre-commit/action@v3.0.1
 
-  mypy:
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.12"
+
+      - name: Run pre-commit
+        run: uvx pre-commit run --all-files
+
+  ruff:
+    name: Ruff
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up PDM
-        uses: pdm-project/setup-pdm@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          version: "0.6.12"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
       - name: Install dependencies
-        run: |
-          sudo apt-get install -y librrd-dev
-          pdm sync -G mypy
+        run: sudo apt-get install -y librrd-dev
+
+      - name: Install project
+        run: uv sync
+
+      - name: Run Ruff linter
+        run: uv run ruff check --output-format=github .
+
+      - name: Run Ruff formatter
+        run: uv run ruff format --diff .
+
+  mypy:
+    name: mypy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.12"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install dependencies
+        run: sudo apt-get install -y librrd-dev
+
+      - name: Install project
+        run: uv sync
+
       - name: Run mypy
-        run: |
-          pdm run mypy meshinfo
+        run: uv run mypy meshinfo
 
   tests:
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -42,34 +79,62 @@ jobs:
           - "3.9"
           - "3.10"
           - "3.11"
+          - "3.12"
+          - "3.13"
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up PDM
-        uses: pdm-project/setup-pdm@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.12"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install dependencies
-        run: |
-          sudo apt-get install -y librrd-dev
-          pdm sync -G testing
-      - name: Run pytest
-        run: |
-          pdm run pytest --cov=meshinfo
+        run: sudo apt-get install -y librrd-dev
+
+      - name: Install project
+        run: uv sync
+
+      - name: Test with pytest
+        run: uv run pytest --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=meshinfo --cov-report=xml --cov-report=html
         env:
           MESHMAP_COLLECTOR_DATA_DIR: "."
+
+      - name: Upload pytest test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results-${{ matrix.python-version }}
+          path: junit/test-results-${{ matrix.python-version }}.xml
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
+
 
   docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up PDM
-        uses: pdm-project/setup-pdm@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          version: "0.6.12"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
       - name: Install dependencies
-        run: |
-          sudo apt-get install -y librrd-dev
-          pdm sync -G docs
+        run: sudo apt-get install -y librrd-dev
+
+      - name: Install project
+        run: uv sync
+
       - name: Run Sphinx
-        run: pdm run sphinx-build -W --keep-going -b html docs docs/_build/html
+        run: uv run sphinx-build -W --keep-going -b html docs docs/_build/html
