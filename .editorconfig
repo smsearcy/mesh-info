@@ -15,18 +15,14 @@ charset = utf-8
 indent_style = space
 indent_size = 4
 
-# Tab indentation (no size specified)
-[Makefile]
-indent_style = tab
+[Justfile]
+indent_style = space
+indent_size = 2
 
-[*.{jinja2,js,json,yml,yaml}]
+[*.{jinja2,js,json,toml,yml,yaml}]
 indent_style = space
 indent_size = 2
 
 [*.rst]
 indent_style = space
 indent_size = 3
-
-[*.toml]
-indent_style = space
-indent_size = 4
