@@ -1,24 +1,20 @@
 Mesh Info
 =========
 
-.. image:: https://github.com/smsearcy/mesh-info/actions/workflows/tests.yml/badge.svg
+.. image:: https://github.com/smsearcy/mesh-info/actions/workflows/ci.yml/badge.svg
    :target: https://github.com/smsearcy/mesh-info/actions
 
 .. image:: https://readthedocs.org/projects/mesh-info-ki7onk/badge/?version=latest
    :target: https://mesh-info-ki7onk.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
-.. image:: https://img.shields.io/badge/pdm-managed-blueviolet
-   :target: https://pdm-project.org
-   :alt: pdm-managed
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json
+   :target: https://github.com/astral-sh/uv
+   :alt: uv
 
 .. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
    :target: https://github.com/astral-sh/ruff
    :alt: Ruff
-
-.. image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
-   :target: https://github.com/pre-commit/pre-commit
-   :alt: pre-commit
 
 |
 
