@@ -23,6 +23,11 @@ so breaking changes are possible but will be highlighted here.
 0.8.1 - Unreleased
 ------------------
 
+Changed
+^^^^^^^
+
+* Switch project management to uv from PDM
+
 Fixed
 ^^^^^
 

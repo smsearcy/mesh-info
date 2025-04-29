@@ -1,4 +1,4 @@
-default: pre-commit fix mypy tests docs
+default: pre-commit fix mypy test-all docs
 
 # Run pre-commit hooks
 pre-commit:
@@ -16,9 +16,13 @@ fix: fmt
 mypy:
 	uv run mypy meshinfo
 
-# Run test suite
-tests:
+# Run entire test suite
+test-all:
 	uv run pytest --cov=meshinfo --cov-report html --cov-report term
+
+# Run tests filtered via expression (pytest -k)
+test expression:
+  uv run pytest -k {{expression}}
 
 # Generate docs
 docs:

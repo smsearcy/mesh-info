@@ -9,9 +9,8 @@ Here are some instructions and pointers to get you setup for development.
     Mesh Info is only tested on Linux,
     so these instructions assume you are on Linux
     (although it could be a virtual machine or WSL).
-    Work is being done in the ``dev-container`` branch to setup containers for development.
 
-    Another item on the todo list is providing some sample data to load in a development environment.
+    On the todo list is providing some sample data to load in a development environment.
     For now, you will either need to connect the development machine to a mesh (at least temporarily),
     or use the ``export`` and ``import`` commands to load data.
 
@@ -22,15 +21,16 @@ For starters, you will need:
 
 * Python 3.9 or greater, with the "dev" or "devel" libraries
 * RRDtool libraries (``librrd-dev`` on Debian/Ubuntu or ``rrdtool-devel`` on Fedora).
-* `PDM <https://pdm-project.org/en/stable/>`_ to manage the Python environment.
+* `uv <https://github.com/astral-sh/uv>`_ to manage the Python environment.
+* `just <https://github.com/casey/just>`_ to run various tasks.
 * Fork/clone the Git repository using your preferred tool and ``cd`` to the repository.
 
 Then, setup the Python virtual environment and activate it:
 
 .. code-block:: console
 
-    pdm install
-    make migrate-db
+    uv sync
+    just migrate-db
     . ./venv/bin/activate
 
 Create a ``.env`` file in the ``mesh-info`` folder and add:
@@ -48,14 +48,18 @@ Create a ``.env`` file in the ``mesh-info`` folder and add:
     Setting the environment to ``development`` enables the Pyramid web framework's debug toolbar
     and puts the data directories in the current user's home folder.
 
-To get data, either run ``pdm run meshinfo collector``
-or use ``pdm run meshinfo import`` to import data.
+To get data, either run ``uv run meshinfo collector``
+or use ``uv run meshinfo import`` to import data.
 
 Run the development web server via:
 
 .. code-block:: console
 
-   pdm run meshinfo web
+   uv run meshinfo web
+
+.. tip::
+
+   With ``just`` installed you can run ``just run`` to run both the collector and web services.
 
 Connect to the server at http://localhost:8000.
 
@@ -63,32 +67,32 @@ Connect to the server at http://localhost:8000.
 Testing
 -------
 
-There is a ``Makefile`` with some commonly used commands and tests.
-Run ``make`` to run the general test suite.
+There is a ``Justfile`` with some commonly used commands and tests.
+Run ``just`` to run the general test suite.
 
-make pre-commit
+just pre-commit
    Runs `pre-commit <https://pre-commit.com/>`_ to check/format files.
 
-make lint
-   Runs `Ruff <https://docs.astral.sh/ruff/>`_ to do static linting.
+just fix
+   Runs `Ruff <https://docs.astral.sh/ruff/>`_ to do static linting and formatting.
 
-make mypy
+just mypy
    Run `mypy <http://mypy-lang.org/>`_ static type checker.
 
-make tests
-   Run test suite.
+just test-all
+   Run entire test suite.
 
    .. tip::
 
       Copy ``sysinfo.json`` samples into ``tests/data`` to verify they can be successfully parsed.
 
-make docs
+just docs
    Generate HTML documentation locally via `Sphinx <https://www.sphinx-doc.org/>`_.
 
-make make-migration
+just make-migration
    Create new database migrations via `Alembic <https://alembic.sqlalchemy.org/>`_.
 
-make migrate-db
+just migrate-db
    Apply `Alembic <https://alembic.sqlalchemy.org/>`_ database migrations.
 
 
