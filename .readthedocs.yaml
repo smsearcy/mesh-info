@@ -9,23 +9,22 @@ version: 2
 build:
   os: ubuntu-20.04
   tools:
-    python: "3.9"
+    python: "3.11"
   apt_packages:
-    - libpq-dev
     - librrd-dev
+  jobs:
+    pre_create_environment:
+      - asdf plugin add uv
+      - asdf install uv 0.6.12
+      - asdf global uv 0.6.12
+    create_environment:
+      - uv venv
+    install:
+      - uv sync
+    build:
+      html:
+        - uv run sphinx-build -T -b html docs $READTHEDOCS_OUTPUT/html
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
    configuration: docs/conf.py
-
-# If using Sphinx, optionally build your docs in additional formats such as PDF
-# formats:
-#    - pdf
-
-# Optionally declare the Python requirements required to build your docs
-python:
-   install:
-     - method: pip
-       path: .
-       extra_requirements:
-         - docs
