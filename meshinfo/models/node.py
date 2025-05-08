@@ -87,10 +87,9 @@ class Node(Base):
     def location(self) -> str:
         if self.longitude and self.latitude:
             return f"{self.longitude:.3f},{self.latitude:.3f}"
-        elif self.grid_square:
+        if self.grid_square:
             return self.grid_square
-        else:
-            return "Unknown"
+        return "Unknown"
 
     def __repr__(self):
         return f"<models.Node(id={self.id!r}, name={self.name!r})>"

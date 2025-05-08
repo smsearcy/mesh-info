@@ -98,22 +98,20 @@ select = [
   "C4",  # flake8-comprehensions
   "C90", # mccabe
   "E",
-  "W",   # pycodestyle
   "F",   # pyflakes
   "I",   # isort
   "N",   # pep8-naming
   "PLC",
   "PLE",
   "PLW", # pylint
+  "RET", # flake8-return
+  "SIM", # flake8-simplify
   "UP",  # pyupgrade
+  "W",   # pycodestyle
   "YTT", # flake8-2020
+  "RUF",
   # Saving these for another day
   # "D",  # pydocstyle
-  # "RET",  # flake8-return
-  # "SIM",  # flake8-simplify
-]
-ignore = [
-  "C416", # unnecessary `dict` comprehension
 ]
 
 [tool.ruff.lint.isort]

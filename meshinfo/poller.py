@@ -274,19 +274,17 @@ async def _get_network_hosts(host_name: str) -> Topology:
     #  return IP addresses *and* host names (#131)
     with contextvars.bound_contextvars(host=host_name):
         logger.debug("Fetching network host information from AREDN API")
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
+        async with (
+            aiohttp.ClientSession() as session,
+            session.get(
                 f"http://{host_name}/cgi-bin/sysinfo.json", params={"topology": 1}
-            ) as response:
-                results = await response.json()
+            ) as response,
+        ):
+            results = await response.json()
 
         # Using `topology` instead of `hosts` because that includes non-AREDN nodes
         # (which cause extra connection/parsing issues).
-        topology = Topology(
-            nodes={entry["destinationIP"] for entry in results["topology"]}
-        )
-
-    return topology
+        return Topology(nodes={entry["destinationIP"] for entry in results["topology"]})
 
 
 async def _node_polling_worker(

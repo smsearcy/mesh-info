@@ -33,8 +33,7 @@ def default_workers():
     """Defaults to Gunicorn recommendations."""
     if cpu_count := os.cpu_count():
         return cpu_count * 2 + 1
-    else:
-        return 1
+    return 1
 
 
 def _get_log_level(level: str) -> int:
@@ -189,8 +188,7 @@ def configure(
                 )
                 client_tz = server_timezone
             return client_tz.name
-        else:
-            return server_timezone.name
+        return server_timezone.name
 
     config.add_request_method(lambda r: client_timezone(r), "timezone", reify=True)
 

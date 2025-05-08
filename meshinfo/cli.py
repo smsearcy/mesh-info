@@ -17,7 +17,7 @@ from meshinfo.historical import HistoricalStats
 logger = structlog.get_logger()
 
 
-def main(argv: list | None = None):  # noqa: C901
+def main(argv: list | None = None):
     """Main CLI entry point for 'meshinfo'."""
 
     parser = build_parser()

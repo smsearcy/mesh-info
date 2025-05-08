@@ -23,7 +23,7 @@ def data_folder() -> Path:
 
 @pytest.fixture(scope="session")
 def app_config():
-    # need to get environment variables from CI
+    # Need to get environment variables from CI
     env = os.environ.copy()
     env["MESHMAP_POLLER_NODE"] = "127.0.0.1"
     return AppConfig.from_environ(env)
@@ -73,10 +73,10 @@ def dbsession(app, tm):
 
 @pytest.fixture
 def testapp(app, tm, dbsession):
-    # override request.dbsession and request.tm with our own
+    # Override request.dbsession and request.tm with our own
     # externally-controlled values that are shared across requests but aborted
     # at the end
-    testapp = webtest.TestApp(
+    return webtest.TestApp(
         app,
         extra_environ={
             "HTTP_HOST": "example.com",
@@ -85,8 +85,6 @@ def testapp(app, tm, dbsession):
             "app.dbsession": dbsession,
         },
     )
-
-    return testapp
 
 
 @pytest.fixture

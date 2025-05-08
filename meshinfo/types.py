@@ -66,14 +66,13 @@ class LinkType(enum.IntEnum):
         # using if...else since it's not a straight-forward `.title()`
         if self == LinkType.RF:
             return "Radio"
-        elif self == LinkType.WIREGUARD:
+        if self == LinkType.WIREGUARD:
             return "Wireguard"
-        elif self == LinkType.TUN:
+        if self == LinkType.TUN:
             return "Tunnel"
-        elif self == LinkType.DTD:
+        if self == LinkType.DTD:
             return "DTD"
-        else:
-            return "Unknown"
+        return "Unknown"
 
 
 class NodeStatus(enum.Enum):

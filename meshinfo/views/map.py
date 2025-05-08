@@ -58,7 +58,7 @@ class LinkLayer:
         }
 
 
-# map legend uses the order of the bands here
+# Map legend uses the order of the bands here
 _NODE_LAYERS = (
     NodeLayer("fiveGHzNodes", "5 GHz Nodes", Band.FIVE_GHZ, "gold-radio-small.png"),
     NodeLayer("threeGHzNodes", "3 GHz Nodes", Band.THREE_GHZ, "blue-radio-small.png"),
@@ -167,8 +167,7 @@ class GeoLink:
 
     @property
     def opacity(self) -> float:
-        opacity = 1.0 if self.status == LinkStatus.CURRENT else 0.2
-        return opacity
+        return 1.0 if self.status == LinkStatus.CURRENT else 0.2
 
     @property
     def offset(self) -> int:
@@ -299,7 +298,7 @@ def map_data(request: Request):
     for link in (GeoLink.from_model(link) for link in _dedupe_links(links)):
         link_layers[link.layer.key].features.append(link)
 
-    # return only the layers with features in them
+    # Return only the layers with features in them
     return {
         "nodeLayers": [
             layer for layer in node_layers.values() if len(layer.features) > 0
@@ -324,7 +323,7 @@ def _calc_hue(value: float, *, red: float, green: float) -> int:
 
 def _dedupe_links(links: list[Link]) -> Iterator[Link]:
     """Filter out redundant tunnels and DTD links."""
-    # while it is unlikely that two nodes are connected by both types, this is safer
+    # While it is unlikely that two nodes are connected by both types, this is safer
     seen_tunnels = set()
     seen_dtd = set()
     seen_wireguard = set()
@@ -333,7 +332,7 @@ def _dedupe_links(links: list[Link]) -> Iterator[Link]:
         if link.type not in {LinkType.DTD, LinkType.TUN, LinkType.WIREGUARD}:
             yield link
             continue
-        # reverse the nodes to see if the mirror version was returned
+        # Reverse the nodes to see if the mirror version was returned
         link_nodes = (link.destination_id, link.source_id)
         if link.type == LinkType.DTD and link_nodes not in seen_dtd:
             seen_dtd.add((link.source_id, link.destination_id))

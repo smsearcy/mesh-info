@@ -74,7 +74,7 @@ class _DnsClientProtocol(asyncio.DatagramProtocol):
         if response_code == 3:
             logger.warning("DNS name error")
             return ""
-        elif response_code > 0:
+        if response_code > 0:
             logger.warning("DNS error", repsonse_code=response_code)
             return ""
 

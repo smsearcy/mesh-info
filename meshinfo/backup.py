@@ -77,10 +77,9 @@ def _export_file(filename: Path, destination: Path) -> str:
         logger.debug("Dumping for export", filename=filename)
         rrdtool.dump(str(filename), str(destination / f"{filename.stem}.xml"))
         return "rrd"
-    else:
-        logger.debug("Copying for export", filename=filename)
-        shutil.copy(filename, destination)
-        return "copied"
+    logger.debug("Copying for export", filename=filename)
+    shutil.copy(filename, destination)
+    return "copied"
 
 
 def import_data(
@@ -134,7 +133,6 @@ def _import_file(filename: Path, destination: Path) -> str:
             check=True,
         )
         return "rrd"
-    else:
-        logger.debug("Copying for importing", filename=filename)
-        shutil.copy(filename, destination)
-        return "copied"
+    logger.debug("Copying for importing", filename=filename)
+    shutil.copy(filename, destination)
+    return "copied"

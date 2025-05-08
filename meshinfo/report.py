@@ -43,7 +43,7 @@ def main(
     timeout: int = 30,
     verbose: int = 0,
     workers: int = 50,
-):
+) -> str | None:
     """Crawls network and prints information about the nodes and links.
 
     Detailed output is not printed until the crawler finishes.
@@ -98,6 +98,7 @@ def main(
 
     total_time = time.monotonic() - start_time
     print(f"{NOTE}Network report took {total_time:.2f} seconds{END}")
+    return None
 
 
 def pprint_node(node: SystemInfo, checker: VersionChecker):
@@ -223,4 +224,4 @@ def handle_errors(errors: Collection[NodeError], output: Path, *, save: bool):
                 filename = f"{error.ip_address}-response.txt"
             else:
                 filename = f"{error.ip_address}-error.txt"
-            open(output / filename, "w").write(error.response)
+            (output / filename).write_text(error.response)

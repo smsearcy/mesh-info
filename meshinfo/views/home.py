@@ -32,10 +32,10 @@ def overview(request: Request):
     firmware_stats: defaultdict[str, int] = defaultdict(int)
     for version, count in query.all():
         if re.match(r"\d+\.\d+\.\d+\.\d+", version):
-            # match typical AREDN version (e.g. 3.25.2.0)
+            # Match typical AREDN version (e.g. 3.25.2.0)
             firmware_stats[version] = count
         elif re.match(r"\d{8}-[0-9A-Fa-f]+", version):
-            # match AREDN nightly version of date and hexadecimal (as of April 2025)
+            # Match AREDN nightly version of date and hexadecimal (as of April 2025)
             firmware_stats["Nightly"] += count
         else:
             firmware_stats["Unknown"] += count
@@ -45,7 +45,7 @@ def overview(request: Request):
         .filter(Node.status == NodeStatus.ACTIVE)
         .group_by(Node.api_version)
     )
-    api_version_stats = {version: count for version, count in query.all()}
+    api_version_stats: dict[str, int] = dict(query.all())
 
     # Get node counts by band
     query = (
@@ -53,7 +53,7 @@ def overview(request: Request):
         .filter(Node.status == NodeStatus.ACTIVE)
         .group_by(Node.band)
     )
-    band_stats = {band: count for band, count in query.all()}
+    band_stats: dict[str, int] = dict(query.all())
 
     last_run = (
         dbsession.query(CollectorStat)

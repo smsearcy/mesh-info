@@ -6,7 +6,7 @@ import enum
 from collections.abc import Iterable
 from itertools import cycle
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import attr
 import pendulum
@@ -124,7 +124,7 @@ class HistoricalStats:
                 rrdtool.update(
                     str(rrd_file),
                     "--template",
-                    "link_count:service_count:uptime:load:radio_links:dtd_links:tunnel_links",  # noqa
+                    "link_count:service_count:uptime:load:radio_links:dtd_links:tunnel_links",
                     f"{timestamp}:{values}",
                 )
             except rrdtool.OperationalError as exc:
@@ -538,10 +538,9 @@ def _dump(value: Any) -> str:
 
     if isinstance(value, str):
         return value
-    elif value is None:
+    if value is None:
         return "U"
-    else:
-        return str(value)
+    return str(value)
 
 
 @attr.s(auto_attribs=True)
@@ -553,13 +552,13 @@ class Graph:
     title: str = ""
     vertical_label: str = ""
     lower_bound: float | None = None
-    options: list[str] = attr.Factory(list)
-    data_definitions: list[str] = attr.Factory(list)
-    data_calculations: list[str] = attr.Factory(list)
-    variable_definitions: list[str] = attr.Factory(list)
-    elements: list[str] = attr.Factory(list)
+    options: list[str] = attr.ib(factory=list)
+    data_definitions: list[str] = attr.ib(factory=list)
+    data_calculations: list[str] = attr.ib(factory=list)
+    variable_definitions: list[str] = attr.ib(factory=list)
+    elements: list[str] = attr.ib(factory=list)
 
-    _common_stats = {
+    _common_stats: ClassVar = {
         "lst": "LAST",
         "min": "MINIMUM",
         "avg": "AVERAGE",
@@ -600,7 +599,7 @@ class Graph:
             )
         self.elements.append(f"{style}:{v_name}{color}:{legend:12s}")
         self.elements.extend(
-            f"GPRINT:{stat}_{v_name}:{fmt}" for stat in self._common_stats.keys()
+            f"GPRINT:{stat}_{v_name}:{fmt}" for stat in self._common_stats
         )
         self.elements[-1] += r"\l"
 

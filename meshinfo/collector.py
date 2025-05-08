@@ -89,14 +89,14 @@ def main(
             logger.exception("Aborted!", exc=exc)
             return str(exc)
 
-        return
+        return None
 
     try:
         asyncio.run(service(collection, polling_period=config.period))
     except KeyboardInterrupt as exc:
         logger.exception("Aborted!", exc=exc)
         return str(exc)
-    return
+    return None
 
 
 async def service(collect, *, polling_period: int):

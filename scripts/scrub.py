@@ -28,22 +28,17 @@ class ScrubJsonSample:
     fake: Faker = attr.ib(factory=Faker, init=False)
 
     def scrub_dict(self, values: dict[str, Any]) -> dict:
-        scrubbed_dict = {
-            key: self.scrub_unknown(key, value) for key, value in values.items()
-        }
-        return scrubbed_dict
+        return {key: self.scrub_unknown(key, value) for key, value in values.items()}
 
     def scrub_unknown(self, key: str, value: Any) -> Any:
         if isinstance(value, dict):
             return self.scrub_dict(value)
-        elif isinstance(value, list):
+        if isinstance(value, list):
             return self.scrub_list(key, value)
-        else:
-            return self.scrub_scalar(key, value)
+        return self.scrub_scalar(key, value)
 
     def scrub_list(self, key: str, values: list) -> list:
-        scrubbed_list = [self.scrub_unknown(key, value) for value in values]
-        return scrubbed_list
+        return [self.scrub_unknown(key, value) for value in values]
 
     def scrub_scalar(self, key: str, value: Any) -> Any:
         if not key:
@@ -75,7 +70,7 @@ class ScrubJsonSample:
         return value
 
 
-def main(argv: list = None):
+def main(argv: list | None = None):
     """Scrub JSON files before adding to repository for tests."""
     # Scrub Sample Files
     parser = argparse.ArgumentParser()
@@ -111,14 +106,13 @@ def random_grid_square():
         random.randint(0, 24),
         random.randint(0, 24),
     ]
-    grid_square = (
+    return (
         uppercase[values[0]]
         + uppercase[values[1]]
         + f"{values[2]}{values[3]}"
         + lowercase[values[4]]
         + lowercase[values[5]]
     )
-    return grid_square
 
 
 if __name__ == "__main__":

@@ -386,7 +386,7 @@ def _load_system_info(json_data: dict[str, Any]) -> SystemInfo:
     details = json_data["node_details"]
     link_info = json_data.get("link_info") or {}
 
-    node_info = SystemInfo(
+    return SystemInfo(
         node_name=json_data["node"],
         display_name=json_data["node"],
         api_version=json_data["api_version"],
@@ -416,7 +416,6 @@ def _load_system_info(json_data: dict[str, Any]) -> SystemInfo:
         ],
         source_json=json_data,
     )
-    return node_info
 
 
 def _load_legacy_system_info(json_data: dict[str, Any]) -> SystemInfo:
@@ -498,19 +497,17 @@ def _version_delta(sample: tuple[int, ...], standard: tuple[int, ...]) -> int:
             )
         if delta == 0:
             continue
-        elif position == 1:
+        if position == 1:
             # major version is behind
             return 3
-        elif position == length:
+        if position == length:
             # reached the final value
             if length == 2:
                 # if there are only two parts then treat the lsat number more severely
                 return 1 if delta < 2 else 2
-            else:
-                return 1 if delta < 4 else 2
-        else:
-            # some middle value
-            return 2 if delta < 2 else 3
+            return 1 if delta < 4 else 2
+        # some middle value
+        return 2 if delta < 2 else 3
 
     return 0
 
