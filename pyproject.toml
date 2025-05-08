@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "mesh-info"
 description = "Collect and display information about an AREDN mesh network."
-version = "0.8.0"
+version = "0.8.1.dev0"
 readme = "README.rst"
 authors = [{ name = "Scott Seary", email = "smsearcy@gmail.com" }]
 requires-python = ">=3.9"

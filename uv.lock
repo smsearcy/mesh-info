@@ -714,7 +714,7 @@ wheels = [
 
 [[package]]
 name = "mesh-info"
-version = "0.8.0"
+version = "0.8.1.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
@@ -764,7 +764,7 @@ requires-dist = [
     { name = "attrs", specifier = "~=23.1" },
     { name = "environ-config", specifier = "~=23.2" },
     { name = "gunicorn", specifier = ">=22.0" },
-    { name = "pendulum", specifier = "~=3.1.0" },
+    { name = "pendulum", specifier = "~=3.1" },
     { name = "platformdirs", specifier = "~=2.0" },
     { name = "pyramid", specifier = "~=2.0" },
     { name = "pyramid-jinja2", specifier = "~=2.10" },
