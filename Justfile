@@ -1,5 +1,7 @@
 default: pre-commit fix mypy test-all docs
 
+export SQLALCHEMY_WARN_20 := "1"
+
 # Run pre-commit hooks
 pre-commit:
 	uvx pre-commit run --all-files
