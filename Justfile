@@ -1,6 +1,7 @@
 default: pre-commit fix mypy test-all docs
 
 export SQLALCHEMY_WARN_20 := "1"
+export PYTHONWARNINGS := "always::DeprecationWarning"
 
 # Run pre-commit hooks
 pre-commit:
