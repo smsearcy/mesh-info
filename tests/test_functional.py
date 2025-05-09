@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 def test_overview_success(testapp, dbsession):
     res = testapp.get("/", status=200)
     assert res.body

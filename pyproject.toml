@@ -94,28 +94,29 @@ exclude = ["alembic/versions/*.py"]
 [tool.ruff.lint]
 select = [
   "A",   # flake8-builtins
-  "B",   # flake8-bugbear"
+  "B",   # flake8-bugbear
   "C4",  # flake8-comprehensions
   "C90", # mccabe
-  "E",
+  "E",   # pycodestyle (error)
   "F",   # pyflakes
   "I",   # isort
   "N",   # pep8-naming
-  "PLC",
-  "PLE",
-  "PLW", # pylint
+  "PLC", # pylint (convention)
+  "PLE", # pylint (error)
+  "PLW", # pylint (warning)
   "RET", # flake8-return
+  "RUF",
   "SIM", # flake8-simplify
   "UP",  # pyupgrade
-  "W",   # pycodestyle
+  "W",   # pycodestyle (warning)
   "YTT", # flake8-2020
-  "RUF",
   # Saving these for another day
   # "D",  # pydocstyle
 ]
 
 [tool.ruff.lint.isort]
 known-third-party = ["alembic"]
+required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 12

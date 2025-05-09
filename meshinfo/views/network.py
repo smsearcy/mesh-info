@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pendulum
 from pyramid.httpexceptions import HTTPBadRequest, HTTPNotFound
 from pyramid.request import Request

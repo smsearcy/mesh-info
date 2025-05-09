@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pendulum
 import structlog
 from pyramid.view import exception_view_config

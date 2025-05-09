@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pendulum
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship

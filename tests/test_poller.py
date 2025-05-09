@@ -1,5 +1,7 @@
 """Test network crawling functionality."""
 
+from __future__ import annotations
+
 from asyncio import StreamReader
 
 import pytest

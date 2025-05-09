@@ -1,5 +1,7 @@
 """Input validation schemas/parsing for Mesh Info views."""
 
+from __future__ import annotations
+
 from pyramid.httpexceptions import HTTPBadRequest
 
 from ..historical import GraphParams, Period

@@ -1,5 +1,7 @@
 """Configuration for Pyramid's interactive pshell."""
 
+from __future__ import annotations
+
 from . import models
 
 

@@ -1,5 +1,7 @@
 """Test the configuration module."""
 
+from __future__ import annotations
+
 import logging
 
 from meshinfo.config import AppConfig, Environment

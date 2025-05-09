@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.request import Request
 from pyramid.response import Response

@@ -1,5 +1,7 @@
 """Script to manage running collector and web service for local development."""
 
+from __future__ import annotations
+
 import subprocess
 import sys
 import time

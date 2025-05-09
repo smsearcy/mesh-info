@@ -1,5 +1,7 @@
 """Filter for Jinja templates."""
 
+from __future__ import annotations
+
 import jinja2
 from pyramid.threadlocal import get_current_request
 

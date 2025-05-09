@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pyramid.request import Request
 from pyramid.view import view_config
 

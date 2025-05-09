@@ -1,5 +1,7 @@
 """Smoke tests for the CLI commands."""
 
+from __future__ import annotations
+
 from meshinfo import cli
 from meshinfo.config import from_env
 
