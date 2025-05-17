@@ -34,7 +34,7 @@ def node_detail(request: Request):
 
     query = (
         dbsession.query(Link)
-        .options(joinedload(Link.destination).load_only("display_name"))
+        .options(joinedload(Link.destination).load_only(Node.display_name))
         .filter(
             Link.source_id == node.id,
             Link.status != LinkStatus.INACTIVE,
@@ -92,7 +92,7 @@ def node_preview(request: Request):
 
     query = (
         dbsession.query(Link)
-        .options(joinedload(Link.destination).load_only("display_name"))
+        .options(joinedload(Link.destination).load_only(Node.display_name))
         .filter(
             Link.source_id == node.id,
             Link.status == LinkStatus.CURRENT,
@@ -101,7 +101,7 @@ def node_preview(request: Request):
     current_links = query.all()
     query = (
         dbsession.query(Link)
-        .options(joinedload(Link.destination).load_only("display_name"))
+        .options(joinedload(Link.destination).load_only(Node.display_name))
         .filter(
             Link.source_id == node.id,
             Link.status == LinkStatus.RECENT,
@@ -128,7 +128,11 @@ def node_graphs(request: Request):
     graph = request.matchdict["name"]
     dbsession: Session = request.dbsession
 
-    node = dbsession.query(Node).options(load_only("display_name", "id")).get(node_id)
+    node = (
+        dbsession.query(Node)
+        .options(load_only(Node.display_name, Node.id))
+        .get(node_id)
+    )
 
     return {
         "node": node,
