@@ -20,18 +20,23 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
-0.8.1 - Unreleased
+0.8.1 - 2025-05-17
 ------------------
 
 Changed
 ^^^^^^^
 
-* Switch project management to uv from PDM
+* Switch project management from PDM to uv
 
 Fixed
 ^^^^^
 
 * Fix bug in firmware statistics on home page (`#135 <https://github.com/smsearcy/mesh-info/issues/135>`_)
+
+Security
+^^^^^^^^
+
+* Update pinned version of *aiohttp* due to vulnerabilities
 
 0.8.0 - 2025-04-02
 ------------------
