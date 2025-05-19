@@ -52,7 +52,9 @@ multidict==6.2.0
     #   aiohttp
     #   yarl
 packaging==24.2
-    # via gunicorn
+    # via
+    #   gunicorn
+    #   zope-sqlalchemy
 pastedeploy==3.1.0
     # via plaster-pastedeploy
 pendulum==3.1.0
@@ -143,5 +145,5 @@ zope-interface==7.2
     #   transaction
     #   wired
     #   zope-sqlalchemy
-zope-sqlalchemy==1.6
+zope-sqlalchemy==3.1
     # via mesh-info

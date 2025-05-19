@@ -39,8 +39,8 @@ dependencies = [
   "structlog ~= 23.2",
   "sqlalchemy ~= 1.4",
   "transaction ~= 3.0",
-  "zope.sqlalchemy ~= 1.6",
   "rrdtool-bindings>=0.2.0",
+  "zope-sqlalchemy>=1.6",
 ]
 
 [dependency-groups]
