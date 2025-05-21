@@ -20,6 +20,14 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
+0.8.2 - 2025-05-20
+------------------
+
+Security
+^^^^^^^^
+
+* Update pinned version of *setuptools* due to vulnerability
+
 0.8.1 - 2025-05-17
 ------------------
 
