@@ -23,7 +23,7 @@ configure_mappers()
 
 
 def get_engine(settings):
-    return create_engine(**attr.asdict(settings))
+    return create_engine(future=True, **attr.asdict(settings))
 
 
 def get_session_factory(engine) -> sessionmaker:

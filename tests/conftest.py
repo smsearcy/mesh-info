@@ -37,7 +37,7 @@ def dbengine(request, tmp_path):
     db_url = f"sqlite:///{sqlite_file!s}"
 
     alembic_cfg = alembic.config.Config("alembic.ini")
-    engine = create_engine(db_url)
+    engine = create_engine(db_url, future=True)
     alembic_cfg.attributes["connection"] = engine
 
     Base.metadata.drop_all(bind=engine)

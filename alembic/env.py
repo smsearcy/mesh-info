@@ -61,7 +61,9 @@ def run_migrations_online():
 
     if connectable is None:
         app_config = from_env()
-        connectable = create_engine(app_config.db.url, poolclass=pool.NullPool)
+        connectable = create_engine(
+            app_config.db.url, poolclass=pool.NullPool, future=True
+        )
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
