@@ -1,0 +1,269 @@
+{
+  "lon": "113.316546",
+  "sysinfo": {
+    "uptime": "6 days, 0:25:49",
+    "loads": [
+      0.38,
+      0.12,
+      0.03
+    ]
+  },
+  "interfaces": [
+    {
+      "name": "br0.3",
+      "mac": "D4:A6:10:DB:F7:D0"
+    },
+    {
+      "mac": "54:D5:04:AA:DA:35",
+      "name": "br-lan",
+      "ip": "10.81.250.161"
+    },
+    {
+      "name": "br0.1",
+      "mac": "D4:A6:10:DB:F7:D0"
+    },
+    {
+      "name": "br-wan",
+      "mac": "38:AD:7A:E4:E7:43"
+    },
+    {
+      "name": "br0.2",
+      "mac": "D4:A6:10:DB:F7:D0"
+    },
+    {
+      "mac": "92:94:42:F8:38:7D",
+      "name": "wlan0",
+      "ip": "10.202.63.84"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "br0",
+      "mac": "D4:A6:10:DB:F7:D0"
+    },
+    {
+      "mac": "58:C1:6F:D0:0C:B1",
+      "name": "br-dtdlink",
+      "ip": "10.203.63.84"
+    },
+    {
+      "name": "eth0",
+      "mac": "D4:A6:10:DB:F7:D0"
+    }
+  ],
+  "api_version": "1.14",
+  "lat": "34.907984",
+  "meshrf": {
+    "ssid": "ArednMeshNetwork",
+    "elevation": "0",
+    "freq": "5885",
+    "chanbw": "10",
+    "azimuth": "300",
+    "channel": "177",
+    "status": "on",
+    "mode": "adhoc",
+    "antenna": {
+      "gain": 19,
+      "beamwidth": 120,
+      "description": "airMAX 5 GHz, 19 dBi 120&deg; Sector",
+      "model": "AM-5G19-120"
+    },
+    "height": "7"
+  },
+  "tunnels": {
+    "active_tunnel_count": 0,
+    "wireguard_tunnel_count": 0,
+    "legacy_tunnel_count": 0
+  },
+  "link_info": {
+    "10.52.8.245": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 1,
+      "vtime": 20000,
+      "linkCost": 0.099609,
+      "linkType": "DTD",
+      "hostname": "N0CALL-VP-M5-Roc-SEC",
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "neighborLinkQuality": 1,
+      "symmetryTime": 18817,
+      "seqnoValid": false,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "lossMultiplier": 65536,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 4817,
+      "validityTime": 37447,
+      "olsrInterface": "br-dtdlink",
+      "lastHelloTime": 0,
+      "asymmetryTime": 519915408
+    },
+    "10.20.141.218": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 1,
+      "vtime": 20000,
+      "linkCost": 0.099609,
+      "linkType": "DTD",
+      "hostname": "N0CALL-VP-PB400AC-dz",
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "neighborLinkQuality": 1,
+      "symmetryTime": 17112,
+      "seqnoValid": false,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "lossMultiplier": 65536,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 3112,
+      "validityTime": 35188,
+      "olsrInterface": "br-dtdlink",
+      "lastHelloTime": 0,
+      "asymmetryTime": 519913703
+    },
+    "10.26.78.143": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 1,
+      "vtime": 20000,
+      "linkCost": 0.099609,
+      "linkType": "DTD",
+      "hostname": "N0CALL-VP-haplite\n143.78.27.10.in-addr.arpa\tname = N0CALL-VP-haplite",
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "neighborLinkQuality": 1,
+      "symmetryTime": 19441,
+      "seqnoValid": false,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "lossMultiplier": 65536,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 5441,
+      "validityTime": 39298,
+      "olsrInterface": "br-dtdlink",
+      "lastHelloTime": 0,
+      "asymmetryTime": 519916032
+    },
+    "10.166.72.127": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 1,
+      "vtime": 20000,
+      "linkCost": 0.099609,
+      "linkType": "DTD",
+      "hostname": "N0CALL-VP-NSM5-SmtLp",
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "neighborLinkQuality": 1,
+      "symmetryTime": 17716,
+      "seqnoValid": false,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "lossMultiplier": 65536,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 3716,
+      "validityTime": 36079,
+      "olsrInterface": "br-dtdlink",
+      "lastHelloTime": 0,
+      "asymmetryTime": 519914307
+    },
+    "10.12.102.46": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 1,
+      "vtime": 20000,
+      "linkCost": 1,
+      "linkType": "RF",
+      "hostname": "N0CALL-LBacGEN2-b",
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "rx_rate": 13,
+      "neighborLinkQuality": 1,
+      "noise": -112,
+      "symmetryTime": 17766,
+      "seqnoValid": false,
+      "lossMultiplier": 65536,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "asymmetryTime": 519914357,
+      "tx_rate": 6.5,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 3766,
+      "validityTime": 37094,
+      "olsrInterface": "wlan0",
+      "lastHelloTime": 0,
+      "signal": -67
+    },
+    "10.103.253.36": {
+      "linkType": "RF",
+      "interface": "wlan0",
+      "hostname": "N0CALL-omni-wfdo-7a24"
+    },
+    "10.80.84.92": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 1,
+      "vtime": 20000,
+      "linkCost": 0.099609,
+      "linkType": "DTD",
+      "hostname": "N0CALL-VP-PB-529TWR",
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "neighborLinkQuality": 1,
+      "symmetryTime": 18515,
+      "seqnoValid": false,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "lossMultiplier": 65536,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 4515,
+      "validityTime": 37928,
+      "olsrInterface": "br-dtdlink",
+      "lastHelloTime": 0,
+      "asymmetryTime": 519915106
+    },
+    "10.244.12.205": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 1,
+      "vtime": 20000,
+      "linkCost": 0.099609,
+      "linkType": "DTD",
+      "hostname": "N0CALL-VP-PB400-Dallas.local.mesh\n205.12.245.10.in-addr.arpa\tname = N0CALL-VP-PB400-Dallas",
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "neighborLinkQuality": 1,
+      "symmetryTime": 16453,
+      "seqnoValid": false,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "lossMultiplier": 65536,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 2453,
+      "validityTime": 35857,
+      "olsrInterface": "br-dtdlink",
+      "lastHelloTime": 0,
+      "asymmetryTime": 519913044
+    }
+  },
+  "grid_square": "RI63yq",
+  "node": "N0CALL-VP-Roc5AC-Sec",
+  "node_details": {
+    "description": "Victor Point 120 degree sector serving Salem. N0CALL@comcast.net",
+    "model": "Ubiquiti Rocket 5AC Lite",
+    "mesh_gateway": "0",
+    "board_id": "0xe1f5",
+    "firmware_mfg": "Other",
+    "firmware_version": "3.25.5.1"
+  }
+}

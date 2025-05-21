@@ -1,0 +1,185 @@
+{
+  "lon": "17.495889",
+  "sysinfo": {
+    "uptime": "5 days, 1:45:37",
+    "loads": [
+      0.08,
+      0.13,
+      0.15
+    ]
+  },
+  "interfaces": [
+    {
+      "name": "br0.3",
+      "mac": "68:F4:39:81:80:69"
+    },
+    {
+      "name": "wgs0",
+      "ip": "172.31.92.155"
+    },
+    {
+      "mac": "62:A2:B8:DD:44:04",
+      "name": "br-lan",
+      "ip": "10.213.184.65"
+    },
+    {
+      "mac": "88:E3:76:5B:A7:7C",
+      "name": "wlan0",
+      "ip": "10.122.183.8"
+    },
+    {
+      "mac": "D0:12:D8:6F:D4:12",
+      "name": "br-wan",
+      "ip": "192.168.100.109"
+    },
+    {
+      "name": "br0.2",
+      "mac": "68:F4:39:81:80:69"
+    },
+    {
+      "name": "wgs1",
+      "ip": "172.31.79.171"
+    },
+    {
+      "name": "br0.100",
+      "mac": "68:F4:39:81:80:69"
+    },
+    {
+      "name": "tunl0",
+      "mac": "00:00:00:00"
+    },
+    {
+      "name": "br0",
+      "mac": "68:F4:39:81:80:69"
+    },
+    {
+      "mac": "B2:91:70:0D:72:29",
+      "name": "br-dtdlink",
+      "ip": "10.123.183.8"
+    },
+    {
+      "name": "eth0",
+      "mac": "68:F4:39:81:80:69"
+    }
+  ],
+  "api_version": "1.14",
+  "lat": "-25.611540",
+  "meshrf": {
+    "ssid": "ArednMeshNetwork",
+    "elevation": "0",
+    "freq": "2397",
+    "chanbw": "10",
+    "azimuth": "80",
+    "channel": "-2",
+    "status": "on",
+    "mode": "adhoc",
+    "antenna": {
+      "gain": 11,
+      "beamwidth": 55,
+      "description": "11 dBi 55&deg; Panel",
+      "builtin": true
+    },
+    "height": "10"
+  },
+  "services_local": [
+    {
+      "protocol": "tcp",
+      "name": "Mesh Info",
+      "link": "http://N0CALL-meshpi:8080/"
+    }
+  ],
+  "tunnels": {
+    "active_tunnel_count": 2,
+    "wireguard_tunnel_count": 2,
+    "legacy_tunnel_count": 0
+  },
+  "link_info": {
+    "10.94.41.84": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 1,
+      "vtime": 20000,
+      "linkCost": 1,
+      "linkType": "WIREGUARD",
+      "hostname": "N0CALL-hAP1-Phoenix",
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "neighborLinkQuality": 1,
+      "symmetryTime": 20000,
+      "seqnoValid": false,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "lossMultiplier": 65536,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 6000,
+      "validityTime": 38946,
+      "olsrInterface": "wgs1",
+      "lastHelloTime": 0,
+      "asymmetryTime": 438238305
+    },
+    "10.98.33.29": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 0.796,
+      "vtime": 20000,
+      "linkCost": 4194304,
+      "linkType": "RF",
+      "hostname": "N0CALL-CPE220-1-Medford-OR-20-270",
+      "validityTime": 12415,
+      "previousLinkStatus": "UNSPECIFIED",
+      "currentLinkStatus": "ASYMMETRIC",
+      "rx_rate": 72.2,
+      "neighborLinkQuality": 0,
+      "noise": -94,
+      "symmetryTime": 0,
+      "seqnoValid": false,
+      "lossMultiplier": 65536,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "asymmetryTime": 438231646,
+      "tx_rate": 14.4,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 3352,
+      "expected_throughput": 8.7,
+      "olsrInterface": "wlan0",
+      "lastHelloTime": 0,
+      "signal": -61
+    },
+    "10.16.102.97": {
+      "helloTime": 0,
+      "lostLinkTime": 0,
+      "linkQuality": 1,
+      "vtime": 20000,
+      "linkCost": 1,
+      "linkType": "WIREGUARD",
+      "hostname": "N0CALL-hAP1-Ashland",
+      "previousLinkStatus": "SYMMETRIC",
+      "currentLinkStatus": "SYMMETRIC",
+      "neighborLinkQuality": 1,
+      "symmetryTime": 17270,
+      "seqnoValid": false,
+      "pending": false,
+      "lossHelloInterval": 4000,
+      "lossMultiplier": 65536,
+      "hysteresis": 0,
+      "seqno": 0,
+      "lossTime": 3270,
+      "validityTime": 36748,
+      "olsrInterface": "wgs0",
+      "lastHelloTime": 0,
+      "asymmetryTime": 438235575
+    }
+  },
+  "grid_square": "DL49ie",
+  "node": "N0CALL-NSM2-1",
+  "node_details": {
+    "description": "East Medford pointed to Roxy Ann",
+    "model": "Ubiquiti Nanostation M (XW)",
+    "mesh_gateway": "0",
+    "board_id": "0xe866",
+    "firmware_mfg": "Other",
+    "firmware_version": "3.25.5.1"
+  }
+}
