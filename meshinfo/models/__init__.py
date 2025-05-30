@@ -27,7 +27,7 @@ def get_engine(settings):
 
 
 def get_session_factory(engine) -> sessionmaker:
-    factory = sessionmaker()
+    factory = sessionmaker(future=True)
     factory.configure(bind=engine)
     return factory
 
