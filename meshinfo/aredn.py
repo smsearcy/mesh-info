@@ -368,10 +368,10 @@ def load_system_info(json_data: dict[str, Any], *, ip_address: str = "") -> Syst
     # The vast majority of nodes at this time are on the newer API
     # (and some "custom" software doesn't report its API version correctly),
     # so we're just going to try the "modern" parser, falling back in case of errors.
-    try:
+    api_version = tuple(int(part) for part in json_data["api_version"].split("."))
+    if api_version >= (1, 5):
         node_info = _load_system_info(json_data)
-    except Exception as exc:
-        logger.warning("JSON parse error, falling back to legacy version", exc=exc)
+    else:
         node_info = _load_legacy_system_info(json_data)
 
     # handle issue of failing to identify the main wireless interface
