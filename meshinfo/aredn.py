@@ -365,13 +365,10 @@ def load_system_info(json_data: dict[str, Any], *, ip_address: str = "") -> Syst
         Data class with information about the node.
 
     """
-    # The vast majority of nodes at this time are on the newer API
-    # (and some "custom" software doesn't report its API version correctly),
-    # so we're just going to try the "modern" parser, falling back in case of errors.
-    try:
+    api_version = tuple(int(part) for part in json_data["api_version"].split("."))
+    if api_version >= (1, 5):
         node_info = _load_system_info(json_data)
-    except Exception as exc:
-        logger.warning("JSON parse error, falling back to legacy version", exc=exc)
+    else:
         node_info = _load_legacy_system_info(json_data)
 
     # handle issue of failing to identify the main wireless interface
@@ -537,9 +534,12 @@ def _load_link_info(
 
     """
     # fix example of a DTD link that wasn't properly identified as such
-    missing_dtd = (
-        json_data["linkType"] == "" and json_data["olsrInterface"] == "br-dtdlink"
-    )
+    try:
+        interface = json_data["olsrInterface"]
+    except KeyError:
+        # I suspect this is a Babel-only link with no OLSR data...
+        interface = json_data["interface"]
+    missing_dtd = json_data["linkType"] == "" and interface == "br-dtdlink"
     type_ = "DTD" if missing_dtd else json_data["linkType"]
     try:
         link_type = getattr(LinkType, type_)
@@ -557,9 +557,11 @@ def _load_link_info(
         destination=node_name,
         destination_ip=destination_ip,
         type=link_type,
-        interface=json_data["olsrInterface"],
-        quality=json_data["linkQuality"],
-        neighbor_quality=json_data["neighborLinkQuality"],
+        interface=interface,
+        # FIXME: need another way to get this information without OLSR
+        # (look at LQM data)
+        quality=json_data.get("linkQuality"),
+        neighbor_quality=json_data.get("neighborLinkQuality"),
         signal=json_data.get("signal"),
         noise=json_data.get("noise"),
         tx_rate=json_data.get("tx_rate"),
