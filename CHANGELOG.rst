@@ -20,6 +20,20 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
+0.8.3 - Unreleased
+------------------
+
+Changed
+^^^^^^^
+
+* Updated latest AREDN and API versions
+
+Fixed
+^^^^^
+
+* Avoid link info parse error when no OLSR information (`#138 <https://github.com/smsearcy/mesh-info/issues/138>`_)
+
+
 0.8.2 - 2025-05-20
 ------------------
 
