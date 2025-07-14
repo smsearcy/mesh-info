@@ -47,7 +47,7 @@ dependencies = [
 dev = [
   "Faker>=25.3.0",
   "WebTest>=3.0.0",
-  "mypy>=1.10.0",
+  "mypy>=1.10.1",
   "pyramid-debugtoolbar>=4.12.1",
   "pytest-asyncio>=0.23.7",
   "pytest-cov>=5.0.0",
@@ -56,6 +56,12 @@ dev = [
   "ruff>=0.4.6",
   "sphinx-rtd-theme>=2.0.0",
   "sphinx>=7.3.7",
+  "sqlalchemy2-stubs>=0.0.2a38",
+]
+lsp = [
+    "pylsp-mypy>=0.7.0",
+    "python-lsp-ruff>=2.2.2",
+    "python-lsp-server>=1.13.0",
 ]
 
 [project.urls]
@@ -74,6 +80,7 @@ include = ["alembic", "meshinfo"]
 # postponing enabling this for another day
 # disallow_untyped_defs = true
 warn_unused_configs = true
+plugins = "sqlalchemy.ext.mypy.plugin"
 
 [[tool.mypy.overrides]]
 ignore_missing_imports = true
@@ -82,7 +89,6 @@ module = [
   "hupper.*",
   "pyramid.*",
   "rrdtool.*",
-  "sqlalchemy.*",
   "transaction.*",
   "zope.*",
 ]

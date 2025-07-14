@@ -12,7 +12,7 @@ fmt:
   uv run ruff format .
 
 # Format and lint with Ruff
-fix: && fmt
+fix: fmt
 	uv run ruff check . --fix
 
 # Type checking with mypy
