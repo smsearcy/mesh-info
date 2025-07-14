@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pendulum
 from sqlalchemy import (
     JSON,
@@ -16,6 +18,9 @@ from sqlalchemy.orm import relationship
 
 from ..types import Band, NodeStatus
 from .meta import Base, PDateTime
+
+if TYPE_CHECKING:
+    from .link import Link
 
 
 class Node(Base):
@@ -80,7 +85,9 @@ class Node(Base):
         nullable=False,
     )
 
-    links = relationship("Link", foreign_keys="Link.source_id", back_populates="source")
+    links: list[Link] = relationship(
+        "Link", foreign_keys="Link.source_id", back_populates="source"
+    )
 
     # Is this premature optimization?
     Index("idx_mac_name", mac_address, name)

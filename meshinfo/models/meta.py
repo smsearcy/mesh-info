@@ -16,8 +16,15 @@ NAMING_CONVENTION = {
     "pk": "pk_%(table_name)s",
 }
 
+
+# Necessary for 2.0 migration:
+# https://docs.sqlalchemy.org/en/20/changelog/migration_20.html#migration-to-2-0-step-six-add-allow-unmapped-to-explicitly-typed-orm-models
+class _Base:
+    __allow_unmapped__ = True
+
+
 metadata = MetaData(naming_convention=NAMING_CONVENTION)
-Base = declarative_base(metadata=metadata)
+Base = declarative_base(metadata=metadata, cls=_Base)
 
 
 class PDateTime(TypeDecorator):

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pendulum
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship
@@ -7,18 +9,25 @@ from sqlalchemy.orm import relationship
 from ..types import LinkId, LinkStatus, LinkType
 from .meta import Base, PDateTime
 
+if TYPE_CHECKING:
+    from .node import Node
+
 
 class Link(Base):
     """Represents a link between two nodes."""
 
     __tablename__ = "link"
 
-    source_id = sa.Column(sa.Integer, sa.ForeignKey("node.node_id"), primary_key=True)
-    destination_id = sa.Column(
+    source_id: int = sa.Column(
         sa.Integer, sa.ForeignKey("node.node_id"), primary_key=True
     )
-    type = sa.Column(sa.Enum(LinkType, native_enum=False), primary_key=True)
-    status = sa.Column(sa.Enum(LinkStatus, native_enum=False), nullable=False)
+    destination_id: int = sa.Column(
+        sa.Integer, sa.ForeignKey("node.node_id"), primary_key=True
+    )
+    type: LinkType = sa.Column(sa.Enum(LinkType, native_enum=False), primary_key=True)
+    status: LinkStatus = sa.Column(
+        sa.Enum(LinkStatus, native_enum=False), nullable=False
+    )
     last_seen = sa.Column(PDateTime(), nullable=False, default=pendulum.now)
 
     olsr_cost = sa.Column(sa.Float)
@@ -40,8 +49,10 @@ class Link(Base):
         nullable=False,
     )
 
-    source = relationship("Node", foreign_keys="Link.source_id", back_populates="links")
-    destination = relationship("Node", foreign_keys="Link.destination_id")
+    source: Node = relationship(
+        "Node", foreign_keys="Link.source_id", back_populates="links"
+    )
+    destination: Node = relationship("Node", foreign_keys="Link.destination_id")
 
     @property
     def signal_noise_ratio(self):
