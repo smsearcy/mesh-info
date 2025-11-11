@@ -202,7 +202,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Purges old data from the database and RRD files.",
     )
     purge_parser.add_argument(
-        "--days", default=180, help="Purge nodes not seen in this many days."
+        "--days", type=int, default=180, help="Purge nodes not seen in this many days."
     )
     purge_parser.add_argument("--update", action=argparse.BooleanOptionalAction)
 
