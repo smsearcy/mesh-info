@@ -1,0 +1,109 @@
+{
+  "api_version": "2.0",
+  "node": "N0CALL-NSM2-1",
+  "node_details": {
+    "model": "Ubiquiti Nanostation M (XW)",
+    "description": "East Medford pointed to Roxy Ann",
+    "board_id": "0xe866",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "babel-20251106-5796bc0f",
+    "mesh_gateway": false,
+    "mesh_supernode": false
+  },
+  "tunnels": {
+    "active_tunnel_count": 2
+  },
+  "lat": "-8.054422",
+  "lon": "-5.951764",
+  "gridsquare": "CN82ni",
+  "meshrf": {
+    "status": "on",
+    "mode": "adhoc",
+    "ssid": "ArednMeshNetwork",
+    "channel": -2,
+    "chanbw": 10,
+    "freq": 2397,
+    "azimuth": 80,
+    "elevation": 0,
+    "height": 10,
+    "antenna": {
+      "description": "11 dBi 55&deg; Panel",
+      "gain": 11,
+      "beamwidth": 55,
+      "builtin": true
+    }
+  },
+  "sysinfo": {
+    "uptime": "0 days, 11:36",
+    "loads": [
+      0.71,
+      0.53,
+      0.5
+    ],
+    "freememory": "13532"
+  },
+  "interfaces": [
+    {
+      "name": "eth0",
+      "mac": "F6:92:30:8D:65:64"
+    },
+    {
+      "name": "br-dtdlink",
+      "mac": "74:F6:DF:E9:8A:26",
+      "ip": "10.123.183.8"
+    },
+    {
+      "name": "br0",
+      "mac": "F6:92:30:8D:65:64"
+    },
+    {
+      "name": "br0.2",
+      "mac": "F6:92:30:8D:65:64"
+    },
+    {
+      "name": "br-lan",
+      "mac": "9A:F9:CC:6E:75:E6",
+      "ip": "10.213.184.65"
+    },
+    {
+      "name": "br0.3",
+      "mac": "F6:92:30:8D:65:64"
+    },
+    {
+      "name": "br-wan",
+      "mac": "86:DA:A4:FA:71:D2",
+      "ip": "192.168.100.109"
+    },
+    {
+      "name": "br0.100",
+      "mac": "F6:92:30:8D:65:64"
+    },
+    {
+      "name": "wgs1",
+      "ip": "172.31.79.171"
+    },
+    {
+      "name": "wgs0",
+      "ip": "172.31.92.155"
+    },
+    {
+      "name": "wlan0",
+      "mac": "78:9A:F5:00:98:AF",
+      "ip": "10.122.183.8"
+    }
+  ],
+  "link_info": {
+    "10.94.41.84": {
+      "hostname": "N0CALL-hap1-phoenix",
+      "linkType": "WIREGUARD",
+      "interface": "wgs1"
+    },
+    "10.98.33.29": {
+      "hostname": "N0CALL-cpe220-1-medford-or-20-270",
+      "linkType": "RF",
+      "interface": "wlan0",
+      "signal": -57,
+      "noise": -91
+    }
+  }
+}

@@ -70,7 +70,7 @@ def test_api_version_1_5(data_folder):
     assert system_info.api_version == "1.5"
     assert len(system_info.load_averages) == 3
     assert system_info.up_time == "0 days, 2:39:38"
-    assert system_info.up_time_seconds == 9_578
+    assert system_info.up_time_seconds == 9_540
     assert system_info.active_tunnel_count == 0
 
 
@@ -97,7 +97,7 @@ def test_api_version_1_6(data_folder):
     assert system_info.api_version == "1.6"
     assert len(system_info.load_averages) == 3
     assert system_info.up_time == "255 days, 3:00:03"
-    assert system_info.up_time_seconds == 22_042_803
+    assert system_info.up_time_seconds == 22_042_800
     assert system_info.active_tunnel_count == 0
     assert len(system_info.services_json) == 1
     assert system_info.ip_address == "10.159.123.176"
@@ -126,7 +126,7 @@ def test_api_version_1_7(data_folder):
     assert system_info.api_version == "1.7"
     assert len(system_info.load_averages) == 3
     assert system_info.up_time == "3 days, 19:44:05"
-    assert system_info.up_time_seconds == 330_245
+    assert system_info.up_time_seconds == 330_240
     assert system_info.active_tunnel_count == 0
     assert system_info.ip_address == "10.106.204.11"
     assert system_info.band == Band.FIVE_GHZ
@@ -154,7 +154,7 @@ def test_api_version_1_9(data_folder):
     assert system_info.api_version == "1.9"
     assert len(system_info.load_averages) == 3
     assert system_info.up_time == "7 days, 14:51:22"
-    assert system_info.up_time_seconds == 658282
+    assert system_info.up_time_seconds == 658260
     assert system_info.active_tunnel_count == 0
     assert system_info.ip_address == "10.10.115.143"
     assert system_info.band == Band.TWO_GHZ
@@ -218,6 +218,26 @@ def test_with_tunnel_1_7(data_folder):
     assert system_info.active_tunnel_count == 0
     assert system_info.ip_address == "10.1.2.3"
     assert system_info.lan_ip_address == "10.3.2.1"
+
+
+def test_api_version_2_0_min(data_folder) -> None:
+    """Test parsing minimal API version 2.0 data."""
+    with open(data_folder / "sysinfo-2.0-basic.json") as f:
+        json_data = json.load(f)
+    system_info = aredn.load_system_info(json_data)
+
+    # I could just construct a second object but I'm not checking everything
+    assert system_info.node_name == "n0call-nsm2-1"
+    assert system_info.display_name == "N0CALL-NSM2-1"
+    assert len(system_info.interfaces) == 11
+    assert system_info.interfaces["br-lan"].ip_address == "10.213.184.65"
+    assert system_info.status == "on"
+    assert system_info.ssid == "ArednMeshNetwork"
+    assert system_info.api_version == "2.0"
+    assert len(system_info.load_averages) == 3
+    assert system_info.active_tunnel_count == 2
+    assert system_info.ip_address == "10.122.183.8"
+    assert system_info.lan_ip_address == "10.213.184.65"
 
 
 def test_lan_interface_eth0_0(data_folder):

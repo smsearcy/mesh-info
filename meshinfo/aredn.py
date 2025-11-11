@@ -306,16 +306,15 @@ class SystemInfo:
         """Convert uptime string to seconds."""
         if self.up_time == "":
             return None
-        if not (match := re.match(r"^(\d+) days, (\d+):(\d+):(\d+)", self.up_time)):
+        if not (match := re.match(r"^(\d+) days?, (\d+):(\d+)", self.up_time)):
             logger.warning("Failed to parse uptime string", value=self.up_time)
             return None
 
         days = int(match.group(1))
         hours = int(match.group(2))
         minutes = int(match.group(3))
-        seconds = int(match.group(4))
 
-        return 86_400 * days + 3_600 * hours + 60 * minutes + seconds
+        return 86_400 * days + 3_600 * hours + 60 * minutes
 
     @property
     def radio_link_count(self) -> int | None:
@@ -336,7 +335,9 @@ class SystemInfo:
         if not self.links:
             # in the absence of the link info dictionary use the tunnel count
             return self.active_tunnel_count
-        return sum(1 for link in self.links if link.type == LinkType.TUN)
+        return sum(
+            1 for link in self.links if link.type in {LinkType.WIREGUARD, LinkType.TUN}
+        )
 
     @property
     def api_version_tuple(self) -> tuple[int, ...]:
