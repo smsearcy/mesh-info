@@ -277,12 +277,16 @@ async def _get_network_hosts(host_name: str) -> Topology:
         async with (
             aiohttp.ClientSession() as session,
             session.get(
-                f"http://{host_name}/cgi-bin/sysinfo.json", params={"nodes": 1}
+                f"http://{host_name}/cgi-bin/sysinfo.json",
+                params={"nodes": 1, "topology": 1},
             ) as response,
         ):
             results = await response.json()
 
-        return Topology(nodes={node["ip"] for node in results["nodes"]})
+        api_version = tuple(int(value) for value in results["api_version"].split("."))
+        if api_version >= (2, 0):
+            return Topology(nodes={node["ip"] for node in results["nodes"]})
+        return Topology(nodes={entry["destinationIP"] for entry in results["topology"]})
 
 
 async def _node_polling_worker(
