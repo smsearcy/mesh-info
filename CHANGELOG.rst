@@ -20,7 +20,7 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
-0.8.3 - Unreleased
+0.8.3 - 2025-11-11
 ------------------
 
 Changed
@@ -32,6 +32,7 @@ Fixed
 ^^^^^
 
 * Avoid link info parse error when no OLSR information (`#138 <https://github.com/smsearcy/mesh-info/issues/138>`_)
+* Add support for starting with a Babel node (`#140 <https://github.com/smsearcy/mesh-info/issues/140>`_)
 
 
 0.8.2 - 2025-05-20
