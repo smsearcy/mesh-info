@@ -20,6 +20,18 @@ so breaking changes are possible but will be highlighted here.
     Fixed
     Security
 
+0.8.4 - Unreleased
+------------------
+
+**NOTE:** With the transition from OLSR to Babel,
+it currently appears that the best bet for querying the whole network is to start with a node running a Babel nightly.
+
+Fixed
+^^^^^
+
+* Updated RRDtool bindings so that *Mesh Info* installs on systems based on Debian 13 (Trixie).
+
+
 0.8.3 - 2025-11-11
 ------------------
 
