@@ -11,11 +11,11 @@ import string
 import sys
 from typing import Any
 
-import attr
+import attrs
 from faker import Faker  # type: ignore
 
 
-@attr.s
+@attrs.define
 class ScrubJsonSample:
     """Remove potentially sensitive information from sample JSON for nodes.
 
@@ -24,8 +24,8 @@ class ScrubJsonSample:
 
     """
 
-    mapped_values: dict = attr.ib(factory=dict, init=False)
-    fake: Faker = attr.ib(factory=Faker, init=False)
+    mapped_values: dict = attrs.field(factory=dict, init=False)
+    fake: Faker = attrs.field(factory=Faker, init=False)
 
     def scrub_dict(self, values: dict[str, Any]) -> dict:
         return {key: self.scrub_unknown(key, value) for key, value in values.items()}
@@ -51,11 +51,6 @@ class ScrubJsonSample:
             new_value = f"{self.fake.latitude():.6f}"
         elif key == "lon" and value != "":
             new_value = f"{self.fake.longitude():.6f}"
-        elif key == "mac" and value != "00:00:00:00":
-            # due to virtual interfaces the same MAC address can repeat in the file
-            if value not in self.mapped_values:
-                self.mapped_values[value] = self.fake.mac_address().upper()
-            new_value = self.mapped_values[value]
         elif key in ("node", "hostname", "name", "link"):
             new_value = re.sub(r"\d?[a-zA-Z]{1,2}\d{1,4}[a-zA-Z]{1,4}", "N0CALL", value)
         elif key == "grid_square" and value != "":

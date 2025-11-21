@@ -1,0 +1,411 @@
+{
+  "api_version": "2.0",
+  "node": "N0CALL-HAP-Merlin",
+  "node_details": {
+    "model": "MikroTik RouterBOARD 952Ui-5ac2nD (hAP ac lite)",
+    "description": "Josephine County Mesh Node",
+    "board_id": "MikroTik RouterBOARD 952Ui-5ac2nD (hAP ac lite)",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "babel-20251010-d36213c9",
+    "mesh_gateway": false,
+    "mesh_supernode": false
+  },
+  "tunnels": {
+    "active_tunnel_count": 6
+  },
+  "lat": "-16.918048",
+  "lon": "-58.228944",
+  "gridsquare": "CN82gm",
+  "meshrf": {
+    "status": "off"
+  },
+  "sysinfo": {
+    "uptime": "39 days, 12:17",
+    "loads": [
+      1.03,
+      0.66,
+      0.63
+    ],
+    "freememory": "8660"
+  },
+  "interfaces": [
+    {
+      "name": "eth0",
+      "mac": "22:63:f1:09:b6:74"
+    },
+    {
+      "name": "eth1",
+      "mac": "4e:04:06:7f:d7:de"
+    },
+    {
+      "name": "br-nomesh",
+      "mac": "96:0e:38:fd:05:14",
+      "ip": "10.15.210.19"
+    },
+    {
+      "name": "br-dtdlink",
+      "mac": "02:83:13:a8:53:07",
+      "ip": "10.16.210.19"
+    },
+    {
+      "name": "br0",
+      "mac": "22:63:f1:09:b6:74"
+    },
+    {
+      "name": "br0.2",
+      "mac": "22:63:f1:09:b6:74"
+    },
+    {
+      "name": "br-lan",
+      "mac": "dc:2c:6e:0f:d2:0e",
+      "ip": "10.250.66.97"
+    },
+    {
+      "name": "br0.1",
+      "mac": "22:63:f1:09:b6:74"
+    },
+    {
+      "name": "br-wan",
+      "mac": "dc:2c:6e:0f:d2:0d",
+      "ip": "192.168.1.8"
+    },
+    {
+      "name": "br0.4",
+      "mac": "22:63:f1:09:b6:74"
+    },
+    {
+      "name": "wgc0",
+      "ip": "172.31.14.80"
+    },
+    {
+      "name": "wgs0",
+      "ip": "172.31.80.245"
+    },
+    {
+      "name": "wgc3",
+      "ip": "172.31.14.76"
+    },
+    {
+      "name": "wgc1",
+      "ip": "172.31.14.72"
+    },
+    {
+      "name": "wgc4",
+      "ip": "172.31.14.78"
+    },
+    {
+      "name": "wgc2",
+      "ip": "172.31.14.74"
+    }
+  ],
+  "link_info": {
+    "10.94.22.214": {
+      "hostname": "N0CALL-hap-gp",
+      "linkType": "WIREGUARD",
+      "interface": "wgc0"
+    },
+    "10.252.10.65": {
+      "hostname": "N0CALL-hapacl-gp",
+      "linkType": "WIREGUARD",
+      "interface": "wgc4"
+    },
+    "10.6.190.77": {
+      "hostname": "N0CALL-hap-joco",
+      "linkType": "WIREGUARD",
+      "interface": "wgc3"
+    },
+    "10.190.252.101": {
+      "hostname": "N0CALL-tun-srv",
+      "linkType": "WIREGUARD",
+      "interface": "wgc2"
+    },
+    "10.162.164.252": {
+      "hostname": "N0CALL-hap-32-cp-250",
+      "linkType": "WIREGUARD",
+      "interface": "wgc1"
+    },
+    "10.206.216.217": {
+      "hostname": "lccore-tunsrv",
+      "linkType": "WIREGUARD",
+      "interface": "wgs0"
+    }
+  },
+  "lqm": {
+    "enabled": true,
+    "config": {
+      "user_blocks": ""
+    },
+    "info": {
+      "now": 3413809,
+      "trackers": {
+        "00:00:ac:1f:0e:51": {
+          "lastseen": 3413809,
+          "lastup": 3263913,
+          "type": "Wireguard",
+          "device": "wgc0",
+          "mac": "00:00:ac:1f:0e:51",
+          "ipv6ll": "fe80::200:acff:fe1f:e51",
+          "refresh": 3414572,
+          "lq": 100,
+          "rxcost": 206,
+          "txcost": 206,
+          "rtt": 41,
+          "tx_packets": 21653964,
+          "tx_fail": 0,
+          "avg_tx_packets": 178.21358820079,
+          "last_tx_packets": 21653964,
+          "babel_route_count": 15,
+          "babel_metric": 239,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 206
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.027764644281972,
+          "quality": 100,
+          "tx_quality": 100.0,
+          "rev_lastseen": 3413776,
+          "hostname": "N0CALL-hap-gp",
+          "canonical_ip": "10.94.22.214",
+          "ip": "172.31.14.81",
+          "lat": "25.390908",
+          "lon": "-153.602506",
+          "distance": 15017,
+          "localarea": false,
+          "model": "MikroTik RouterBOARD 952Ui-5ac2nD (hAP ac lite)",
+          "firmware_version": "babel-20250928-a57fde60",
+          "rev_ping_success_time": 0.026371744,
+          "rev_ping_quality": 100,
+          "rev_quality": 100,
+          "rev_snr": null
+        },
+        "00:00:ac:1f:0e:4f": {
+          "lastseen": 3413809,
+          "lastup": 3241529,
+          "type": "Wireguard",
+          "device": "wgc4",
+          "mac": "00:00:ac:1f:0e:4f",
+          "ipv6ll": "fe80::200:acff:fe1f:e4f",
+          "refresh": 3414280,
+          "lq": 100,
+          "rxcost": 206,
+          "txcost": 306,
+          "rtt": 45,
+          "tx_packets": 42033301,
+          "tx_fail": 0,
+          "avg_tx_packets": 164.87535375647,
+          "last_tx_packets": 42033301,
+          "babel_route_count": 22,
+          "babel_metric": 343,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 206
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.03391232724583,
+          "quality": 100,
+          "tx_quality": 100.0,
+          "rev_lastseen": 3413397,
+          "hostname": "N0CALL-hapacl-gp",
+          "canonical_ip": "10.252.10.65",
+          "ip": "172.31.14.79",
+          "lat": "-41.827748",
+          "lon": "-157.422772",
+          "distance": 13268,
+          "localarea": false,
+          "model": "MikroTik RouterBOARD 952Ui-5ac2nD (hAP ac lite)",
+          "firmware_version": "3.25.5.1",
+          "rev_ping_success_time": 0.037119607593344,
+          "rev_ping_quality": 100,
+          "rev_quality": 100,
+          "rev_snr": null
+        },
+        "00:00:ac:1f:0e:4d": {
+          "lastseen": 3413809,
+          "lastup": 3229598,
+          "type": "Wireguard",
+          "device": "wgc3",
+          "mac": "00:00:ac:1f:0e:4d",
+          "ipv6ll": "fe80::200:acff:fe1f:e4d",
+          "refresh": 3414566,
+          "lq": 100,
+          "rxcost": 206,
+          "txcost": 206,
+          "rtt": 54,
+          "tx_packets": 23925483,
+          "tx_fail": 0,
+          "avg_tx_packets": 170.1390918925,
+          "last_tx_packets": 23925483,
+          "babel_route_count": 12,
+          "babel_metric": 252,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 206
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.037824126705843,
+          "quality": 100,
+          "tx_quality": 100.0,
+          "rev_lastseen": 3413809,
+          "hostname": "N0CALL-hap-joco",
+          "canonical_ip": "10.6.190.77",
+          "ip": "172.31.14.77",
+          "lat": "47.399706",
+          "lon": "-160.927151",
+          "distance": 7938,
+          "localarea": false,
+          "model": "MikroTik RouterBOARD 952Ui-5ac2nD (hAP ac lite)",
+          "firmware_version": "babel-20251006-e87a7912",
+          "rev_ping_success_time": 0.034072952979467,
+          "rev_ping_quality": 100,
+          "rev_quality": 100,
+          "rev_snr": null
+        },
+        "00:00:ac:1f:0e:4b": {
+          "lastseen": 3413809,
+          "lastup": 3382877,
+          "type": "Wireguard",
+          "device": "wgc2",
+          "mac": "00:00:ac:1f:0e:4b",
+          "ipv6ll": "fe80::200:acff:fe1f:e4b",
+          "refresh": 3414329,
+          "lq": 100,
+          "rxcost": 206,
+          "txcost": 206,
+          "rtt": 43,
+          "tx_packets": 90160230,
+          "tx_fail": 0,
+          "avg_tx_packets": 236.45030348645,
+          "last_tx_packets": 90160230,
+          "babel_route_count": 523,
+          "babel_metric": 241,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 206
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.038879003911401,
+          "quality": 100,
+          "tx_quality": 100.0,
+          "rev_lastseen": 3413460,
+          "hostname": "N0CALL-tun-srv",
+          "canonical_ip": "10.190.252.101",
+          "ip": "172.31.14.75",
+          "lat": "-40.536536",
+          "lon": "88.308667",
+          "distance": 319535,
+          "localarea": false,
+          "model": "VMware, Inc. VMware Virtual Platform",
+          "firmware_version": "babel-20251118-bdad642a",
+          "rev_ping_success_time": 0.039322644729637,
+          "rev_ping_quality": 100,
+          "rev_quality": 100,
+          "rev_snr": null
+        },
+        "00:00:ac:1f:0e:49": {
+          "lastseen": 3413809,
+          "lastup": 3093262,
+          "type": "Wireguard",
+          "device": "wgc1",
+          "mac": "00:00:ac:1f:0e:49",
+          "ipv6ll": "fe80::200:acff:fe1f:e49",
+          "refresh": 3414038,
+          "lq": 100,
+          "rxcost": 206,
+          "txcost": 306,
+          "rtt": 19,
+          "tx_packets": 39820756,
+          "tx_fail": 0,
+          "avg_tx_packets": 211.89597665372,
+          "last_tx_packets": 39820756,
+          "babel_route_count": 60,
+          "babel_metric": 316,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 206
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.01519151074354,
+          "quality": 100,
+          "tx_quality": 100.0,
+          "rev_snr": null,
+          "rev_ping_success_time": 0.020614196877018,
+          "rev_ping_quality": 100,
+          "rev_quality": 100,
+          "rev_lastseen": 3413081,
+          "hostname": "N0CALL-hap-32-cp-250",
+          "canonical_ip": "10.162.164.252",
+          "ip": "172.31.14.73",
+          "lat": "-57.957377",
+          "lon": "-46.487433",
+          "distance": 49478,
+          "localarea": false,
+          "model": "MikroTik RouterBOARD 952Ui-5ac2nD (hAP ac lite)",
+          "firmware_version": "3.25.10.0"
+        },
+        "00:00:ac:1f:50:f4": {
+          "lastseen": 3413809,
+          "lastup": 2840803,
+          "type": "Wireguard",
+          "device": "wgs0",
+          "mac": "00:00:ac:1f:50:f4",
+          "ipv6ll": "fe80::200:acff:fe1f:50f4",
+          "refresh": 3414128,
+          "lq": 100,
+          "rxcost": 206,
+          "txcost": 306,
+          "rtt": 37,
+          "tx_packets": 39235635,
+          "tx_fail": 0,
+          "avg_tx_packets": 215.18672853567,
+          "last_tx_packets": 39235635,
+          "babel_route_count": 372,
+          "babel_metric": 335,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 206
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.032440861615624,
+          "quality": 100,
+          "tx_quality": 100.0,
+          "rev_lastseen": 3413208,
+          "hostname": "lccore-tunsrv",
+          "canonical_ip": "10.206.216.217",
+          "ip": "172.31.80.244",
+          "lat": "64.833485",
+          "lon": "-56.949541",
+          "distance": 173046,
+          "localarea": false,
+          "model": "QEMU Standard PC (i440FX + PIIX, 1996)",
+          "firmware_version": "3.25.10.0",
+          "rev_ping_success_time": 0.03488377533277,
+          "rev_ping_quality": 100,
+          "rev_quality": 100,
+          "rev_snr": null
+        }
+      },
+      "distance": 80550,
+      "hidden_nodes": [],
+      "total_route_count": 1004
+    }
+  }
+}

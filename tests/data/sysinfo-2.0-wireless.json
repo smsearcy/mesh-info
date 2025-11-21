@@ -1,0 +1,395 @@
+{
+  "api_version": "2.0",
+  "node": "N0CALL-PARRETT-5AC-PTP",
+  "node_details": {
+    "model": "Ubiquiti PowerBeam 5AC 400",
+    "description": "146.920/441.875 100.0 Hz. Allstar Node 1102 part of AH6LE Repeater System",
+    "board_id": "0xe7f5",
+    "firmware_mfg": "AREDN",
+    "firmware_version": "babel-20251111-406eb660",
+    "mesh_gateway": false,
+    "mesh_supernode": false
+  },
+  "tunnels": {
+    "active_tunnel_count": 0
+  },
+  "lat": "36.741104",
+  "lon": "-23.982048",
+  "gridsquare": "CN85gg",
+  "meshrf": {
+    "status": "on",
+    "mode": "adhoc",
+    "ssid": "ArednMeshNetwork",
+    "channel": 183,
+    "chanbw": 10,
+    "freq": 5915,
+    "azimuth": 209,
+    "height": 380,
+    "antenna": {
+      "description": "25 dBi 10&deg; Dish",
+      "gain": 25,
+      "beamwidth": 10,
+      "builtin": true
+    }
+  },
+  "sysinfo": {
+    "uptime": "9 days, 2:36",
+    "loads": [
+      0.3,
+      0.35,
+      0.31
+    ],
+    "freememory": "12632"
+  },
+  "interfaces": [
+    {
+      "name": "eth0",
+      "mac": "f0:9f:c2:51:66:6f"
+    },
+    {
+      "name": "br-dtdlink",
+      "mac": "02:8f:dd:23:32:2b",
+      "ip": "10.81.102.111"
+    },
+    {
+      "name": "br0",
+      "mac": "f0:9f:c2:51:66:6f"
+    },
+    {
+      "name": "br0.2",
+      "mac": "f0:9f:c2:51:66:6f"
+    },
+    {
+      "name": "br-lan",
+      "mac": "02:8e:41:df:f5:c2",
+      "ip": "10.6.102.241"
+    },
+    {
+      "name": "br0.3",
+      "mac": "f0:9f:c2:51:66:6f"
+    },
+    {
+      "name": "br-wan",
+      "mac": "02:5b:77:50:fc:76"
+    },
+    {
+      "name": "br0.98",
+      "mac": "f0:9f:c2:51:66:6f"
+    },
+    {
+      "name": "wlan0",
+      "mac": "f0:9f:c2:50:66:6f",
+      "ip": "10.80.102.111"
+    }
+  ],
+  "link_info": {
+    "10.104.255.191": {
+      "hostname": "N0CALL-eaglecrestnorth",
+      "linkType": "RF",
+      "interface": "wlan0",
+      "signal": -68,
+      "noise": -98
+    },
+    "10.200.72.174": {
+      "hostname": "N0CALL-supernode",
+      "linkType": "DTD",
+      "interface": "br-dtdlink"
+    },
+    "10.108.176.242": {
+      "hostname": "N0CALL-parrett-5acsector-ne",
+      "linkType": "DTD",
+      "interface": "br-dtdlink"
+    },
+    "10.182.232.63": {
+      "hostname": "N0CALL-x86-parrett",
+      "linkType": "DTD",
+      "interface": "br-dtdlink"
+    },
+    "10.101.28.3": {
+      "hostname": "N0CALL-x86-qth",
+      "linkType": "DTD",
+      "interface": "br-dtdlink"
+    },
+    "10.50.43.211": {
+      "hostname": "N0CALL-tunnel-server",
+      "linkType": "DTD",
+      "interface": "br-dtdlink"
+    }
+  },
+  "lqm": {
+    "enabled": true,
+    "config": {
+      "user_blocks": ""
+    },
+    "info": {
+      "start": 81,
+      "now": 314674,
+      "trackers": {
+        "04:18:d6:68:ff:bf": {
+          "lastseen": 314674,
+          "lastup": 84,
+          "type": "RF",
+          "device": "wlan0",
+          "mac": "04:18:d6:68:ff:bf",
+          "ipv6ll": "fe80::618:d6ff:fe68:ffbf",
+          "refresh": 314846,
+          "avg_lq": 99.987070279969,
+          "mode": "mesh",
+          "lq": 100,
+          "rxcost": 256,
+          "txcost": 256,
+          "rtt": 3,
+          "signal": -68,
+          "tx_packets": 1831334,
+          "tx_retries": 32967,
+          "tx_fail": 969,
+          "tx_bitrate": 9.75,
+          "rx_bitrate": 21.65,
+          "snr": 30,
+          "avg_tx_packets": 195.65614943872,
+          "last_tx_packets": 1831334,
+          "avg_tx_retries": 1.4968817437777,
+          "last_tx_retries": 32967,
+          "avg_tx_fail": 8.7690098239855e-33,
+          "last_tx_fail": 969,
+          "avg_tx_bitrate": null,
+          "avg_rx_bitrate": null,
+          "babel_route_count": 15,
+          "babel_metric": 256,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 96
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.010889253589039,
+          "quality": 100,
+          "tx_quality": 99.234942654206,
+          "rev_lastseen": 313920,
+          "hostname": "N0CALL-eaglecrestnorth",
+          "canonical_ip": "10.104.255.191",
+          "ip": "10.104.255.191",
+          "lat": "-83.474332",
+          "lon": "2.927910",
+          "distance": 41531,
+          "localarea": false,
+          "model": "Ubiquiti Rocket M5 (XW)",
+          "firmware_version": "3.25.10.0",
+          "rev_ping_success_time": 0.012098210495623,
+          "rev_ping_quality": 100,
+          "rev_quality": 71,
+          "rev_snr": 17
+        },
+        "02:53:55:c1:fe:33": {
+          "lastseen": 314674,
+          "lastup": 293026,
+          "type": "DtD",
+          "device": "br-dtdlink",
+          "mac": "02:53:55:c1:fe:33",
+          "ipv6ll": "fe80::53:55ff:fec1:fe33",
+          "refresh": 315342,
+          "avg_lq": 99.795310561592,
+          "lq": 100,
+          "rxcost": 96,
+          "txcost": 96,
+          "rtt": 0,
+          "babel_route_count": 2,
+          "babel_metric": 96,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 96
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.0074067934090707,
+          "quality": 100,
+          "rev_lastseen": 314338,
+          "hostname": "N0CALL-supernode",
+          "canonical_ip": "10.200.72.174",
+          "ip": "10.210.35.18",
+          "lat": "4.270421",
+          "lon": "-28.766902",
+          "distance": 11261,
+          "localarea": false,
+          "model": "QEMU Standard PC (i440FX + PIIX, 1996)",
+          "firmware_version": "3.25.10.0",
+          "rev_ping_success_time": 0.021578566305769,
+          "rev_ping_quality": 100,
+          "rev_quality": 100,
+          "rev_snr": null
+        },
+        "02:b5:8e:b9:79:6a": {
+          "lastseen": 314674,
+          "lastup": 84,
+          "type": "DtD",
+          "device": "br-dtdlink",
+          "mac": "02:b5:8e:b9:79:6a",
+          "ipv6ll": "fe80::b5:8eff:feb9:796a",
+          "refresh": 315206,
+          "avg_lq": 99.999987651921,
+          "lq": 100,
+          "rxcost": 96,
+          "txcost": 96,
+          "rtt": 0,
+          "babel_route_count": 12,
+          "babel_metric": 96,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 96
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.0019184065991269,
+          "quality": 100,
+          "rev_lastseen": 314247,
+          "hostname": "N0CALL-parrett-5acsector-ne",
+          "canonical_ip": "10.108.176.242",
+          "ip": "10.109.176.242",
+          "lat": "35.355830",
+          "lon": "123.451588",
+          "distance": 104,
+          "localarea": false,
+          "model": "Ubiquiti Rocket 5AC Lite",
+          "firmware_version": "babel-20251105-8e11fb16",
+          "rev_ping_success_time": 0.001486277024943,
+          "rev_ping_quality": 100,
+          "rev_quality": 100
+        },
+        "02:89:ff:1b:f1:2c": {
+          "lastseen": 314674,
+          "lastup": 84,
+          "type": "DtD",
+          "device": "br-dtdlink",
+          "mac": "02:89:ff:1b:f1:2c",
+          "ipv6ll": "fe80::89:ffff:fe1b:f12c",
+          "refresh": 314702,
+          "avg_lq": 99.999999835321,
+          "lq": 100,
+          "rxcost": 96,
+          "txcost": 96,
+          "rtt": 0,
+          "babel_route_count": 4,
+          "babel_metric": 96,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 96
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.0013886714183947,
+          "quality": 100,
+          "rev_lastseen": 313876,
+          "hostname": "N0CALL-x86-parrett",
+          "canonical_ip": "10.182.232.63",
+          "ip": "10.214.158.119",
+          "lat": "1.296800",
+          "lon": "-85.347900",
+          "distance": 0,
+          "localarea": true,
+          "model": "QEMU Standard PC (i440FX + PIIX, 1996)",
+          "firmware_version": "babel-20251104-27b0e58a",
+          "rev_ping_success_time": 0.00077333960078197,
+          "rev_ping_quality": 100,
+          "rev_quality": 100
+        },
+        "02:c2:ae:7f:bb:a2": {
+          "lastseen": 314674,
+          "lastup": 293026,
+          "type": "DtD",
+          "device": "br-dtdlink",
+          "mac": "02:c2:ae:7f:bb:a2",
+          "ipv6ll": "fe80::c2:aeff:fe7f:bba2",
+          "refresh": 315071,
+          "avg_lq": 99.002798956898,
+          "lq": 93,
+          "rxcost": 96,
+          "txcost": 96,
+          "rtt": 0,
+          "babel_route_count": 55,
+          "babel_metric": 96,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 96
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.034877683138285,
+          "quality": 100,
+          "rev_lastseen": 314295,
+          "hostname": "N0CALL-x86-qth",
+          "canonical_ip": "10.101.28.3",
+          "ip": "10.43.2.127",
+          "lat": "-6.102756",
+          "lon": "121.446310",
+          "distance": 11261,
+          "localarea": false,
+          "model": "QEMU Standard PC (i440FX + PIIX, 1996)",
+          "firmware_version": "babel-20251106-5796bc0f",
+          "rev_ping_success_time": 0.0038547055120418,
+          "rev_ping_quality": 100,
+          "rev_quality": 100,
+          "rev_snr": null
+        },
+        "02:c5:c3:b2:41:19": {
+          "lastseen": 314674,
+          "lastup": 293026,
+          "type": "DtD",
+          "device": "br-dtdlink",
+          "mac": "02:c5:c3:b2:41:19",
+          "ipv6ll": "fe80::c5:c3ff:feb2:4119",
+          "refresh": 315193,
+          "avg_lq": 99.734001937946,
+          "lq": 100,
+          "rxcost": 96,
+          "txcost": 96,
+          "rtt": 0,
+          "babel_route_count": 1238,
+          "babel_metric": 96,
+          "routable": true,
+          "user_blocks": false,
+          "babel_config": {
+            "hello_interval": 4,
+            "update_interval": 120,
+            "rxcost": 96
+          },
+          "ping_quality": 100,
+          "ping_success_time": 0.0074006510985215,
+          "quality": 100,
+          "rev_lastseen": 314421,
+          "hostname": "N0CALL-tunnel-server",
+          "canonical_ip": "10.50.43.211",
+          "ip": "10.143.52.203",
+          "lat": "-20.004091",
+          "lon": "-49.753677",
+          "distance": 11261,
+          "localarea": false,
+          "model": "QEMU Standard PC (i440FX + PIIX, 1996)",
+          "firmware_version": "3.25.10.0",
+          "rev_ping_success_time": 0.019854863088464,
+          "rev_ping_quality": 100,
+          "rev_quality": 100,
+          "rev_snr": null
+        }
+      },
+      "distance": 41531,
+      "hidden_nodes": [
+        {
+          "ip": "10.242.48.212",
+          "hostname": "N0CALL-N0CALL-gen2-newb",
+          "distance": 4349
+        }
+      ],
+      "total_route_count": 1326
+    }
+  }
+}
