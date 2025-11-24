@@ -240,6 +240,36 @@ def test_api_version_2_0_min(data_folder) -> None:
     assert system_info.lan_ip_address == "10.213.184.65"
 
 
+def test_api_version_2_0_no_wireless(data_folder) -> None:
+    """Test parsing API version 2.0 data, no wireless interface."""
+
+    with open(data_folder / "sysinfo-2.0-no-wireless.json") as f:
+        json_data = json.load(f)
+    system_info = aredn.load_system_info(json_data)
+
+    assert system_info.node_name == "n0call-hap-merlin"
+    assert system_info.display_name == "N0CALL-HAP-Merlin"
+    assert system_info.api_version == "2.0"
+    assert system_info.latitude == -16.918048
+    assert system_info.longitude == -58.228944
+    assert len(system_info.interfaces) == 16
+    assert system_info.interfaces["br-nomesh"] == aredn.Interface(
+        name="br-nomesh",
+        mac_address="960e38fd0514",
+        ip_address="10.15.210.19",
+    )
+    assert len(system_info.links) == 6
+    assert system_info.links[0] == aredn.LinkInfo(
+        source="n0call-hap-merlin",
+        destination="n0call-hap-gp",
+        destination_ip="10.94.22.214",
+        type=aredn.LinkType.WIREGUARD,
+        interface="wgc0",
+        quality=100,
+        neighbor_quality=100,
+    )
+
+
 def test_lan_interface_eth0_0(data_folder):
     """Validate that eth0.0 is recognized as a LAN IP address."""
 
