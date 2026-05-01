@@ -18,6 +18,14 @@ Mesh Info
 
 |
 
+Project Update
+--------------
+
+I have not had the time to spend on this project to keep it up to date with the upstream changes in AREDN (e.g. Babel).
+So I am finally going to acknowledge that and archive the project.
+Maybe someday I will have the chance to pick it back up.
+
+
 `Project Documentation <https://mesh-info-ki7onk.readthedocs.io/>`_
 
 .. -begin-content-
